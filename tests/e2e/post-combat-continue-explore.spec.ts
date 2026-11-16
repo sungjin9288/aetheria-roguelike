@@ -5,7 +5,8 @@ import { startE2ERun } from './testHelpers';
 //   이제 탐험할 수 있는 곳(대기 · 안전지대 밖)에서는 카드를 닫고 탐험을 바로 부르고, 안전지대에서는 그 단추를 그리지 않는다.
 //   카드가 나타난 직후 잠깐은 주 행동을 받지 않는다(전투를 끝낸 연타가 탐험 · 가방을 누르지 않게).
 const SETTINGS_KEY = 'aetheria.device-qa.system-settings.snapshot.v1';
-const FIELD = '어둠의 지하 감옥';
+// 오버월드 3단계(2026-11-16)부터 사냥 지역은 모두 지도를 걷고 결과 카드는 '닫기'로 지도에 돌아간다 — 탐험 단추가 남은 사냥 지역은 혼돈의 심연뿐이다.
+const FIELD = '혼돈의 심연';
 
 const readGame = (page: Page) => page.evaluate(() => JSON.parse(window.render_game_to_text?.() || '{}'));
 

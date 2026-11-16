@@ -371,7 +371,8 @@ test('exploreActions: 체인 → 캠프파이어 → 보스 도전 선택 → �
     const body = source.slice(bodyStart);
     const chainIdx = body.indexOf('getChainEventForLoc');
     const campfireIdx = body.indexOf('buildCampfireEvent');
-    const bossGaugeIdx = body.indexOf('buildBossChallengeEvent');
+    // 2026-11 오버월드 3단계: 카드는 지도의 보스 문과 같은 생성기(`buildAreaBossChallengeCard` → `buildBossChallengeEvent`)다.
+    const bossGaugeIdx = body.indexOf('buildAreaBossChallengeCard');
     const scoutIdx = body.indexOf('buildScoutEvent');
     assert.ok(chainIdx > -1 && campfireIdx > -1 && bossGaugeIdx > -1 && scoutIdx > -1,
         '4개 분기 모두 explore() 본문에 존재');

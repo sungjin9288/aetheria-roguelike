@@ -9,6 +9,7 @@ import { buildGraveData } from '../utils/graveUtils.js';
 import { MSG } from '../data/messages.js';
 import { getEffectiveMaxHp, getEffectiveMaxMpFull, healWithinMax } from './vitals.js';
 import { getActiveRelicSynergies, relicNumber } from '../data/relics.js';
+import { getRuleElementMultiplier } from './chapterBossRule.js';
 import { processLoot as _processLoot, resolveEnemyBaseName as _resolveEnemyBaseName } from './CombatEngine.loot.js';
 import { getPlayerStatusStacks, getStatusStackMult, statusMethods } from './CombatEngine.status.js';
 import { outcomeMethods } from './CombatEngine.outcome.js';
@@ -56,7 +57,8 @@ export const CombatEngine = {
             // cycle 151: 'elem_boost' (프리즘 핵) — 약점 적중 배율에 val 추가 (1.25 → 1.5).
             const boostRelic = (relics || []).find((r) => r.effect === 'elem_boost');
             const boost = relicNumber(boostRelic);
-            return BALANCE.ELEMENT_WEAK_MULT + boost;
+            // 2026-11 B5: 장 보스 규칙 '물든 뿌리' — 약점 배율이 1을 넘지 않는다.
+            return getRuleElementMultiplier(BALANCE.ELEMENT_WEAK_MULT + boost, enemy);
         }
         if (enemy?.resistance && enemy.resistance === elem) return BALANCE.ELEMENT_RESIST_MULT;
         return 1;

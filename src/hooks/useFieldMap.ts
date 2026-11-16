@@ -3,17 +3,25 @@ import { BALANCE } from '../data/constants';
 import { DB } from '../data/db';
 import { MSG } from '../data/messages';
 import { GS } from '../reducers/gameStates';
+import { getFieldDoor } from '../systems/fieldDoor';
 import { getFieldMapLayout, isFieldMapRegion, planFieldAutoStep } from '../systems/fieldMapWalk';
 import { getAutoExploreStep, type AutoExploreState } from '../utils/autoExplore';
-import { getFieldAutoAvailability, getFieldAutoStopText, type FieldAutoAvailability } from '../utils/fieldAuto';
+import {
+    getFieldAutoAvailability, getFieldAutoStopText, getFieldWalkStopText, isFieldAutoWalkUnlocked, planPlayerFieldAutoWalk,
+    type FieldAutoAvailability,
+} from '../utils/fieldAuto';
 import type { FieldDirection, FieldMapLayout, FieldMapState } from '../types/fieldMap';
 import type { AddLog } from './actionDeps';
 
 /**
  * 지역 지도 걷기의 화면 쪽 배선(설계 docs/OVERWORLD_WALK_DESIGN_2026-11.md §1 · §7 · §8). 걷기 · 상자 · 클리어는 리듀서가 소유하고
  * 이 훅은 (1) 지도 지역에 지도가 없으면 만들고 (2) 리듀서가 남긴 처리할 일(조우 · 출구 · 미믹)을 기존 액션으로 넘기며
- * (3) 자동 탐험 걸음을 박자마다 부른다. 자동 탐험 켜짐은 화면 상태다(세이브 봉투 밖 — 리로드하면 멈춰 있다, 이어 가기는 횟수를 쓰지 않는다).
+ * (3) 자동 탐험 · 자동 걷기 걸음을 박자마다 부른다. 켜짐은 화면 상태다(세이브 봉투 밖 — 리로드하면 멈춰 있다, 이어 가기는 횟수를 쓰지 않는다).
+ * 오버월드 3단계: 자동 걷기(하루 횟수 없음 · 첫 전직 뒤)는 같은 박자 고리를 쓰되 걸음은 `planPlayerFieldAutoWalk`(상자를 열지
+ * 않고 그 옆에서 멈춘다), 조우는 연속 탐험(H1) 판정 그대로다. 보스 문 칸을 지도 화면이 그리도록 넘긴다.
  */
+
+type AutoMode = 'run' | 'walk';
 
 export interface FieldMapActions {
     fieldEnter: () => unknown;
@@ -46,6 +54,12 @@ export interface FieldMapControl {
     auto: FieldAutoAvailability & { running: boolean; canStart: boolean };
     startAuto: () => void;
     stopAuto: () => void;
+    /** 지금 보이는 보스 문의 칸 — 닫혀 있으면 null */
+    door: number | null;
+    /** 자동 걷기(오버월드 3단계) — 첫 전직 뒤 · 하루 횟수 없음 */
+    autoWalk: { unlocked: boolean; running: boolean; canStart: boolean };
+    startAutoWalk: () => void;
+    stopAutoWalk: () => void;
 }
 
 const isTypingTarget = (target: EventTarget | null): boolean => {
@@ -98,27 +112,37 @@ export function useFieldMap({ state, actions, addLog, blocked, paused, timeScale
         if (!pendingKey) handledRef.current = null;
     }, [pendingKey]);
 
-    // (3) 자동 탐험 — 지역을 떠나거나 지도가 바뀌면(사망 · 새 지도) 켜짐이 풀린다(켜짐은 그 지도의 `autoRun`과 함께일 때만).
-    const [runningFlag, setRunning] = useState(false);
-    const running = runningFlag && inRegion && Boolean(field?.autoRun);
+    // (3) 자동 탐험 · 자동 걷기 — 지역을 떠나거나 지도가 바뀌면(사망 · 새 지도) 켜짐이 풀린다. 자동 탐험은 그 지도의 `autoRun`과
+    // 함께일 때만, 자동 걷기는 켠 지도(순번)에서만 켜져 있다.
+    const [mode, setMode] = useState<AutoMode | null>(null);
+    const [walkSeq, setWalkSeq] = useState<number | null>(null);
+    const running = mode === 'run' && inRegion && Boolean(field?.autoRun);
+    const walking = mode === 'walk' && inRegion && Boolean(field) && field?.seq === walkSeq;
+    const looping = running || walking;
+    // 자동 걷기가 한 번 멈춘 상자 — 다시 켜면 그 상자 옆에서는 멈추지 않는다(지도 순번마다 새로 시작).
+    const acknowledgedRef = useRef<{ seq: number; chests: number[] }>({ seq: -1, chests: [] });
     const [tick, setTick] = useState(0);
     const busyRef = useRef(false);
     const halt = useCallback((text: string | null) => {
-        setRunning(false);
+        setMode(null);
         if (text) addLog?.('system', text);
     }, [addLog]);
+    const stopText = useCallback((reason: Parameters<typeof getFieldAutoStopText>[0]) => (
+        mode === 'walk' ? getFieldWalkStopText(reason, stateRef.current.player) : getFieldAutoStopText(reason, stateRef.current.player)
+    ), [mode]);
 
     useEffect(() => {
-        if (!running || paused || busyRef.current) return undefined;
+        if (!looping || paused || busyRef.current) return undefined;
+        const walkMode = mode === 'walk';
         const timer = window.setTimeout(() => {
             if (blocked) {
-                halt(getFieldAutoStopText('mode', stateRef.current.player));
+                halt(stopText('mode'));
                 return;
             }
             const latest = stateRef.current;
-            const step = getAutoExploreStep(latest, { requireJob: false });
+            const step = getAutoExploreStep(latest, { requireJob: walkMode });
             if (step.kind === 'stop') {
-                halt(getFieldAutoStopText(step.reason, latest.player));
+                halt(stopText(step.reason));
                 return;
             }
             busyRef.current = true;
@@ -131,12 +155,27 @@ export function useFieldMap({ state, actions, addLog, blocked, paused, timeScale
                         }
                         const current = latest.player?.fieldMap;
                         const currentMap = latest.player?.loc ? DB.MAPS[latest.player.loc] : null;
-                        if (!current || !currentMap || current.loc !== latest.player?.loc) {
-                            halt(getFieldAutoStopText('mode', stateRef.current.player));
+                        if (!latest.player || !current || !currentMap || current.loc !== latest.player.loc) {
+                            halt(stopText('mode'));
                             return;
                         }
                         if (current.pending) return; // 처리할 일 이펙트가 넘긴다
-                        const direction = planFieldAutoStep(current, getFieldMapLayout(current, currentMap));
+                        const currentLayout = getFieldMapLayout(current, currentMap);
+                        if (walkMode) {
+                            if (acknowledgedRef.current.seq !== current.seq) acknowledgedRef.current = { seq: current.seq, chests: [] };
+                            const plan = planPlayerFieldAutoWalk(latest.player, current, currentLayout, acknowledgedRef.current.chests);
+                            if (plan.kind === 'stop') {
+                                if (plan.chestId !== undefined) {
+                                    acknowledgedRef.current = { seq: current.seq, chests: [...acknowledgedRef.current.chests, plan.chestId] };
+                                }
+                                halt(getFieldWalkStopText(plan.reason, latest.player));
+                                return;
+                            }
+                            actionsRef.current.fieldStep(plan.direction, false);
+                            return;
+                        }
+                        const door = getFieldDoor(latest.player, current.loc, currentMap, currentLayout);
+                        const direction = planFieldAutoStep(current, currentLayout, door);
                         if (!direction) {
                             halt(MSG.FIELD_AUTO_DONE);
                             return;
@@ -146,28 +185,28 @@ export function useFieldMap({ state, actions, addLog, blocked, paused, timeScale
                         actionsRef.current.combat(step.kind);
                     }
                 } catch {
-                    halt(getFieldAutoStopText('mode', stateRef.current.player));
+                    halt(stopText('mode'));
                 } finally {
                     busyRef.current = false;
                     setTick((value) => value + 1);
                 }
             };
             void run();
-        }, blocked ? 0 : BALANCE.FIELD_AUTO_STEP_MS * timeScale);
+        }, blocked ? 0 : (walkMode ? BALANCE.FIELD_AUTO_WALK_STEP_MS : BALANCE.FIELD_AUTO_STEP_MS) * timeScale);
         return () => window.clearTimeout(timer);
-    }, [running, paused, blocked, tick, timeScale, halt, gameState, player, state.enemy, postCombatResult, pendingRelics, currentEvent, state.isAiThinking]);
+    }, [looping, mode, paused, blocked, tick, timeScale, halt, stopText, gameState, player, state.enemy, postCombatResult, pendingRelics, currentEvent, state.isAiThinking]);
 
     useEffect(() => {
-        if (!running || typeof document === 'undefined') return undefined;
+        if (!looping || typeof document === 'undefined') return undefined;
         const onVisibility = () => {
-            if (document.visibilityState === 'hidden') halt(getFieldAutoStopText('hidden', stateRef.current.player));
+            if (document.visibilityState === 'hidden') halt(stopText('hidden'));
         };
         document.addEventListener('visibilitychange', onVisibility);
         return () => document.removeEventListener('visibilitychange', onVisibility);
-    }, [running, halt]);
+    }, [looping, halt, stopText]);
 
     const idle = gameState === GS.IDLE && !postCombatResult && !pendingRelics && !currentEvent;
-    const canWalk = Boolean(field && layout && idle && !pending && !running && !blocked);
+    const canWalk = Boolean(field && layout && idle && !pending && !looping && !blocked);
     const walk = useCallback((direction: FieldDirection) => {
         actionsRef.current.fieldStep(direction, false);
     }, []);
@@ -192,7 +231,7 @@ export function useFieldMap({ state, actions, addLog, blocked, paused, timeScale
         return () => window.clearInterval(timer);
     }, []);
     const availability = getFieldAutoAvailability(player || {}, loc, field, layout, clock);
-    const canStart = Boolean(field && layout && idle && !pending && !running && !blocked && availability.lock === null);
+    const canStart = Boolean(field && layout && idle && !pending && !looping && !blocked && availability.lock === null);
     const startAuto = useCallback(() => {
         const latestPlayer = stateRef.current.player;
         const current = latestPlayer?.fieldMap;
@@ -207,11 +246,25 @@ export function useFieldMap({ state, actions, addLog, blocked, paused, timeScale
         } else {
             actionsRef.current.fieldStartAuto();
         }
-        setRunning(true);
+        setMode('run');
     }, [addLog]);
     const stopAuto = useCallback(() => {
         if (running) halt(getFieldAutoStopText('manual', stateRef.current.player));
     }, [running, halt]);
+
+    const walkUnlocked = isFieldAutoWalkUnlocked(player);
+    const canStartWalk = Boolean(field && layout && idle && !pending && !looping && !blocked && walkUnlocked);
+    const startAutoWalk = useCallback(() => {
+        const latestPlayer = stateRef.current.player;
+        const current = latestPlayer?.fieldMap;
+        if (!latestPlayer || !current || current.loc !== latestPlayer.loc || !isFieldAutoWalkUnlocked(latestPlayer)) return;
+        setWalkSeq(current.seq);
+        setMode('walk');
+    }, []);
+    const stopAutoWalk = useCallback(() => {
+        if (walking) halt(getFieldWalkStopText('manual', stateRef.current.player));
+    }, [walking, halt]);
+    const door = getFieldDoor(player, loc, mapData, layout);
 
     return {
         active: Boolean(field && layout),
@@ -222,5 +275,9 @@ export function useFieldMap({ state, actions, addLog, blocked, paused, timeScale
         auto: { ...availability, running, canStart },
         startAuto,
         stopAuto,
+        door,
+        autoWalk: { unlocked: walkUnlocked, running: walking, canStart: canStartWalk },
+        startAutoWalk,
+        stopAutoWalk,
     };
 }

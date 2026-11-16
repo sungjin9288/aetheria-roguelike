@@ -44,6 +44,7 @@ import { CombatEngine } from '../../systems/CombatEngine';
 import { scaleProgressionExpReward } from '../../data/progressionProfiles';
 import { getDiscoveredBossSignatureDrops } from '../../utils/bossSignatureHint';
 import { getAppearThreatLine } from '../../utils/enemyThreat';
+import { getAppearRuleLine } from '../../systems/chapterBossRule';
 import { getSignaturePityMultiplier } from '../../utils/signaturePity';
 import { resolveAbyssDailyDive } from '../../utils/abyssDailyDive';
 import { activateDevourBonus } from '../../utils/adventureRelicBonuses.js';
@@ -471,6 +472,9 @@ export const runQuietRollAndCombat = (
     // Wave 88 · 111: 보스(지역 조우 · 숨은 보스 · 심연 층 보스)와 정예의 가장 센 한 방을 내 최대 생명과 함께 보인다(실제 엔진 · 고정 난수).
     const appearThreat = getAppearThreatLine(player, mStats);
     if (appearThreat) addLog('warning', appearThreat);
+    // 2026-11 B5: 장 보스 규칙 — 이 전투에만 통하는 규칙을 말한다(권고 없음).
+    const appearRule = getAppearRuleLine(mStats);
+    if (appearRule) addLog('warning', appearRule);
     // anticipate 레이어: boss가 signature를 드롭 가능한 경우 pre-combat 예고
     if (mStats.isBoss) {
         // 2026-10 Wave 103 (소유자 결정 §107.6): 이미 도감에 있는 각인만 예고한다 — 아직 없는 각인이 어디서 나오는지는 플레이어가 알아낸다.

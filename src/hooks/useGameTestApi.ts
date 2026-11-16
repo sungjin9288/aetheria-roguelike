@@ -19,6 +19,9 @@ import type { GraveEntry } from '../utils/graveUtils';
 import type { RunSummary } from '../reducers/actionTypes';
 import { BALANCE, CONSTANTS } from '../data/constants';
 import { createFieldMapState, getFieldMapLayout, isFieldMapRegion } from '../systems/fieldMapWalk';
+import { getFieldDoor } from '../systems/fieldDoor';
+import { getFieldBiome } from '../systems/fieldBiome';
+import { buildFieldQaDoorMap, buildFieldQaWalkChestMap, pickFieldQaBiomeRegion } from './fieldQaSeeds';
 import { getLevelExpRequirement } from '../systems/expCurve';
 import { DB } from '../data/db';
 import { DEATH_LORE } from '../data/deathLore';
@@ -63,6 +66,7 @@ import { advanceExploreState } from '../utils/explorationPacing';
 import { getAdditiveNumericRelicValue } from '../utils/relicEffectValues';
 import { getStructuredFallbackPoolEvent } from '../data/structuredFallbackEvents';
 import { ASCENSION_RULES } from '../data/ascensionRules';
+import { isChapterRuleBossName } from '../data/chapterBossRules';
 
 const RETURN_BRIEFING_RENDER_DELAY_MS = 50;
 
@@ -365,7 +369,8 @@ export interface CanonicalEventChanceRelicChoiceSnapshot {
 /** 지역 지도 QA 시드의 갈래 */
 /** walk: 새 지도 · mimic: 첫 상자의 미믹이 깨어남 · opened: 상자를 모두 연 지도(나가면 클리어) · cleared: 클리어한 지역 */
 /** `paid` — 클리어한 지역, 오늘 무료 자동 탐험을 다 쓴 상태(다음 한 번은 골드) · 골드 넉넉 */
-export type FieldMapSeedKind = 'walk' | 'mimic' | 'opened' | 'cleared' | 'paid';
+/** 3단계 — `biome`: 숲이 아닌 바이옴의 새 지도 · `door`: 열린 보스 문 바로 옆 · `walkChest`: 위험한 칸 하나(상자 옆)만 남은 지도(전직 뒤) */
+export type FieldMapSeedKind = 'walk' | 'mimic' | 'opened' | 'cleared' | 'paid' | 'biome' | 'door' | 'walkChest';
 
 export interface AetheriaTestApi {
     getTrueEndingJourneySnapshot: () => TrueEndingJourneySnapshot;
@@ -442,6 +447,8 @@ export interface AetheriaTestApi {
      * 예고 칩은 충전 강타 · 끊기까지 남은 피해다(`partialDamage`만큼 이미 깎인 상태). 생명은 실효 최대치다.
      */
     seedBossChargeScenario: (bossName: string, mapName: string, partialDamage?: number) => boolean;
+    /** 2026-11 B5: 장 보스 규칙이 있는 보스와 싸우는 전투 — 규칙 칩 · 거부 줄 검증용. 규칙 없는 보스면 false. */
+    seedChapterBossRuleScenario: (bossName: string, mapName: string) => boolean;
     seedCombatSkillReadinessScenario: (mp: number) => boolean;
     /**
      * 2026-11 H4: 행동 조합 하나의 유물 두 조각을 든 채 일반 적과 전투를 시작한다 — `enemyHpRatio`는 적의 남은 생명 비율,
@@ -769,6 +776,9 @@ export const useGameTestApi = (
                             entrance: layout.entrance,
                             exits: layout.exits.map((exit) => ({ index: exit.index, to: exit.to })),
                             chests: layout.chests.map((chest) => ({ id: chest.id, index: chest.index })),
+                            // 3단계: 보이는 보스 문의 칸(닫혀 있으면 null) · 바이옴
+                            door: getFieldDoor(e.player, e.player.loc!, mapData, layout),
+                            biome: getFieldBiome(e.player.loc, mapData),
                         };
                     })(),
                 },
@@ -1947,6 +1957,22 @@ export const useGameTestApi = (
                 er.dispatch({ type: AT.SET_GAME_STATE, payload: GS.COMBAT });
                 return true;
             },
+            seedChapterBossRuleScenario: (bossName: string, mapName: string) => {
+                const er = engineRef.current;
+                if (!isChapterRuleBossName(bossName) || !DB.MAPS[mapName]) return false;
+                const scenarioPlayer = { ...er.player, loc: mapName, level: 40 };
+                const fullStats = calculateFullStats(scenarioPlayer)!;
+                er.dispatch({ type: AT.SET_PLAYER, payload: { loc: mapName, level: 40, hp: fullStats.maxHp, mp: fullStats.maxMp } });
+                er.dispatch({
+                    type: AT.SET_ENEMY,
+                    payload: {
+                        name: bossName, baseName: bossName, level: 40, hp: 4000, maxHp: 4000, atk: 60, def: 40, exp: 2400, gold: 1800,
+                        isBoss: true, pattern: { heavyChance: 0.2, guardChance: 0.2 },
+                    },
+                });
+                er.dispatch({ type: AT.SET_GAME_STATE, payload: GS.COMBAT });
+                return true;
+            },
             seedSwiftVictoryScenario: () => {
                 const er = engineRef.current;
                 const species = er.player.loc ? DB.MAPS[er.player.loc]?.monsters?.[0] : undefined;
@@ -1977,10 +2003,11 @@ export const useGameTestApi = (
             },
             seedAutoExploreScenario: () => {
                 const er = engineRef.current;
-                // 시작 마을에서 나가는 첫 사냥 지역 · 기본 직업의 첫 전직(데이터에서 읽는다).
-                // 2026-11: 지도 지역(`FIELD_MAP_REGIONS`)은 연속 탐험 대신 지도 자동 탐험을 쓰므로 건너뛴다.
-                const loc = (DB.MAPS[CONSTANTS.START_LOCATION]?.exits || [])
-                    .find((name) => DB.MAPS[name]?.type === 'dungeon' && (DB.MAPS[name]?.monsters?.length ?? 0) > 0
+                // 지도가 아닌 사냥 지역 · 기본 직업의 첫 전직(데이터에서 읽는다).
+                // 2026-11 오버월드 3단계: 사냥 지역은 모두 지도 지역이라(연속 탐험 대신 자동 걷기 · 지도 자동 탐험) 연속 탐험이
+                // 남는 곳은 지도가 아닌 사냥 지역(혼돈의 심연)뿐이다.
+                const loc = Object.keys(DB.MAPS)
+                    .find((name) => DB.MAPS[name]?.type !== 'safe' && (DB.MAPS[name]?.monsters?.length ?? 0) > 0
                         && !isFieldMapRegion(name, DB.MAPS[name]));
                 const job = DB.CLASSES[CONSTANTS.DEFAULT_JOB]?.next?.[0];
                 if (!loc || !job) return false;
@@ -2006,10 +2033,12 @@ export const useGameTestApi = (
             },
             seedFieldMapScenario: (kind: FieldMapSeedKind = 'walk') => {
                 const er = engineRef.current;
-                const loc = BALANCE.FIELD_MAP_REGIONS[0];
+                // 3단계: biome · door는 숲이 아닌 바이옴의 지역(구역 보스가 있는 첫 지역), 나머지는 첫 지도 지역(고요한 숲).
+                const loc = kind === 'biome' || kind === 'door' ? pickFieldQaBiomeRegion() : BALANCE.FIELD_MAP_REGIONS[0];
                 const mapData = loc ? DB.MAPS[loc] : null;
                 const job = DB.CLASSES[CONSTANTS.DEFAULT_JOB]?.next?.[0];
                 if (!loc || !mapData || !job || !isFieldMapRegion(loc, mapData)) return false;
+                const level = typeof mapData.level === 'number' ? Math.max(10, mapData.level + 2) : 10;
                 const base = { ...er.player, loc, fieldMap: null };
                 const fresh = createFieldMapState(base, loc, mapData);
                 const layout = getFieldMapLayout(fresh, mapData);
@@ -2018,13 +2047,18 @@ export const useGameTestApi = (
                     ? { ...fresh, pos: chest.index, visited: [...new Set([...fresh.visited, chest.index])].sort((a, b) => a - b), openedChests: [chest.id], pending: { kind: 'mimic' as const, chestId: chest.id } }
                     : kind === 'opened'
                         ? { ...fresh, openedChests: layout.chests.map((entry) => entry.id).sort((a, b) => a - b) }
-                        : fresh;
+                        : kind === 'door'
+                            ? buildFieldQaDoorMap(fresh, layout)?.field ?? null
+                            : kind === 'walkChest'
+                                ? buildFieldQaWalkChestMap(fresh, layout)
+                                : fresh;
+                if (!fieldMap) return false;
                 const patch = {
                     job,
                     loc,
-                    level: 10,
+                    level,
                     exp: 0,
-                    nextExp: getLevelExpRequirement(10),
+                    nextExp: getLevelExpRequirement(level),
                     atk: 500,
                     inv: (er.player.inv || []).slice(0, 5),
                     status: [],
@@ -2036,6 +2070,8 @@ export const useGameTestApi = (
                         fieldAutoRuns: kind === 'paid'
                             ? { day: getProtocolDayKey(new Date()), used: BALANCE.FIELD_AUTO_RUNS_PER_DAY }
                             : undefined,
+                        // 보스 문은 그 지역 게이지가 찼을 때만 열린다.
+                        ...(kind === 'door' ? { bossGauge: { ...(er.player.stats?.bossGauge || {}), [loc]: 1 } } : {}),
                     },
                     ...(kind === 'paid' ? { gold: 100_000 } : {}),
                 };

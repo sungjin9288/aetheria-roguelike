@@ -50,6 +50,8 @@ export interface GameEvent {
     isScout?: boolean;
     /** 원정 보스 게이지 조우 전용. */
     isBossGaugeChallenge?: boolean;
+    /** 오버월드 3단계 — 지도의 보스 문이 연 도전 카드(물러나도 탐험 롤이 이어지지 않는다). */
+    fromFieldDoor?: boolean;
     /** 다른 차원의 묘비(Wave 70) 전용 — 다른 플레이어의 공개 묘비. */
     isDimensionGrave?: boolean;
     /** 떠돌이 행상인(Wave 75) 전용 — 재고는 `player.merchantVisit`가 든다. */

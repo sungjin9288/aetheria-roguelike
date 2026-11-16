@@ -183,6 +183,24 @@ if (!baseDir) {
                 console.log(`    자동 탐험: 판당 ${per('autoRuns', 1)}번 (끝까지 ${per('autoDone', 1)} · 이어 가기 ${per('autoResumes', 1)}) · 자동 걸음 ${(100 * sumField('autoSteps') / Math.max(1, sumField('steps'))).toFixed(1)}% (Lv21+ ${(100 * sumField('lateAutoSteps') / Math.max(1, sumField('lateSteps'))).toFixed(1)}%) · 지도 전투 입력 자동 ${share('inputs')} (Lv21+ ${share('late')})`);
                 if (Object.keys(stops).length) console.log(`      멈춤: ${Object.entries(stops).sort((x, y) => y[1] - x[1]).map(([k, n]) => `${k} ${(100 * n / stopTotal).toFixed(0)}%`).join(' · ')}`);
             }
+            // 오버월드 3단계 — 보스 문(연 카드 · 도전), 자동 걷기(켠 수 · 걸음 몫 · 그동안의 조우 · 자동 전투 입력 · 멈춤 이유).
+            if (fieldRows.some((r) => r.field.doorCards !== undefined)) {
+                console.log(`    보스 문: 판당 카드 ${per('doorCards', 2)} · 도전 ${per('doorFights', 2)}`);
+            }
+            const walkRows = fieldRows.filter((r) => r.field.walk);
+            if (walkRows.length) {
+                const sumWalk = (key) => walkRows.reduce((acc, r) => acc + (Number(r.field.walk[key]) || 0), 0);
+                const steps = walkRows.reduce((acc, r) => acc + (Number(r.field.steps) || 0), 0);
+                const lateSteps = walkRows.reduce((acc, r) => acc + (Number(r.field.lateSteps) || 0), 0);
+                const sumIn = (group, key) => walkRows.reduce((acc, r) => acc + (r.field[group]?.[key] || 0), 0);
+                const autoInputs = (group, stepKey) => sumIn(group, 'autoCombat') + sumWalk(stepKey) + walkRows.reduce((acc, r) => acc + (Number(r.field[stepKey === 'steps' ? 'autoSteps' : 'lateAutoSteps']) || 0), 0);
+                const allInputs = (group, total) => sumIn(group, 'autoCombat') + sumIn(group, 'manualCombat') + total;
+                const stops = walkRows.reduce((acc, r) => { for (const [k, n] of Object.entries(r.field.walk.stops)) acc[k] = (acc[k] || 0) + n; return acc; }, {});
+                const stopTotal = Math.max(1, Object.values(stops).reduce((x, y) => x + y, 0));
+                console.log(`    자동 걷기: 판당 ${(sumWalk('starts') / walkRows.length).toFixed(0)}번 켬 · 걸음 ${(100 * sumWalk('steps') / Math.max(1, steps)).toFixed(1)}% (Lv21+ ${(100 * sumWalk('lateSteps') / Math.max(1, lateSteps)).toFixed(1)}%) · 조우 판당 ${(sumWalk('encounters') / walkRows.length).toFixed(0)} · 자동 전투 판당 ${(sumWalk('combat') / walkRows.length).toFixed(0)}`);
+                console.log(`      입력(걸음 + 지도 전투) 자동 ${(100 * autoInputs('inputs', 'steps') / Math.max(1, allInputs('inputs', steps))).toFixed(1)}% (Lv21+ ${(100 * autoInputs('late', 'lateSteps') / Math.max(1, allInputs('late', lateSteps))).toFixed(1)}%)`);
+                if (Object.keys(stops).length) console.log(`      멈춤: ${Object.entries(stops).sort((x, y) => y[1] - x[1]).map(([k, n]) => `${k} ${(100 * n / stopTotal).toFixed(0)}%`).join(' · ')}`);
+            }
         }
         const picked = xs.filter((r) => r.chapterPicks);
         if (picked.length) {

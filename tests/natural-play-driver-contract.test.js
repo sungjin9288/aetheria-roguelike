@@ -37,11 +37,11 @@ test('짧은 예산에서도 실제로 성장한다 — 막힘 감시가 비어 
     assert.ok(run.moments.every(([at], index) => at >= 0 && at <= run.hours && (index === 0 || at >= run.moments[index - 1][0])));
 });
 
-test('v3 (Wave 128): 받은 곁가지 이야기 임무는 그 이야기가 시작되는 지역에서 끝내고, 회차마다 이야기별 단계를 남긴다', async () => {
+test('v3 (Wave 128) · v4 (오버월드 3단계): 받은 곁가지 이야기 임무는 그 이야기가 시작되는 지역에서 끝내고, 회차마다 이야기별 단계를 남긴다', async () => {
     const { DRIVER_VERSION } = await import('../scripts/naturalPlay/driver.mjs');
-    assert.equal(DRIVER_VERSION, 3);
+    assert.equal(DRIVER_VERSION, 4);
     const result = await runNaturalPlay(SHORT);
-    assert.equal(result.driverVersion, 3);
+    assert.equal(result.driverVersion, 4);
     const [run] = result.runs;
     // 본편 장이 여는 이야기(사라진 마법사 · 잊혀진 사령관)와, 게시판에서 받은 곁가지 이야기 임무가 여는 이야기가 함께 열린다.
     for (const chainId of ['lost_wizard', 'forgotten_commander', 'last_hero', 'water_apostle']) {
@@ -291,4 +291,29 @@ test('지도 걷기 정책(오버월드 2단계)은 옵션이다 — 기본은 �
 
     await assert.rejects(() => runNaturalPlay({ ...SHORT, field: 'yes' }), /unknown field/);
     await assert.rejects(() => runNaturalPlay({ ...SHORT, fieldAuto: 'on' }), /needs field/);
+});
+
+test('자동 걷기 정책(오버월드 3단계)은 옵션이다 — 끄면 흔적이 없고, 켜면 결정론적이며 상자를 열지 않고 걸음 · 멈춤의 합이 맞는다', async () => {
+    const ALL = { seed: 1, path: 'knight', maxSteps: 1500, field: 'all', bagRoom: 'tidy' };
+    const off = await runNaturalPlay(ALL);
+    assert.equal(off.fieldWalkAuto, undefined);
+    assert.equal(off.runs[0].field.walk, undefined, '끄면 자동 걷기 기록이 없다');
+
+    const WALK = { ...ALL, fieldWalkAuto: 'on' };
+    const walk = await runNaturalPlay(WALK);
+    assert.deepEqual(await runNaturalPlay(WALK), walk);
+    assert.equal(walk.fieldWalkAuto, 'on');
+    assert.equal(walk.stalled, null, JSON.stringify(walk.stalled));
+    const record = walk.runs[0].field;
+    assert.equal(record.fallbacks, 0, JSON.stringify(record));
+    assert.ok(record.walk.starts > 0 && record.walk.steps > 0, JSON.stringify(record.walk));
+    assert.ok(record.walk.steps <= record.steps && record.walk.lateSteps <= record.walk.steps);
+    assert.ok(record.walk.combat <= record.walk.encounters, '조우 중 자동으로 싸운 것은 조우 수를 넘지 않는다');
+    const stops = Object.values(record.walk.stops).reduce((sum, value) => sum + value, 0);
+    assert.ok(stops <= record.walk.starts, '멈춤은 시작보다 많지 않다');
+    assert.ok((record.walk.stops.chest ?? 0) > 0, '상자 앞에서 멈춘다(상자는 손으로 연다)');
+    assert.ok(record.doorFights <= record.doorCards, '보스 문 도전은 문 카드 수를 넘지 않는다');
+
+    await assert.rejects(() => runNaturalPlay({ ...SHORT, fieldWalkAuto: 'yes', field: 'all' }), /unknown fieldWalkAuto/);
+    await assert.rejects(() => runNaturalPlay({ ...SHORT, fieldWalkAuto: 'on' }), /needs field/);
 });

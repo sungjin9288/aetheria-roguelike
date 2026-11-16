@@ -184,6 +184,8 @@ export interface MonsterBase {
     chargeArmed?: boolean;
     /** 충전을 마친 순간의 생명 — 강타 차례에 그 사이 깎인 양을 잰다. */
     chargeHpMark?: number;
+    /** 장 보스 규칙 '전투 중 소모품 한 번'(2026-11 B5) — 이 보스와의 전투에서 쓴 소모품 수. 적 인스턴스와 함께 끝난다. */
+    ruleItemUses?: number;
 }
 
 // cycle 328: BossPhase export 제거 — phase2/phase3 필드 타입으로만 사용, 외부 import 0건.

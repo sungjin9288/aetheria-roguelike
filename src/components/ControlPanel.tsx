@@ -179,7 +179,7 @@ const ControlPanel = ({
       />
     );
     // 2026-11 H1: 연속 탐험이 시작한 전투에서도 진행 줄 · 멈추기 단추가 보인다.
-    if (fieldMap?.auto.running) {
+    if (fieldMap?.auto.running || fieldMap?.autoWalk.running) {
       return (
         <div className="w-full space-y-2">
           <FieldAutoButton control={fieldMap} />

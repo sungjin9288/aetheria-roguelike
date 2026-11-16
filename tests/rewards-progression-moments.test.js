@@ -371,7 +371,10 @@ test('UX-10 계속 탐험 판정은 조작판의 탐험 단추와 같다 — 사
 });
 
 test('UX-10 결과 카드에 넘기는 탐험은 실제 탐험 액션을 정확히 한 번 부르고, 탐험할 수 없으면 넘기지 않는다', () => {
-    const field = playerAt('서쪽 평원');
+    // 오버월드 3단계: 사냥 지역은 모두 지도다 — 탐험 단추로 탐험하는 사냥 지역은 지도가 아닌 지역(혼돈의 심연)이다.
+    const nonFieldHunt = Object.entries(DB.MAPS).find(([loc, map]) => map.type !== 'safe' && (map.monsters || []).length > 0 && !BALANCE.FIELD_MAP_REGIONS.includes(loc))?.[0];
+    assert.ok(nonFieldHunt);
+    const field = playerAt(nonFieldHunt);
     let explored = 0;
     const explore = () => { explored += 1; return Promise.resolve(); };
     const action = getPostCombatExploreAction(GS.IDLE, field, explore);

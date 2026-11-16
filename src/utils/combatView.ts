@@ -4,6 +4,7 @@ import { getDiscoveredBossSignatureDrops } from './bossSignatureHint.js';
 import { getCombatSkillReadiness } from './combatSkillReadiness';
 import { getBossThreatChip, getEliteThreatChip } from './enemyThreat';
 import { getBehaviorComboChip } from '../systems/relicBehaviorCombos';
+import { getChapterRuleChip } from '../systems/chapterBossRule';
 import { getCombatSkillTray } from './combatSkillTray';
 import { getConsumableDescription } from './consumablePresentation';
 import { isConsumableItem } from '../systems/consumableRules';
@@ -52,7 +53,7 @@ type ComboStackRelic = Extract<DictRelic, { effect: 'combo_stack' }>;
  * (리팩토링: 컴포넌트에서 새어나간 전투 계산 로직 분리 — 행동 보존.)
  */
 export const buildCombatView = ({ player, enemy, stats, selectedSkill, skillCooldown, mobile }: CombatViewInput) => {
-    const skillReadiness = getCombatSkillReadiness({ player, selectedSkill, skillCooldown });
+    const skillReadiness = getCombatSkillReadiness({ player, selectedSkill, skillCooldown, enemy });
     // 2026-10 감사 CL-03: 가진 기술 전부 — 칸마다 같은 준비 판정(재사용 대기 · 기력)과 약점 판정(전투 예고와 같은 판정).
     const skillTray = getCombatSkillTray(player, { enemy, stats });
     // 보스 카드(기믹 · 공략 요령)가 읽는다. 2026-10 감사 CL-06: '보스 전술' 신호(entryHint · hint · phaseHint)는 지웠다 — 데스크톱
@@ -138,5 +139,7 @@ export const buildCombatView = ({ player, enemy, stats, selectedSkill, skillCool
         mobileCombatSignals,
         skillReadiness,
         skillTray,
+        // 2026-11 B5: 장 보스 규칙 칩 — 위협 칩과 따로 늘 보인다(신호 두 칸 상한 밖). 규칙만 말한다.
+        chapterRuleChip: getChapterRuleChip(enemy),
     };
 };

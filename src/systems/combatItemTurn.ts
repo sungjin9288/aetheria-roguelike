@@ -10,6 +10,7 @@ import { resolveConsumableEffect } from './consumableEffect';
 import { tickAfterAction } from './combatTurnTick';
 import { endCombatScope } from '../utils/combatScope';
 import { applyConsumableBehaviorCombos } from './relicBehaviorCombos';
+import { countRuleItemUse, getChapterRuleBlockedLog, isRuleItemSealed } from './chapterBossRule';
 import type { GraveEntry } from '../utils/graveUtils';
 import type { RunSummary } from '../reducers/actionTypes';
 
@@ -46,6 +47,16 @@ export const resolveCombatItemTurn = ({
     rng?: () => number;
 }): CombatItemTurnResult => {
     const random = rng || createSeededRandom(seed);
+    // 2026-11 B5: 장 보스 규칙 '꺼지지 않는 불' — 한도만큼 쓴 뒤의 소모품은 쓰지 않고 거부한다(소모 · 차례 · 난수 없음).
+    if (isRuleItemSealed(enemy)) {
+        return {
+            kind: 'rejected',
+            player,
+            enemy,
+            logs: [{ type: 'warning', text: getChapterRuleBlockedLog(enemy) ?? '' }],
+            visualEffect: null,
+        };
+    }
     const consumed = resolveConsumableEffect({ player, item });
     if (!consumed.ok) {
         return {
@@ -63,7 +74,7 @@ export const resolveCombatItemTurn = ({
     // W8-Z4: enemyAttack(CombatEngine.enemyAI.ts)이 any 타입에서 벗어나 stats로 FullStats(non-null)를
     //   요구하게 됐다 — calculateFullStats(player)는 `!player`일 때만 null이라 이 경로는 항상 non-null.
     const counterStats = calculateFullStats(playerForEnemyTurn)!;
-    const counterResult = CombatEngine.enemyAttack(playerForEnemyTurn, enemy, counterStats, random);
+    const counterResult = CombatEngine.enemyAttack(playerForEnemyTurn, countRuleItemUse(enemy), counterStats, random);
     const logs = [consumed.log, ...combo.logs, ...turnTick.logs, ...counterResult.logs];
     const signals: CombatTurnSignals = {
         playerCrit: false,

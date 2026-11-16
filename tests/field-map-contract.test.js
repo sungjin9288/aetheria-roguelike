@@ -93,10 +93,14 @@ test('새 지도는 방문마다 다르고, 위험은 이전 지도에서 이어
     assert.deepEqual(first.visited, [layout.entrance]);
 });
 
-test('시제품은 고요한 숲 하나만 지도를 쓴다', () => {
-    assert.deepEqual([...BALANCE.FIELD_MAP_REGIONS], ['고요한 숲']);
-    assert.equal(isFieldMapRegion('고요한 숲', DB.MAPS['고요한 숲']), true);
-    assert.equal(isFieldMapRegion('서쪽 평원', DB.MAPS['서쪽 평원']), false);
+test('오버월드 3단계: 사냥 지역은 모두 지도를 쓴다 — 혼돈의 심연(층) · 안전지대(황금 왕국 포함)는 지금 화면 그대로', () => {
+    const hunting = Object.entries(DB.MAPS)
+        .filter(([, map]) => map.type !== 'safe' && map.level !== 'infinite' && (map.monsters || []).length > 0)
+        .map(([loc]) => loc);
+    assert.deepEqual([...BALANCE.FIELD_MAP_REGIONS].sort(), [...hunting].sort(), '목록 = maps.ts의 사냥 지역(새 사냥 지역은 목록에 더할 것)');
+    for (const loc of hunting) assert.equal(isFieldMapRegion(loc, DB.MAPS[loc]), true, loc);
+    assert.equal(isFieldMapRegion('혼돈의 심연', DB.MAPS['혼돈의 심연']), false);
+    assert.equal(isFieldMapRegion('황금 왕국', DB.MAPS['황금 왕국']), false);
     assert.equal(isFieldMapRegion('시작의 마을', DB.MAPS['시작의 마을']), false);
 });
 

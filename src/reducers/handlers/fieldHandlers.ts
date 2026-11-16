@@ -2,6 +2,7 @@ import { BALANCE } from '../../data/constants';
 import { DB } from '../../data/db';
 import { MSG } from '../../data/messages';
 import { getFieldChestReward, grantFieldChestReward, isFieldChestMimic } from '../../systems/fieldChest';
+import { getFieldDoor } from '../../systems/fieldDoor';
 import {
     areAllFieldChestsOpened,
     createFieldMapState,
@@ -69,7 +70,9 @@ const fieldStep = (state: GameState, action: ActionOf<typeof AT.FIELD_STEP>): Ga
     const now = Number.isFinite(action.payload?.now) ? action.payload.now : 0;
     const auto = Boolean(action.payload?.auto);
     const layout = getFieldMapLayout(field, mapData);
-    const result = resolveFieldStep(field, layout, action.payload.direction, getFieldEncounterThreshold(state.player, loc));
+    // 3단계 보스 문 — 보일 때만 밟을 수 있는 처리할 일이 된다(문은 저장된 게이지 · 격파 기록에서 나온다).
+    const door = getFieldDoor(state.player, loc, mapData, layout);
+    const result = resolveFieldStep(field, layout, action.payload.direction, getFieldEncounterThreshold(state.player, loc), door);
     const { outcome } = result;
     if (outcome.kind === 'blocked') return state;
 

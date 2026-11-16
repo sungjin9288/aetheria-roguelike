@@ -38,20 +38,22 @@ const newMobilePage = async (browser: Browser, baseURL: string | undefined, view
 };
 
 // 자연 플레이 후반 상태의 모양(두 글자 이름 · 긴 지역 이름 · 6자리 골드)을 격리된 QA 저장소로 불러온다.
+// 오버월드 3단계(2026-11-16)부터 사냥 지역은 모두 지도를 걷는다 — 조작판의 추천 경로 줄 · 탐험 단추가 남은 사냥 지역은 혼돈의 심연뿐이다.
+const LATE_FIELD = '혼돈의 심연';
 const loadLateFieldFixture = async (page: Page) => {
     await page.goto('/?e2e=1&deviceQa=system-settings', { waitUntil: 'domcontentloaded' });
     await expect.poll(() => page.evaluate((key) => Boolean(localStorage.getItem(key)), SETTINGS_KEY), { timeout: 20_000 }).toBe(true);
-    const fixture = await page.evaluate((key) => {
+    const fixture = await page.evaluate(({ key, LATE_FIELD }) => {
         const saved = JSON.parse(localStorage.getItem(key)!);
-        saved.player = { ...saved.player, name: '용사', loc: '어둠의 지하 감옥', gold: 858275 };
+        saved.player = { ...saved.player, name: '용사', loc: LATE_FIELD, gold: 858275 };
         saved.gameState = 'idle';
         saved.enemy = null;
         saved.currentEvent = null;
         return JSON.stringify(saved);
-    }, SETTINGS_KEY);
+    }, { key: SETTINGS_KEY, LATE_FIELD });
     await page.addInitScript(({ key, snapshot }) => localStorage.setItem(key, snapshot), { key: SETTINGS_KEY, snapshot: fixture });
     await page.reload();
-    await expect.poll(() => page.evaluate(() => JSON.parse(window.render_game_to_text?.() || '{}').player?.loc)).toBe('어둠의 지하 감옥');
+    await expect.poll(() => page.evaluate(() => JSON.parse(window.render_game_to_text?.() || '{}').player?.loc)).toBe(LATE_FIELD);
 };
 
 // 줄이 바뀐 자리의 앞뒤가 둘 다 한글이면 낱말 안에서 꺾인 것이다.

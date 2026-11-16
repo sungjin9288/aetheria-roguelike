@@ -1,9 +1,13 @@
 import { BALANCE } from '../data/constants';
+import { DB } from '../data/db';
 import { MSG } from '../data/messages';
+import { planFieldAutoWalk, type FieldAutoWalkPlan, type FieldAutoWalkStopReason } from '../systems/fieldAutoWalk';
+import { getFieldDoor } from '../systems/fieldDoor';
 import { areAllFieldChestsOpened } from '../systems/fieldMapWalk';
 import type { FieldMapLayout, FieldMapState } from '../types/fieldMap';
 import type { Player } from '../types/player';
-import { getAutoExploreHpStopRatio, type AutoExploreStopReason } from './autoExplore';
+import { getAutoExploreHpStopRatio, isAutoExploreUnlocked, type AutoExploreStopReason } from './autoExplore';
+import { getMapAccess } from './mapAccess';
 import { getProtocolDayKey } from './protocolCycle';
 
 /**
@@ -111,4 +115,42 @@ export const getFieldAutoStopText = (
     if (reason === 'manual') return MSG.FIELD_AUTO_STOPPED_MANUAL;
     if (reason === 'hp_low') return MSG.FIELD_AUTO_STOPPED(MSG.FIELD_AUTO_STOP_HP_LOW(Math.round(getAutoExploreHpStopRatio(player) * 100)));
     return MSG.FIELD_AUTO_STOPPED(MSG.FIELD_AUTO_STOP_REASON[reason]);
+};
+
+/*
+ * 2026-11 오버월드 3단계 — 자동 걷기(소유자 결정 2026-11-16 "(가) 자동 걷기, 상자 앞에서 멈춤"). 하루 횟수가 없고 첫 전직 뒤에
+ * 쓴다(연속 탐험 H1과 같은 자격). 걸음은 `planFieldAutoWalk`(순수), 조우는 H1 판정(`getAutoExploreStep`) 그대로다.
+ */
+
+/** 자동 걷기를 쓸 수 있는가 — 연속 탐험(H1)과 같은 첫 전직 조건 */
+export const isFieldAutoWalkUnlocked = (player: Pick<Player, 'job'> | null | undefined): boolean => isAutoExploreUnlocked(player);
+
+/** 지금 지도에서 자동 걷기의 다음 걸음 — 보이는 보스 문과 지금 레벨로 들어갈 수 있는 출구를 목표로 넘긴다. */
+export const planPlayerFieldAutoWalk = (
+    player: Player,
+    field: FieldMapState,
+    layout: FieldMapLayout,
+    acknowledgedChests: readonly number[] = [],
+    seasonActive = false,
+): FieldAutoWalkPlan => {
+    const mapData = DB.MAPS[field.loc];
+    const door = getFieldDoor(player, field.loc, mapData, layout);
+    const level = player.level || 1;
+    const exits = layout.exits
+        .filter((exit) => !getMapAccess(DB.MAPS, field.loc, exit.to, level, seasonActive).reason)
+        .map((exit) => exit.index);
+    return planFieldAutoWalk(field, layout, { door, exits, acknowledgedChests });
+};
+
+/** 자동 걷기가 멈춘 이유 한 줄 — 행동을 권하지 않는다(Wave 88). 조우 판정의 이유는 자동 탐험과 같은 낱말을 쓴다. */
+export const getFieldWalkStopText = (
+    reason: FieldAutoWalkStopReason | AutoExploreStopReason | 'manual' | 'hidden',
+    player: Parameters<typeof getAutoExploreHpStopRatio>[0],
+): string => {
+    if (reason === 'manual') return MSG.FIELD_WALK_STOPPED_MANUAL;
+    if (reason === 'hp_low') return MSG.FIELD_WALK_STOPPED(MSG.FIELD_AUTO_STOP_HP_LOW(Math.round(getAutoExploreHpStopRatio(player) * 100)));
+    if (reason === 'chest' || reason === 'door' || reason === 'exit' || reason === 'stuck') {
+        return MSG.FIELD_WALK_STOPPED(MSG.FIELD_WALK_STOP_REASON[reason]);
+    }
+    return MSG.FIELD_WALK_STOPPED(MSG.FIELD_AUTO_STOP_REASON[reason]);
 };

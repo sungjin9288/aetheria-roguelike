@@ -7,6 +7,7 @@ import type { LootLog } from './CombatEngine.loot.js';
 import { ENEMY_ACTION_LOG_TYPE, ENEMY_HEAVY_LOG_TYPE } from '../data/logBadge.js';
 import { getEnemyDebuffAtkLabel, getEnemyDebuffAtkMult, getPlayerStatusStacks, getStatusStackMult, isEnemyBlindActive, isEnemyTauntActive } from './CombatEngine.status.js';
 import { getEnemyAttackElement, getEquipmentResistMult } from '../utils/equipmentPassives.js';
+import { getChapterBossRule, isRuleEvasionSealed, isRuleResistPierced } from './chapterBossRule.js';
 import {
     getActiveHeavyStatus, getChargeBreakRemaining, getChargeReleaseMult, getLongFightEnrageBonus, getPhase2Threshold, getPhase3Threshold, getPhaseStatuses,
     isBreathAction, isBreathNext, isChargeBrokenByDamage, isChargeTurn, isChargeTurnNext, isResistPierced,
@@ -94,7 +95,7 @@ const applyIncomingDamageMods = (
         // 2026-10 Wave 57: 원소 저항 장비 — 적 공격의 원소는 적 자신의 원소다(소유자 결정). 그 원소를 막는 장비가 있으면
         //   받는 피해 × BALANCE.EQUIP_ELEMENT_RESIST_MULT(50% 감소). 이전에는 장비 설명("불에 강한", "모든 원소를 저항")만 있었다.
         const attackElement = getEnemyAttackElement(enemy);
-        const elementResistMult = isResistPierced(enemy) ? 1 : getEquipmentResistMult(stats.elementResists, attackElement);
+        const elementResistMult = isResistPierced(enemy) || isRuleResistPierced(enemy) ? 1 : getEquipmentResistMult(stats.elementResists, attackElement);
         if (attackElement && elementResistMult < 1) {
             const before = out;
             out = Math.max(1, Math.floor(out * elementResistMult));
@@ -133,14 +134,15 @@ const applyBossStatus = (
     status: StatusId,
     logs: LootLog[],
     appliedText: (label: string) => string,
-    { resistChance, maxStacks, random }: { resistChance: number; maxStacks?: number; random: () => number },
+    { resistChance, maxStacks, random, rulePierce = false }: { resistChance: number; maxStacks?: number; random: () => number; rulePierce?: boolean },
 ): Player => {
     const label = MSG.DOT_LABELS[status] || status;
     const list: StatusId[] = Array.isArray(player.status) ? player.status : [];
     const present = list.includes(status);
     const stackable = typeof maxStacks === 'number' && maxStacks > 1;
     if (present && (!stackable || status === 'freeze')) return player;
-    if (resistChance > 0 && random() < resistChance) {
+    // 2026-11 B5 '빙하의 숨'(`rulePierce`): 저항 판정 난수는 그대로 쓰고 결과만 버린다(규칙 유무와 난수 소비가 같다).
+    if (resistChance > 0 && random() < resistChance && !rulePierce) {
         logs.push({ type: 'success', text: MSG.ANCIENT_SEAL_RESIST });
         return player;
     }
@@ -271,12 +273,19 @@ export const enemyAIMethods: EnemyAIMixin & ThisType<EnemyAIMixinContext> = {
         const cloakPending = Boolean(updatedPlayer.combatFlags?.cloakEvadePending)
             && relics.some((relic) => relic.effect === 'first_turn_evade');
         const stealthActive = (updatedPlayer.combatFlags?.stealthHits ?? 0) > 0 || Boolean(updatedPlayer.nextHitEvaded) || cloakPending;
+        // 2026-11 B5: 장 보스 규칙 '폭풍의 눈' — 장비 회피 · 그림자 망토 · 은신이 피하지 못한다. 회피 판정 난수는 그대로 쓰고
+        //   결과만 버린다(규칙 유무와 난수 소비가 같다). 은신 · 망토의 남은 횟수도 그대로 쓴다.
+        const evasionSealed = isRuleEvasionSealed(updatedEnemy);
+        const evadeSealedLog = () => ({ type: 'info', text: MSG.CHAPTER_RULE_EVADE_SEALED(getChapterBossRule(updatedEnemy)?.name ?? '') });
         // 충전 차례 · 끊긴 강타는 공격이 아니라 장비 회피를 굴리지 않는다(H5).
         if (!stealthActive && !chargeTurn && !chargeBroken && armorEvasion > 0 && random() < armorEvasion) {
-            return {
-                updatedPlayer, updatedEnemy, damage: 0, isDead: false,
-                logs: [...logs, { type: 'success', text: MSG.ARMOR_EVADE_PROC(enemy.name) }]
-            };
+            if (!evasionSealed) {
+                return {
+                    updatedPlayer, updatedEnemy, damage: 0, isDead: false,
+                    logs: [...logs, { type: 'success', text: MSG.ARMOR_EVADE_PROC(enemy.name) }]
+                };
+            }
+            logs.push(evadeSealedLog());
         }
 
         // ── Phase 전환 체크 (보스 + 엘리트 통합) ───────────────────
@@ -293,7 +302,7 @@ export const enemyAIMethods: EnemyAIMixin & ThisType<EnemyAIMixinContext> = {
                         status,
                         logs,
                         (label) => MSG.ENEMY_PHASE_STATUS_APPLIED(phaseNo, label),
-                        { resistChance: phase.pierceResist ? 0 : relicResist, random },
+                        { resistChance: phase.pierceResist ? 0 : relicResist, random, rulePierce: isRuleResistPierced(updatedEnemy) },
                     );
                 });
             };
@@ -442,6 +451,9 @@ export const enemyAIMethods: EnemyAIMixin & ThisType<EnemyAIMixinContext> = {
         // ── 그림자 망토 (Wave 56) — 이번 전투의 첫 실제 공격을 반드시 피한다. 은신보다 먼저 쓴다(은신 횟수를 아낀다).
         if (cloakPending) {
             updatedPlayer = { ...updatedPlayer, combatFlags: { ...(updatedPlayer.combatFlags || {}), cloakEvadePending: false } };
+            if (evasionSealed) logs.push(evadeSealedLog());
+        }
+        if (cloakPending && !evasionSealed) {
             return {
                 updatedPlayer, updatedEnemy, damage: 0, isDead: false,
                 logs: [...logs, { type: 'success', text: MSG.CLOAK_EVADE_PROC(enemy.name) }]
@@ -452,34 +464,46 @@ export const enemyAIMethods: EnemyAIMixin & ThisType<EnemyAIMixinContext> = {
         // "적 공격 N번"은 실제 공격만 센다 — 기절 · 방어 자세 턴은 은신을 쓰지 않는다(이전에는 그 턴에도 회피가
         //   소진됐다). 첫 공격은 반드시 피하고, 그 뒤는 `stealthChance` 확률이다(1이면 난수를 쓰지 않는다).
         const playerFlags = updatedPlayer.combatFlags || {};
-        if ((playerFlags.stealthHits ?? 0) > 0) {
+        //   B5: 망토가 막힌 공격은 은신을 함께 쓰지 않는다(규칙이 없으면 망토가 이 공격을 받았다).
+        if (!cloakPending && (playerFlags.stealthHits ?? 0) > 0) {
             const chance = playerFlags.stealthChance ?? 1;
             const evaded = playerFlags.stealthFirstPending !== false || chance >= 1 || random() < chance;
             updatedPlayer = {
                 ...updatedPlayer,
                 combatFlags: { ...playerFlags, stealthHits: (playerFlags.stealthHits ?? 0) - 1, stealthFirstPending: false },
             };
-            if (evaded) {
+            if (evaded && !evasionSealed) {
                 return {
                     updatedPlayer, updatedEnemy, damage: 0, isDead: false,
                     logs: [...logs, { type: 'success', text: MSG.STEALTH_EVADE_PROC(enemy.name) }]
                 };
             }
-            logs.push({ type: 'warning', text: MSG.STEALTH_EVADE_MISS(enemy.name) });
-            // 은신이 들킨 공격에도 장비 회피는 그대로 기회가 있다(은신 → 장비 순서).
-            if (armorEvasion > 0 && random() < armorEvasion) {
-                return {
-                    updatedPlayer, updatedEnemy, damage: 0, isDead: false,
-                    logs: [...logs, { type: 'success', text: MSG.ARMOR_EVADE_PROC(enemy.name) }]
-                };
+            if (evaded) {
+                logs.push(evadeSealedLog());
+            } else {
+                logs.push({ type: 'warning', text: MSG.STEALTH_EVADE_MISS(enemy.name) });
+                // 은신이 들킨 공격에도 장비 회피는 그대로 기회가 있다(은신 → 장비 순서).
+                if (armorEvasion > 0 && random() < armorEvasion) {
+                    if (!evasionSealed) {
+                        return {
+                            updatedPlayer, updatedEnemy, damage: 0, isDead: false,
+                            logs: [...logs, { type: 'success', text: MSG.ARMOR_EVADE_PROC(enemy.name) }]
+                        };
+                    }
+                    logs.push(evadeSealedLog());
+                }
             }
-        } else if (updatedPlayer.nextHitEvaded) {
+        } else if (!cloakPending && updatedPlayer.nextHitEvaded) {
             // 이전 저장(Wave 53 전)의 1회 회피 표시 — 새로 세우는 곳은 없다.
             updatedPlayer = { ...updatedPlayer, nextHitEvaded: false };
-            return {
-                updatedPlayer, updatedEnemy, damage: 0, isDead: false,
-                logs: [...logs, { type: 'success', text: MSG.STEALTH_EVADE_PROC(enemy.name) }]
-            };
+            if (evasionSealed) {
+                logs.push(evadeSealedLog());
+            } else {
+                return {
+                    updatedPlayer, updatedEnemy, damage: 0, isDead: false,
+                    logs: [...logs, { type: 'success', text: MSG.STEALTH_EVADE_PROC(enemy.name) }]
+                };
+            }
         }
 
         // 2026-10 Wave 55: 실명은 명중률 하락이다 — 이번 공격이 BLIND_ENEMY_MISS_CHANCE 확률로 빗나간다(틱 전 상태로 판정).
@@ -598,7 +622,7 @@ export const enemyAIMethods: EnemyAIMixin & ThisType<EnemyAIMixinContext> = {
             //   과하므로 BALANCE.MONSTER_STATUS_ON_HIT_CHANCE로 발동 확률을 게이팅한다.
             //   저항 유물(status_resist)은 발동 이후 단계 그대로.
             if (!currentStatus.includes(hitStatus) && random() < BALANCE.MONSTER_STATUS_ON_HIT_CHANCE) {
-                if (random() >= resistChance) {
+                if (random() >= resistChance || isRuleResistPierced(updatedEnemy)) {
                     const statusLabels = MSG.DOT_LABELS;
                     protectedResult.updatedPlayer = {
                         ...protectedResult.updatedPlayer,
@@ -625,7 +649,7 @@ export const enemyAIMethods: EnemyAIMixin & ThisType<EnemyAIMixinContext> = {
                 heavyStatus.status,
                 logs,
                 (label) => MSG.ENEMY_HEAVY_STATUS_ON_HIT(updatedEnemy.name, label),
-                { resistChance: relicResistChance, maxStacks: heavyStatus.maxStacks, random },
+                { resistChance: relicResistChance, maxStacks: heavyStatus.maxStacks, random, rulePierce: isRuleResistPierced(updatedEnemy) },
             );
         }
         const breathStatus = breathTurn ? mechanics?.breath?.status : undefined;
@@ -635,7 +659,7 @@ export const enemyAIMethods: EnemyAIMixin & ThisType<EnemyAIMixinContext> = {
                 breathStatus,
                 logs,
                 (label) => MSG.ENEMY_HEAVY_STATUS_ON_HIT(updatedEnemy.name, label),
-                { resistChance: relicResistChance, random },
+                { resistChance: relicResistChance, random, rulePierce: isRuleResistPierced(updatedEnemy) },
             );
         }
 
@@ -688,7 +712,7 @@ export const enemyAIMethods: EnemyAIMixin & ThisType<EnemyAIMixinContext> = {
 
         // Wave 50: 도주 실패 피해도 적에게 받는 피해다 — 조합의 대가(받는 피해 증가)를 같이 받는다.
         //   Wave 57: 같은 이유로 원소 저항 장비도 적용한다.
-        const resistMult = isResistPierced(enemy) ? 1 : getEquipmentResistMult(stats.elementResists, getEnemyAttackElement(enemy));
+        const resistMult = isResistPierced(enemy) || isRuleResistPierced(enemy) ? 1 : getEquipmentResistMult(stats.elementResists, getEnemyAttackElement(enemy));
         const enemyDmg = Math.max(1, Math.floor(Math.max(1, (enemy.atk ?? 0) - stats.def) * (stats.damageTakenMult ?? 1) * resistMult));
         return {
             success: false,

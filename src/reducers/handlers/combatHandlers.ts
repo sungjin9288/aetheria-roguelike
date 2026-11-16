@@ -381,9 +381,14 @@ export const makeCombatActionMap = (initialPlayer: Player) => ({
             now,
             rng: random,
         });
-        if (result.kind === 'rejected') return state;
-        const logs = [...result.logs];
         const nextTurn = (state.combatTurn || 0) + 1;
+        // 2026-11 B5: 장 보스 규칙이 막은 소모품은 기록 줄을 남긴다(RESOLVE_COMBAT_ACTION의 거부와 같은 정산 — 소모 · 적 행동 없음).
+        if (result.kind === 'rejected') {
+            return result.logs.length > 0
+                ? settleNonVictory(state, { result, stories: [], seed, now, nextTurn })
+                : state;
+        }
+        const logs = [...result.logs];
         if (result.kind === 'victory') {
             const settled = settleVictory(state, {
                 player: result.player,

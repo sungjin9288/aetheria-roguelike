@@ -10,6 +10,7 @@ import { tickAfterAction } from './combatTurnTick';
 import type { CombatTurnSignals, Monster, Player } from '../types/index.js';
 import type { GraveEntry } from '../utils/graveUtils.js';
 import { recordThreatEscape } from '../utils/judgmentLedger';
+import { getChapterRuleBlockedLog, isRuleEscapeSealed } from './chapterBossRule';
 
 export type CombatActionKind = 'attack' | 'skill' | 'escape';
 
@@ -120,6 +121,17 @@ export const resolveCombatActionTurn = ({
     // 실제 반환 타입이 드러나면서 이 호출부의 느슨한 any 전파가 끝났다).
     const stats = calculateFullStats(player)!;
 
+    // 2026-11 B5: 장 보스 규칙 '마왕의 영역' — 도주를 굴리지 않고 거부한다(차례 · 적 행동 없음, 난수 없음).
+    if (kind === 'escape' && isRuleEscapeSealed(enemy)) {
+        return {
+            kind: 'rejected',
+            player,
+            enemy,
+            logs: [{ type: 'warning', text: getChapterRuleBlockedLog(enemy) ?? MSG.ESCAPE_FAIL }],
+            visualEffect: null,
+            stories: [],
+        };
+    }
     if (kind === 'escape') {
         const escapeResult = CombatEngine.attemptEscape(enemy, stats, random);
         if (escapeResult.success) {

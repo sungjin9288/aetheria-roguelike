@@ -111,18 +111,28 @@ for (const size of SIZES) {
             await expect(page.getByTestId('field-auto-stop')).toBeVisible({ timeout: 5_000 });
 
             // 자동 탐험은 조우 전투(한 번에 쓰러지는 적)도 대신 싸운다. 멈추면(판단할 일) 정리하고 이어 간다.
-            const deadline = Date.now() + 90_000;
-            for (;;) {
+            // 끝났는지는 정지 단추를 먼저 보고 상태를 나중에 읽어 판정한다 — 상태를 먼저 읽으면 그 사이에 자동 탐험이 끝났을 때
+            //   '멈췄다'로 읽고 끝난 지도에서 새 자동 탐험(횟수 1)을 시작한다(부하가 걸린 전체 실행에서 실제로 일어났다).
+            const isFinished = async () => {
+                const running = await page.getByTestId('field-auto-stop').isVisible();
                 const state = await readState(page);
                 const layout = state.player.fieldLayout;
-                const done = state.player.fieldMap?.openedChests.length === layout?.chests.length
-                    && state.player.fieldMap?.pos === layout?.entrance
-                    && !(await page.getByTestId('field-auto-stop').isVisible());
+                return {
+                    running,
+                    done: !running
+                        && state.player.fieldMap?.openedChests.length === layout?.chests.length
+                        && state.player.fieldMap?.pos === layout?.entrance,
+                };
+            };
+            const deadline = Date.now() + 90_000;
+            for (;;) {
+                const { running, done } = await isFinished();
                 if (done) break;
                 if (Date.now() > deadline) throw new Error('자동 탐험이 끝나지 않았다');
-                if (!(await page.getByTestId('field-auto-stop').isVisible())) {
+                if (!running) {
                     // 자동 탐험이 멈췄다(이벤트 · 결과 카드 · 판단할 전투) — 무엇이 끼어들었든 정리하고 이어 간다.
                     await settleFieldInterruption(page);
+                    if ((await isFinished()).done) break;
                     const start = page.getByTestId('field-auto-start');
                     if ((await start.count()) > 0 && await start.isEnabled()) await start.click();
                 }

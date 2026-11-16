@@ -2,6 +2,7 @@ import { BALANCE } from '../data/constants.js';
 import { MSG } from '../data/messages.js';
 import type { EnemyDotId, Monster, Player, RelicDotScope, StatusId } from '../types/index.js';
 import type { LootLog } from './CombatEngine.loot.js';
+import { getChapterBossRule, isRuleDotSealed } from './chapterBossRule.js';
 
 const isActive = (turns: number | undefined) => (turns ?? 0) > 0;
 
@@ -142,8 +143,13 @@ export const statusMethods = {
     tickEnemyStatus(enemy: Monster, logs: LootLog[], curseAmpMult: number, synergyDotMult: number, relicDotMults?: Partial<Record<RelicDotScope, number>>) {
         let updated = { ...enemy };
 
+        // 2026-11 B5: 장 보스 규칙 '망자의 봉인' — 독 · 화상 · 출혈 틱이 피해를 주지 않는다(지속 턴은 그대로 준다, 난수 없음).
+        const dotSealed = isRuleDotSealed(updated);
+        if (dotSealed && (updated.dots || []).length > 0) {
+            logs.push({ type: 'info', text: MSG.CHAPTER_RULE_DOT_SEALED(getChapterBossRule(updated)?.name ?? '') });
+        }
         // DoT (burn / poison / bleed) — 시너지 죽음의 예언자 dotMult 반영
-        (updated.dots || []).forEach((dot) => {
+        (dotSealed ? [] : updated.dots || []).forEach((dot) => {
             // 2026-10 Wave 55: 기술이 실은 지속 피해 배율(심층 출혈 · 맹독 · 독 보강 · 역병의 안개 "+50%").
             const dotMult = updated.dotMults?.[dot as EnemyDotId] ?? 1;
             const relicMult = relicDotMults?.[dot as RelicDotScope] ?? 1;

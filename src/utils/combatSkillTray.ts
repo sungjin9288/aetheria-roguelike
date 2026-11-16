@@ -29,7 +29,7 @@ export interface CombatSkillTrayEntry {
 
 /** 칸의 약점 표시가 보는 상대 — 전투 화면의 적과 실효 능력치(무기 원소). */
 interface CombatSkillTrayTarget {
-    enemy?: Pick<Monster, 'weakness'> | null;
+    enemy?: Pick<Monster, 'weakness' | 'name' | 'baseName' | 'isBoss'> | null;
     stats?: Pick<FullStats, 'elem'> | null;
 }
 
@@ -53,7 +53,7 @@ export const getCombatSkillTray = (player: Player, target: CombatSkillTrayTarget
         if (!name || seen.has(name)) return [];
         seen.add(name);
         const cooldown = Math.max(0, Number(player.skillLoadout?.cooldowns?.[name]) || 0);
-        const readiness = getCombatSkillReadiness({ player, selectedSkill: skill, skillCooldown: cooldown });
+        const readiness = getCombatSkillReadiness({ player, selectedSkill: skill, skillCooldown: cooldown, enemy: target.enemy as Monster | null | undefined });
         return [{
             name,
             selected: name === selectedName,

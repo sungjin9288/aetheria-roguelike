@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Sword, Zap, ArrowRight, Sparkles, Backpack, TriangleAlert, Skull, ChevronsDown, Flame } from 'lucide-react';
+import { Sword, Zap, ArrowRight, Sparkles, Backpack, TriangleAlert, Skull, ChevronsDown, Flame, ScrollText } from 'lucide-react';
 import { motion as Motion } from 'framer-motion';
 import { buildCombatView, type CombatSignalTone } from '../../utils/combatView';
 import CombatSkillTray from '../combat/CombatSkillTray';
@@ -146,9 +146,10 @@ const CombatPanel = ({ player, actions, enemy, stats, isAiThinking, mobile, dama
     skillReadiness,
     skillTray,
     combatConsumables,
+    chapterRuleChip,
   } = combatView;
   const enemyDebuffs = enemy ? getEnemyDebuffs(enemy) : [];
-  const hasSignals = mobileCombatSignals.length > 0 || enemyDebuffs.length > 0 || Boolean(primarySignatureDrop);
+  const hasSignals = mobileCombatSignals.length > 0 || enemyDebuffs.length > 0 || Boolean(primarySignatureDrop) || Boolean(chapterRuleChip);
 
   const handleAction = (key: CombatActionKey) => {
     if (key === 'item') {
@@ -207,6 +208,16 @@ const CombatPanel = ({ player, actions, enemy, stats, isAiThinking, mobile, dama
               </Chip>
             );
           })}
+          {chapterRuleChip && (
+            <Chip
+              data-testid="combat-chapter-rule-chip"
+              tone="threat"
+              icon={<ScrollText size={13} strokeWidth={2.2} />}
+              className="ae-combat-signal"
+            >
+              {chapterRuleChip}
+            </Chip>
+          )}
           {enemyDebuffs.length > 0 && (
             <Chip
               data-testid="combat-enemy-debuff-chip"

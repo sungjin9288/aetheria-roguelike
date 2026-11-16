@@ -17,6 +17,7 @@ export type FieldStepOutcome =
     | { kind: 'moved' }
     | { kind: 'chest'; chestId: number }
     | { kind: 'exit'; to: string }
+    | { kind: 'door' }
     | { kind: 'encounter' };
 
 export interface FieldStepResult {
@@ -32,8 +33,8 @@ const DELTA: Record<FieldDirection, [number, number]> = {
 };
 
 /**
- * 지도를 쓰는 지역 — 시제품 목록 안의 사냥 지역(혼돈의 심연처럼 층이 있는 지역은 대상 아님). 목록은 부를 때마다 읽는다 —
- * 자연 플레이 드라이버의 3단계 전망 측정(`field: 'all'`)이 측정하는 동안 목록을 모든 사냥 지역으로 바꾼다.
+ * 지도를 쓰는 지역 — 목록(`BALANCE.FIELD_MAP_REGIONS`, 3단계부터 사냥 지역 전부) 안의 사냥 지역(혼돈의 심연처럼 층이 있는
+ * 지역은 대상 아님). 목록은 부를 때마다 읽는다 — 시험이 지도가 아닌 지역의 탐험 경로를 보려고 목록을 비울 수 있다.
  */
 export const isFieldMapRegion = (loc: string | null | undefined, mapData: GameMap | null | undefined): boolean => (
     typeof loc === 'string'
@@ -108,12 +109,16 @@ export const getFieldNeighbor = (layout: FieldMapLayout, index: number, directio
     return layout.tiles[next] === '#' ? null : next;
 };
 
-/** 한 걸음. 처리할 일(`pending`)이 남아 있으면 걷지 않는다 — 연타해도 조우 · 출구가 둘로 갈라지지 않는다. */
+/**
+ * 한 걸음. 처리할 일(`pending`)이 남아 있으면 걷지 않는다 — 연타해도 조우 · 출구가 둘로 갈라지지 않는다.
+ * `door`는 지금 보이는 보스 문의 칸(3단계, `systems/fieldDoor.ts`) — 밟으면 위험을 더하지 않고 문을 처리할 일로 남긴다.
+ */
 export const resolveFieldStep = (
     field: FieldMapState,
     layout: FieldMapLayout,
     direction: FieldDirection,
     threshold: number,
+    door: number | null = null,
 ): FieldStepResult => {
     const blocked = { state: field, outcome: { kind: 'blocked' as const } };
     if (field.pending) return blocked;
@@ -125,6 +130,7 @@ export const resolveFieldStep = (
 
     const exit = layout.exits.find((entry) => entry.index === next);
     if (exit) return { state: { ...moved, pending: { kind: 'exit', to: exit.to } }, outcome: { kind: 'exit', to: exit.to } };
+    if (door !== null && next === door) return { state: { ...moved, pending: { kind: 'door' } }, outcome: { kind: 'door' } };
 
     const chest = layout.chests.find((entry) => entry.index === next);
     if (chest && !field.openedChests.includes(chest.id)) {
@@ -174,10 +180,11 @@ const DIRECTIONS: FieldDirection[] = ['up', 'right', 'down', 'left'];
 
 /**
  * 자동 탐험의 다음 걸음(설계 §7) — 열지 않은 상자 중 가장 가까운 곳, 다 열었으면 입구로. 입구에 닿았고 상자가 없으면 null(끝).
- * 출구 칸은 지나가지 않는다(밟으면 지역을 떠난다).
+ * 출구 칸은 지나가지 않는다(밟으면 지역을 떠난다). 보스 문(3단계)도 지나가지 않는다 — 도전은 플레이어가 고른다.
  */
-export const planFieldAutoStep = (state: FieldMapState, layout: FieldMapLayout): FieldDirection | null => {
+export const planFieldAutoStep = (state: FieldMapState, layout: FieldMapLayout, door: number | null = null): FieldDirection | null => {
     const exits = new Set(layout.exits.map((exit) => exit.index));
+    if (door !== null) exits.add(door);
     const targets = new Set(
         layout.chests.filter((chest) => !state.openedChests.includes(chest.id)).map((chest) => chest.index),
     );

@@ -4,6 +4,7 @@ import { DB } from '../data/db.js';
 import type { GameMap, Player } from '../types/index.js';
 import { getOpenKillQuests } from './questProgress.js';
 import type { EnemyThreat } from './enemyThreat.js';
+import { getChapterRuleForBossName, getChapterRuleLine } from '../systems/chapterBossRule.js';
 
 /**
  * bossGauge.ts — 원정 보스 접근 게이지 (2026-07 감사 축4 — 모바일 세션 정합).
@@ -132,6 +133,8 @@ export interface BossGaugeChoiceOutcome {
 
 export interface BossGaugeEvent {
     isBossGaugeChallenge: true;
+    /** 2026-11 오버월드 3단계 — 지도의 보스 문이 연 카드(탐험이 아니다 — 물러나도 이어지는 탐험 롤이 없고 문이 남는다) */
+    fromFieldDoor?: true;
     bossName: string;
     desc: string;
     choices: string[];
@@ -142,16 +145,24 @@ export interface BossGaugeEvent {
  * 게이지 만충 시 제시할 "도전 / 회피" 선택 카드. campfireEvent.ts/scoutEvents.ts와
  * 동일하게 순수 함수 — 입력 → 새 이벤트 객체.
  */
-export const buildBossChallengeEvent = (bossName: string, threat?: EnemyThreat | null): BossGaugeEvent => ({
+export const buildBossChallengeEvent = (
+    bossName: string,
+    threat?: EnemyThreat | null,
+    options: { door?: boolean } = {},
+): BossGaugeEvent => ({
     isBossGaugeChallenge: true,
+    ...(options.door ? { fromFieldDoor: true as const } : {}),
     bossName,
     // Wave 88: 도전 · 회피를 고르는 카드라 위협을 카드 문구에 싣는다(이벤트 화면에는 기록 창이 없다).
-    desc: threat
-        ? `${MSG.BOSS_GAUGE_FULL_DESC(bossName)} ${MSG.BOSS_THREAT(threat.hit, threat.maxHp, threat.pct, threat.hits)}`
-        : MSG.BOSS_GAUGE_FULL_DESC(bossName),
-    choices: [MSG.BOSS_GAUGE_CHALLENGE_CHOICE, MSG.BOSS_GAUGE_AVOID_CHOICE],
+    //   2026-11 B5: 장 보스면 그 전투의 규칙도 카드에 싣는다.
+    desc: [
+        MSG.BOSS_GAUGE_FULL_DESC(bossName),
+        threat ? MSG.BOSS_THREAT(threat.hit, threat.maxHp, threat.pct, threat.hits) : null,
+        getChapterRuleLine(getChapterRuleForBossName(bossName)),
+    ].filter(Boolean).join(' '),
+    choices: [MSG.BOSS_GAUGE_CHALLENGE_CHOICE, options.door ? MSG.FIELD_DOOR_AVOID_CHOICE : MSG.BOSS_GAUGE_AVOID_CHOICE],
     outcomes: [
         { choiceIndex: 0, gaugeEffect: 'challenge', log: MSG.BOSS_GAUGE_CHALLENGE_LOG(bossName) },
-        { choiceIndex: 1, gaugeEffect: 'avoid', log: MSG.BOSS_GAUGE_AVOID_LOG },
+        { choiceIndex: 1, gaugeEffect: 'avoid', log: options.door ? MSG.FIELD_DOOR_AVOID_LOG : MSG.BOSS_GAUGE_AVOID_LOG },
     ],
 });

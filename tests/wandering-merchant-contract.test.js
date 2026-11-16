@@ -34,6 +34,7 @@ import {
 } from '../src/utils/wanderingMerchant.js';
 import ShopPanel from '../src/components/ShopPanel.tsx';
 import { renderStatic } from './helpers/render.ts';
+import { setFieldMapRegions } from './helpers/fieldRegions.mjs';
 
 /**
  * 2026-10 Wave 75 — 소유자 결정 "가방은 현행 유지, 대신 낮은 확률의 이벤트로 행상인을 만나는 걸로. 물품은 항상 바뀌지만 희귀한
@@ -270,14 +271,20 @@ test('[탐험] 행상인을 만나는 탐험은 만남 카드를 띄우고 이�
     assert.equal(after.currentEvent.merchantStock.count, after.player.merchantVisit.stock.length);
 });
 
-test('[우선순위] 구역 보스 도전 카드가 만남보다 먼저다', async () => {
+test('[우선순위] 구역 보스 도전 카드가 만남보다 먼저다 — 지도가 아닌 지역(지도 지역은 카드 대신 보스 문)', async () => {
     const loc = '기계 폐도';
     const explores = findExplores(loc, true, 100);
     const state = baseState(loc, explores);
     const full = { ...state, player: { ...state.player, stats: { ...state.player.stats, bossGauge: { [loc]: 1 } } } };
-    const after = await explore(full, counting());
+    const restore = setFieldMapRegions([]);
+    let after;
+    try { after = await explore(full, counting()); } finally { restore(); }
     assert.equal(after.currentEvent?.isBossGaugeChallenge, true);
     assert.equal(after.player.merchantVisit, undefined);
+    // 지도 지역(오버월드 3단계)에서는 탐험이 카드를 띄우지 않는다 — 같은 탐험은 행상인을 만난다.
+    const onField = await explore(full, counting());
+    assert.notEqual(onField.currentEvent?.isBossGaugeChallenge, true);
+    assert.equal(onField.currentEvent?.isWanderingMerchant, true);
 });
 
 // ── ⑤ 사고팔기 ───────────────────────────────────────────────────────────────────
