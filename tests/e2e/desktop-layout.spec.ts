@@ -177,3 +177,58 @@ for (const viewport of VIEWPORTS) {
         });
     });
 }
+
+/**
+ * 지역 지도 걷기의 데스크톱 배치 — 지도는 가운데 칸의 남은 높이를 쓰고, 방향 패드 · 도크 · 자동 탐험은 화면 안이다.
+ * 지도가 `min(52vh, 460px)` 고정 높이이던 동안 1024×768 · 1440×900에서 조작판이 가운데 칸 아래로 밀려 잘렸다
+ * (가운데 칸은 넘침을 숨겨 스크롤로도 닿지 않았다 — 걷기는 방향 키로만 됐다).
+ */
+const FIELD_VIEWPORTS = [
+    { width: 1024, height: 768 },
+    { width: 1280, height: 800 },
+    { width: 1440, height: 900 },
+] as const;
+const FIELD_CONTROLS = ['field-pad-up', 'field-pad-down', 'field-pad-left', 'field-pad-right', 'control-move', 'control-map-open', 'control-open-bag', 'field-auto-start'] as const;
+// 지도 칸의 최소 높이(.ae-field-map-slot) — 남은 높이가 이보다 작아지면 칸이 스크롤된다.
+const FIELD_MAP_MIN_HEIGHT = 168;
+
+for (const viewport of FIELD_VIEWPORTS) {
+    test.describe(`데스크톱 지도 ${viewport.width}x${viewport.height}`, () => {
+        test.use({
+            userAgent: devices['Desktop Chrome'].userAgent,
+            deviceScaleFactor: 1,
+            viewport: { ...viewport },
+            isMobile: false,
+            hasTouch: false,
+        });
+
+        test('지도 · 방향 패드 · 도크 · 자동 탐험이 화면 안에 있고 가운데 칸이 잘리지 않는다', async ({ page }) => {
+            await startE2ERun(page);
+            const seeded = await page.evaluate(() => window.__AETHERIA_TEST_API__?.seedFieldMapScenario?.('cleared'));
+            expect(seeded).toBe(true);
+
+            const stage = page.getByTestId('desktop-stage-column');
+            const map = stage.getByTestId('field-map');
+            await expect(map).toBeVisible({ timeout: 8_000 });
+            for (const id of FIELD_CONTROLS) {
+                await expect(stage.getByTestId(id), id).toBeInViewport({ ratio: 1 });
+            }
+            const mapBox = (await map.boundingBox())!;
+            expect(mapBox.height, '지도 높이').toBeGreaterThanOrEqual(FIELD_MAP_MIN_HEIGHT);
+            const overflow = await stage.evaluate((element) => element.scrollHeight - element.clientHeight);
+            expect(overflow, '가운데 칸 넘침 없음').toBeLessThanOrEqual(1);
+            await expectThreeColumnsVisible(page);
+            await expectNoHorizontalOverflow(page);
+            await expectReadableAndTouchable(page.getByTestId('desktop-game-layout'));
+
+            // 마우스로 걷는다 — 방향 패드를 누르면 지도 위치가 바뀐다(막힌 방향은 건너뛴다). 새 지도는 위험 0이라 한 걸음에 조우가 없다.
+            const before = await map.getAttribute('data-field-pos');
+            for (const direction of ['up', 'left', 'right', 'down']) {
+                await stage.getByTestId(`field-pad-${direction}`).click();
+                await page.waitForTimeout(250);
+                if ((await map.getAttribute('data-field-pos')) !== before) break;
+            }
+            await expect(map).not.toHaveAttribute('data-field-pos', before!);
+        });
+    });
+}
