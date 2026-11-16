@@ -51,6 +51,10 @@ import { getChargeBreakDamage, getChargeDamageTaken, isChargeBrokenByDamage } fr
 import { estimateEnemyNextHit } from '../../src/utils/enemyThreat.ts';
 import { getBehaviorCombo, getChargeBreakMult, getCrossRhythmStrike, getFinisherStrike, getThirdBeat, isPotionSkillReady, isPursuitCrit } from '../../src/systems/relicBehaviorCombos.ts';
 import { getAutoExploreStep } from '../../src/utils/autoExplore.ts';
+import { areAllFieldChestsOpened, getFieldMapLayout, getFieldNeighbor, isFieldMapRegion, planFieldAutoStep } from '../../src/systems/fieldMapWalk.ts';
+import { getFieldChestReward } from '../../src/systems/fieldChest.ts';
+import { getFieldAutoRunsUsed, isFieldAutoResumable } from '../../src/utils/fieldAuto.ts';
+import { getMapAccess } from '../../src/utils/mapAccess.ts';
 
 // v2 (Wave 119): 퇴마 · 회복 기술을 쓴다 — v1은 위력(`mult`) 있는 기술만 써서 성직자가 회복도 퇴마도 하지 않았다(원장 §126).
 // v3 (Wave 128): 받은 이야기 임무 — 본편 장과 곁가지 이야기를 여는 임무 — 를 받은 순서대로 하러 간다. v2는 본편 장의 목표 지역만
@@ -186,6 +190,17 @@ const installClock = (clock) => {
  *   `tidy`는 `on`에 더해 상점에서 소모품도 판다 — 종류마다 `TIDY_KEEP_CONSUMABLES`만 남기고, 나중에 낄 장비는 같은 이름을 한 벌만
  *   남긴다(`on`은 소모품을 팔지 않아 Lv21 이후
  *   가방이 물약 · 해독제로 차 한 행동 승리의 92%가 가방 가득으로 접히지 않았다, 원장 §172.7).
+ * @param {'off'|'forest'|'all'} [options.field] 지역 지도 걷기(오버월드 2단계 측정, 2026-11) — `off`(기본, v3 그대로)는 지도 지역에서도
+ *   `explore()`를 바로 부른다(터미널 입력 표면 — 조우 n번 = 탐험 n번이라 결과열이 같다). `forest`는 지도 지역(`BALANCE.FIELD_MAP_REGIONS`,
+ *   지금은 고요한 숲)에서 실제 걷기 전이(`AT.FIELD_STEP`)로 걷는다: 열지 않은 상자를 가까운 순서로 돌고, 다 열면 들어갈 수 있는 가장
+ *   가까운 출구로 나가 다음 행동에 되돌아온다(방문마다 새 지도 — 상자 수입의 상한 쪽 정책, 설계 §9). 미믹은 기존 전투 정책으로 싸운다.
+ *   `all`은 3단계 전망이다 — 측정하는 동안 지도 지역 목록을 모든 사냥 지역으로 바꾸고 끝나면 되돌린다. 걸음은 행동이 아니다(가짜 시계 ·
+ *   행동 수 그대로 — 걸음 수만 회차 기록 `field`에 남기고 걷는 시간은 요약기가 환산한다). 출구로 나간 뒤 되돌아오는 이동은 행동이다.
+ *   옵션이라 `DRIVER_VERSION`은 그대로다.
+ * @param {'off'|'on'|'unlimited'} [options.fieldAuto] 지도 자동 탐험(설계 §7) — `on`은 클리어한 지역의 새 지도에서 하루 횟수가 남아 있으면 켜 둔
+ *   사람이다: 자동 경로(`planFieldAutoStep`)로 걷고, 조우는 연속 탐험과 같은 판정(`getAutoExploreStep`)이 일반 공격 · 고른 기술을 내면
+ *   그것을 쓴다. 멈추면 손으로 처리하고, 판정이 다시 탐험이면 같은 지도에서 이어 간다(횟수를 쓰지 않는다). `field`가 `off`면 쓸 수 없다.
+ *   가짜 시계로 1회차가 하루 남짓이라 `on`은 회차당 몇 번뿐이다. `unlimited`는 측정 전용으로 하루 횟수를 지운다(횟수 결정 — 설계 §11-1).
  * @param {(prev: object, action: object, next: object) => void} [options.onDispatch] 리듀서 전이마다 부르는 관찰 함수(Wave 130 —
  *   기록 · 이벤트 문장 감사). 상태를 바꾸지 않고 난수도 쓰지 않아 결과는 그대로다(정책이 아니므로 `DRIVER_VERSION` 그대로).
  */
@@ -228,6 +243,17 @@ export const RELIC_PICK_POLICIES = Object.freeze(['recommend', 'first']);
 export const RELIC_PLAY_POLICIES = Object.freeze(['none', 'observe', 'aware']);
 /** 연속 탐험 정책(H1, 2026-11) — 기본 `off`는 v3 그대로다. */
 export const AUTO_EXPLORE_POLICIES = Object.freeze(['off', 'on']);
+/** 지역 지도 걷기 · 자동 탐험 정책(오버월드 2단계 측정) — 기본 `off`는 v3 그대로다. */
+export const FIELD_POLICIES = Object.freeze(['off', 'forest', 'all']);
+export const FIELD_AUTO_POLICIES = Object.freeze(['off', 'on', 'unlimited']);
+/** 3단계 전망(`field: 'all'`)이 지도 지역으로 켜는 곳 — 사냥 지역 전부(안전지대 · 층이 있는 혼돈의 심연은 판정이 다시 거른다). */
+const ALL_FIELD_HUNT_REGIONS = Object.keys(DB.MAPS).filter((name) => {
+    const map = DB.MAPS[name];
+    return map.type !== 'safe' && map.level !== 'infinite' && Array.isArray(map.monsters) && map.monsters.length > 0;
+});
+/** 한 행동 안에서 걷는 걸음 상한 — 처리할 일이 생기지 않으면(막힌 지도) 탐험으로 넘어간다. */
+const FIELD_WALK_GUARD = 4000;
+const FIELD_DIRECTIONS = ['up', 'right', 'down', 'left'];
 /** 연속 탐험 입력을 따로 세는 레벨(재미 분석 §2.2 — 전직 뒤 1행동 전투가 대부분인 구간). */
 const AUTO_EXPLORE_LATE_LEVEL = 21;
 /** 가방 여유 정책 — 다녀와도 칸이 나지 않았으면 이만큼의 행동 동안 다시 팔러 가지 않는다. */
@@ -266,8 +292,15 @@ export const runNaturalPlay = async (options) => {
         relicPlay = 'none',
         autoExplore = 'off',
         bagRoom = 'off',
+        field = 'off',
+        fieldAuto = 'off',
         onDispatch,
     } = options;
+    if (!FIELD_POLICIES.includes(field)) throw new Error(`unknown field ${field}`);
+    if (!FIELD_AUTO_POLICIES.includes(fieldAuto)) throw new Error(`unknown fieldAuto ${fieldAuto}`);
+    if (fieldAuto !== 'off' && field === 'off') throw new Error(`fieldAuto ${fieldAuto} needs field forest|all`);
+    const useField = field !== 'off';
+    const useFieldAuto = fieldAuto !== 'off';
     if (!['off', 'on', 'tidy'].includes(bagRoom)) throw new Error(`unknown bagRoom ${bagRoom}`);
     const keepBagRoom = bagRoom !== 'off';
     const tidyBag = bagRoom === 'tidy';
@@ -286,6 +319,9 @@ export const runNaturalPlay = async (options) => {
     const restoreDate = installClock(clock);
     const realRandom = Math.random;
     Math.random = createSeededRandom(deriveSeed(seed, 'natural-play'));
+    // 3단계 전망 — 지도 지역 목록(`isFieldMapRegion`이 부를 때마다 읽는다)을 측정하는 동안만 사냥 지역 전부로 바꾼다.
+    const fieldRegionsBackup = [...BALANCE.FIELD_MAP_REGIONS];
+    if (field === 'all') BALANCE.FIELD_MAP_REGIONS.splice(0, BALANCE.FIELD_MAP_REGIONS.length, ...ALL_FIELD_HUNT_REGIONS);
 
     const initial = structuredClone(INITIAL_STATE);
     initial.player.stats.currentRun.startedAt = firstRunStartedAt(seed);
@@ -341,6 +377,8 @@ export const runNaturalPlay = async (options) => {
         ...(relicPlay === 'none' ? {} : { relicPlay }),
         ...(useAutoExplore ? { autoExplore } : {}),
         ...(keepBagRoom ? { bagRoom } : {}),
+        ...(useField ? { field } : {}),
+        ...(useFieldAuto ? { fieldAuto } : {}),
         stepSeconds,
         runs: [],
         deaths: [],
@@ -403,6 +441,21 @@ export const runNaturalPlay = async (options) => {
                     starts: 0, stops: {}, chains: [], deathsInChain: 0,
                 },
             } : {}),
+            // 지도 걷기를 켠 회차만(오버월드 2단계) — 걸음(손 · 자동, Lv21 이후 따로) · 조우 · 지도 · 출구 · 클리어, 상자(수 · 골드 · 아이템),
+            //   미믹(만남 · 처치 · 도주 · 사망, 강화 재료가 든 미믹의 처치), 번 골드(평생 누적의 회차 차이 — 상자 골드의 몫을 본다).
+            //   자동 탐험을 켜면 시작 · 끝까지 돈 수 · 멈춤 이유, 지도 지역 전투 입력(자동 / 손)도 센다. 상태만 읽는다.
+            ...(useField ? {
+                field: {
+                    maps: 0, steps: 0, autoSteps: 0, lateSteps: 0, lateAutoSteps: 0, encounters: 0, autoEncounters: 0,
+                    exits: 0, clears: 0, fallbacks: 0, chests: 0, chestGold: 0, chestItems: 0,
+                    mimics: 0, mimicWins: 0, mimicFlees: 0, mimicDeaths: 0, mimicRareWins: 0,
+                    goldStart: Number(state.player?.stats?.total_gold) || 0,
+                    ...(useFieldAuto ? {
+                        autoRuns: 0, autoDone: 0, autoResumes: 0, autoStops: {},
+                        inputs: { autoCombat: 0, manualCombat: 0 }, late: { autoCombat: 0, manualCombat: 0 },
+                    } : {}),
+                },
+            } : {}),
             ...(economy === 'none' ? {} : {
                 economy: { enhanceTries: 0, enhanceSuccess: 0, blockedGold: 0, blockedMaterial: 0, blockedReserve: 0, maxed: 0, sold: 0, gearBought: 0, shopVisits: 0, branchAttempts: 0, branches: {}, ...(economy === 'materials' ? { materialBought: 0 } : {}) },
             }),
@@ -410,6 +463,11 @@ export const runNaturalPlay = async (options) => {
     };
     const closeRun = () => {
         if (autoChain) endAutoChain('run_end');
+        if (fieldAutoRunning) stopFieldAuto('run_end');
+        if (run.field) {
+            const { goldStart, ...fieldRecord } = run.field;
+            run.field = { ...fieldRecord, goldEarned: (Number(state.player?.stats?.total_gold) || 0) - goldStart };
+        }
         const meta = state.player?.meta || {};
         const { momentBest: _best, momentJobs: _jobs, eventSeen: _seen, chainBest, ...runRecord } = run;
         result.runs.push({
@@ -479,6 +537,25 @@ export const runNaturalPlay = async (options) => {
         record.chains.push(autoChain.steps);
         autoChain = null;
     }
+    // 지도 자동 탐험 — 켜짐은 화면 상태다(`useFieldMap`과 같다 — 세이브 봉투 밖). 판정은 연속 탐험과 같되 직업 조건이 없다.
+    let fieldAutoRunning = false;
+    let fieldMimicFight = null;
+    let lastFieldMapKey = null;
+    const fieldAutoStep = () => getAutoExploreStep({
+        gameState: state.gameState, player: state.player, enemy: state.enemy, currentEvent: state.currentEvent,
+        pendingRelics: state.pendingRelics, postCombatResult: state.postCombatResult, isAiThinking: Boolean(state.isAiThinking),
+    }, { requireJob: false });
+    function stopFieldAuto(reason) {
+        if (fieldAutoRunning && run?.field?.autoStops) run.field.autoStops[reason] = (run.field.autoStops[reason] || 0) + 1;
+        fieldAutoRunning = false;
+    }
+    const isLate = () => (Number(state.player?.level) || 1) >= AUTO_EXPLORE_LATE_LEVEL;
+    function countFieldCombat(kind) {
+        const record = run?.field;
+        if (!record?.inputs) return;
+        record.inputs[kind] += 1;
+        if (isLate()) record.late[kind] += 1;
+    }
     function countInput(kind) {
         if (!run?.autoExplore) return;
         run.autoExplore.inputs[kind] += 1;
@@ -531,6 +608,20 @@ export const runNaturalPlay = async (options) => {
                     if (next.reason === 'defeat') run.autoExplore.deathsInChain += 1;
                     endAutoChain(next.reason);
                 }
+            }
+            // 지도 자동 탐험 — 같은 판정으로 멈춤을 본다(결과 카드를 닫기 전 — 접히지 않은 카드는 멈춤이다).
+            if (fieldAutoRunning) {
+                const next = fieldAutoStep();
+                if (next.kind === 'stop') stopFieldAuto(next.reason);
+            }
+            // 미믹 전투가 끝났다 — 결과 카드가 있으면 처치, 사망 화면이면 사망, 아니면 도주다.
+            if (fieldMimicFight && state.gameState !== GS.COMBAT) {
+                if (state.gameState === GS.DEAD) run.field.mimicDeaths += 1;
+                else if (state.postCombatResult) {
+                    run.field.mimicWins += 1;
+                    if (fieldMimicFight.rare) run.field.mimicRareWins += 1;
+                } else run.field.mimicFlees += 1;
+                fieldMimicFight = null;
             }
 
             // 유물 선택 — 화면 추천(`getRelicChoiceDecisionStrip`). 칸이 찼으면 나아지는 교체만 한다.
@@ -630,6 +721,7 @@ export const runNaturalPlay = async (options) => {
     } finally {
         Math.random = realRandom;
         restoreDate();
+        BALANCE.FIELD_MAP_REGIONS.splice(0, BALANCE.FIELD_MAP_REGIONS.length, ...fieldRegionsBackup);
     }
     if (run) closeRun();
     result.steps = step;
@@ -657,7 +749,25 @@ export const runNaturalPlay = async (options) => {
                 const key = `${enemy.isBoss ? 'boss' : 'elite'}|${p.loc}|${enemy.baseName}`;
                 run.fightsBy[key] = (run.fightsBy[key] || 0) + 1;
             }
+            const mimicRef = enemy.fieldMimic;
+            if (mimicRef && run.field) {
+                run.field.mimics += 1;
+                const reward = getFieldChestReward(mimicRef.loc, DB.MAPS[mimicRef.loc], mimicRef.seed, mimicRef.chestId, true);
+                fieldMimicFight = { rare: reward.items.includes(CONSTANTS.ENHANCE_MATERIAL_NAME) };
+            }
         }
+        // 지도 자동 탐험 — 판정이 일반 공격 · 고른 기술이면 그것, 아니면 멈추고 손으로 싸운다.
+        if (fieldAutoRunning) {
+            const kind = fieldAutoStep().kind;
+            if (kind === 'attack' || kind === 'skill') {
+                lastCombatSnapshot = { level: Number(p.level) || 1, loc: p.loc, hpRatio: Number((p.hp / Math.max(1, getFullStats().maxHp)).toFixed(3)), enemy: { name: enemy.name, baseName: enemy.baseName, isElite: enemy.isElite, isBoss: enemy.isBoss, huntChampion: enemy.huntChampion } };
+                countFieldCombat('autoCombat');
+                A.combat(kind);
+                return;
+            }
+            stopFieldAuto(kind === 'stop' ? fieldAutoStep().reason : 'mode');
+        }
+        if (useFieldAuto && isFieldMapRegion(p.loc, DB.MAPS[p.loc])) countFieldCombat('manualCombat');
         // 연속 탐험(H1) — 켜진 연쇄에서 판정이 일반 공격 · 고른 기술이면 그것(사람이 토글을 켠 것과 같은 행동). 기술은 지금 고른 기술이다.
         const autoCombat = useAutoExplore && autoChain ? autoStep().kind : null;
         if (autoCombat === 'attack' || autoCombat === 'skill') {
@@ -947,6 +1057,12 @@ export const runNaturalPlay = async (options) => {
 
         const target = chooseTargetMap(state.player);
         if (target && target !== state.player.loc) { stepToward(target); return; }
+        // 지도 지역 — 탐험 버튼 대신 걷는다(조우 = `explore()` 한 번).
+        if (useField && isFieldMapRegion(state.player.loc, DB.MAPS[state.player.loc])) {
+            exploredThisIdle = true;
+            await walkField();
+            return;
+        }
         if (useAutoExplore) {
             // 켜진 연쇄에서 판정이 탐험이면 연속 탐험의 걸음이다. 아니면 수동 탭이고, 판정이 탐험이면 그 탭이 토글을 켠다.
             const canAuto = autoStep().kind === 'explore';
@@ -960,6 +1076,118 @@ export const runNaturalPlay = async (options) => {
             exploredThisIdle = true;
         }
         await buildActions().explore();
+    }
+
+    /**
+     * 지도 걷기 — 처리할 일(조우 · 출구 · 미믹) 하나를 넘길 때까지 걷는다. 걸음은 리듀서 전이(`AT.FIELD_STEP`) 그대로이고 행동으로 세지
+     * 않는다. 정책: 자동 탐험 중이면 자동 경로, 아니면 열지 않은 상자 중 가장 가까운 곳, 다 열었으면 들어갈 수 있는 가장 가까운 출구.
+     * 걸을 곳이 없거나 막히면(일어나면 안 된다 — `fallbacks`로 센다) 탐험 한 번으로 넘어간다.
+     */
+    async function walkField() {
+        const record = run.field;
+        const loc = state.player.loc;
+        const mapData = DB.MAPS[loc];
+        if (state.player.fieldMap?.loc !== loc) dispatch({ type: AT.FIELD_ENTER });
+        if (!state.player.fieldMap?.autoRun) fieldAutoRunning = false;
+        for (let guard = 0; guard < FIELD_WALK_GUARD; guard += 1) {
+            let current = state.player.fieldMap;
+            if (!current || current.loc !== loc) break;
+            const mapKey = `${current.loc}:${current.seq}`;
+            if (mapKey !== lastFieldMapKey) { lastFieldMapKey = mapKey; record.maps += 1; }
+            if (current.pending) {
+                const kind = current.pending.kind;
+                if (kind === 'encounter') { record.encounters += 1; if (fieldAutoRunning) record.autoEncounters += 1; }
+                if (kind === 'exit') {
+                    record.exits += 1;
+                    fieldAutoRunning = false;
+                }
+                await buildActions().processFieldPending();
+                return;
+            }
+            let layout = getFieldMapLayout(current, mapData);
+            if (useFieldAuto && maybeRunFieldAuto(current, layout)) {
+                current = state.player.fieldMap;
+                layout = getFieldMapLayout(current, mapData);
+            }
+            let direction = null;
+            let auto = false;
+            if (fieldAutoRunning) {
+                direction = planFieldAutoStep(current, layout);
+                if (direction) auto = true;
+                else { record.autoDone += 1; fieldAutoRunning = false; continue; }
+            }
+            if (!direction) direction = planFieldManualStep(current, layout);
+            if (!direction) break;
+            const before = state.player;
+            dispatch({ type: AT.FIELD_STEP, payload: { direction, auto, now: clock.now } });
+            if (state.player === before) break;
+            // 클리어는 상자를 다 연 지도의 출구를 밟는 걸음이 기록한다(리듀서).
+            if ((state.player.fieldClearedRegions || []).length > (before.fieldClearedRegions || []).length) record.clears += 1;
+            record.steps += 1;
+            if (auto) record.autoSteps += 1;
+            if (isLate()) { record.lateSteps += 1; if (auto) record.lateAutoSteps += 1; }
+            const opened = (state.player.fieldMap?.openedChests || []).length > current.openedChests.length;
+            if (opened && state.player.fieldMap?.pending?.kind !== 'mimic') {
+                record.chests += 1;
+                record.chestGold += (Number(state.player.gold) || 0) - (Number(before.gold) || 0);
+                record.chestItems += Math.max(0, (state.player.inv || []).length - (before.inv || []).length);
+            }
+        }
+        record.fallbacks += 1;
+        await buildActions().explore();
+    }
+
+    /** 자동 탐험을 켜거나 이어 간다. 새 지도로 바꿨으면 true. */
+    function maybeRunFieldAuto(current, layout) {
+        if (fieldAutoRunning) return false;
+        if (fieldAutoStep().kind !== 'explore') return false;
+        // 이어 가기는 열지 않은 상자가 남았을 때만이다. 끝까지 돈 지도도 입구에서 한 걸음 떼면 게임 판정은 이어 가기를 허락하는데
+        //   (`isFieldAutoResumable`), 그때 켜면 입구로 되돌아가 다시 끝나 출구로 가는 걸음과 진동한다.
+        if (current.autoRun && isFieldAutoResumable(current, layout) && !areAllFieldChestsOpened(current, layout)) {
+            fieldAutoRunning = true;
+            run.field.autoResumes += 1;
+            return false;
+        }
+        // 새로 켜는 것은 갓 들어선 지도이거나 자동 탐험을 끝까지 돈 지도에서만이다(손으로 걷던 지도는 손으로 끝낸다).
+        const fresh = current.openedChests.length === 0 && current.visited.length === 1;
+        if (!fresh && !current.autoRun) return false;
+        if (!(state.player.fieldClearedRegions || []).includes(current.loc)) return false;
+        if (fieldAuto === 'unlimited' && getFieldAutoRunsUsed(state.player, clock.now) > 0) {
+            // 측정 전용 — 오늘 쓴 횟수를 지우고 켠다(하루 횟수가 없을 때 자동 탐험이 대신할 몫을 잰다).
+            dispatch({ type: AT.SET_PLAYER, payload: (p) => ({ ...p, stats: { ...p.stats, fieldAutoRuns: undefined } }) });
+        }
+        if (getFieldAutoRunsUsed(state.player, clock.now) >= BALANCE.FIELD_AUTO_RUNS_PER_DAY) return false;
+        const before = state.player;
+        buildActions().fieldStartAuto();
+        if (state.player === before || !state.player.fieldMap?.autoRun) return false;
+        fieldAutoRunning = true;
+        run.field.autoRuns += 1;
+        return true;
+    }
+
+    /** 손으로 걷는 다음 걸음 — 열지 않은 상자, 다 열었으면 들어갈 수 있는 출구. 출구 칸은 목표일 때만 밟는다. */
+    function planFieldManualStep(current, layout) {
+        const chests = layout.chests.filter((chest) => !current.openedChests.includes(chest.id)).map((chest) => chest.index);
+        const level = Number(state.player.level) || 1;
+        const seasonActive = Boolean(state.liveConfig?.seasonEvent?.active);
+        const exits = layout.exits.filter((exit) => !getMapAccess(DB.MAPS, current.loc, exit.to, level, seasonActive).reason).map((exit) => exit.index);
+        const targets = new Set(chests.length > 0 ? chests : exits);
+        const blocked = new Set(layout.exits.map((exit) => exit.index).filter((index) => !targets.has(index)));
+        const firstStep = new Map();
+        const queue = [current.pos];
+        const seen = new Set([current.pos]);
+        for (let head = 0; head < queue.length; head += 1) {
+            const here = queue[head];
+            if (here !== current.pos && targets.has(here)) return firstStep.get(here);
+            for (const direction of FIELD_DIRECTIONS) {
+                const next = getFieldNeighbor(layout, here, direction);
+                if (next === null || seen.has(next) || blocked.has(next)) continue;
+                seen.add(next);
+                firstStep.set(next, here === current.pos ? direction : firstStep.get(here));
+                queue.push(next);
+            }
+        }
+        return null;
     }
 
     /** 경제 정책이 남겨 두는 골드. */

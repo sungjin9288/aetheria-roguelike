@@ -31,12 +31,13 @@ const DELTA: Record<FieldDirection, [number, number]> = {
     right: [1, 0],
 };
 
-const FIELD_REGIONS: ReadonlySet<string> = new Set(BALANCE.FIELD_MAP_REGIONS);
-
-/** 지도를 쓰는 지역 — 시제품 목록 안의 사냥 지역(혼돈의 심연처럼 층이 있는 지역은 대상 아님) */
+/**
+ * 지도를 쓰는 지역 — 시제품 목록 안의 사냥 지역(혼돈의 심연처럼 층이 있는 지역은 대상 아님). 목록은 부를 때마다 읽는다 —
+ * 자연 플레이 드라이버의 3단계 전망 측정(`field: 'all'`)이 측정하는 동안 목록을 모든 사냥 지역으로 바꾼다.
+ */
 export const isFieldMapRegion = (loc: string | null | undefined, mapData: GameMap | null | undefined): boolean => (
     typeof loc === 'string'
-    && FIELD_REGIONS.has(loc)
+    && (BALANCE.FIELD_MAP_REGIONS as readonly string[]).includes(loc)
     && Boolean(mapData)
     && mapData!.type !== 'safe'
     && mapData!.level !== 'infinite'

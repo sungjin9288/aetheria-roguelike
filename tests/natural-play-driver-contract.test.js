@@ -7,6 +7,7 @@ import assert from 'node:assert/strict';
 import { JOB_PATHS, classifyEventFrame, pickAscensionRuleId, pickChapterPickCardId, runNaturalPlay } from '../scripts/naturalPlay/driver.mjs';
 import { CHAPTER_PICK_SKIP_ID } from '../src/utils/chapterPick.js';
 import { getAscensionRule, getAscensionRuleOffer } from '../src/systems/ascensionRule.js';
+import { BALANCE } from '../src/data/constants.js';
 
 const SHORT = { seed: 7, maxSteps: 800 };
 
@@ -242,4 +243,52 @@ test('연속 탐험 · 가방 여유 정책(H1)은 옵션이다 — 기본은 �
     assert.equal(tidy.stalled, null, JSON.stringify(tidy.stalled));
     await assert.rejects(() => runNaturalPlay({ ...SHORT, autoExplore: 'yes' }), /unknown autoExplore/);
     await assert.rejects(() => runNaturalPlay({ ...SHORT, bagRoom: 'yes' }), /unknown bagRoom/);
+});
+
+test('지도 걷기 정책(오버월드 2단계)은 옵션이다 — 기본은 흔적이 없고, 켜면 실제 걷기 전이로 결정론적이며 상자 · 미믹 · 조우의 합이 맞는다', async () => {
+    const regions = [...BALANCE.FIELD_MAP_REGIONS];
+    const off = await runNaturalPlay(SHORT);
+    assert.equal(off.field, undefined);
+    assert.ok(off.runs.every((run) => run.field === undefined), '기본 결과에는 지도 기록이 없다');
+
+    const FOREST = { ...SHORT, maxSteps: 1500, field: 'forest' };
+    const forest = await runNaturalPlay(FOREST);
+    assert.deepEqual(await runNaturalPlay(FOREST), forest);
+    assert.equal(forest.field, 'forest');
+    assert.equal(forest.stalled, null, JSON.stringify(forest.stalled));
+    const record = forest.runs[0].field;
+    assert.equal(record.fallbacks, 0, '걷기가 막혀 탐험으로 넘어간 적이 없다');
+    assert.ok(record.steps > 0 && record.encounters > 0 && record.chests > 0, JSON.stringify(record));
+    assert.ok(record.clears >= 1, '상자를 다 열고 출구로 나가 클리어한다');
+    assert.ok(record.mimicWins + record.mimicFlees + record.mimicDeaths <= record.mimics);
+    assert.ok(record.mimicRareWins <= record.mimicWins);
+    assert.ok(record.chestGold > 0 && record.goldEarned >= record.chestGold);
+    assert.equal(record.autoSteps, 0, '자동 탐험을 켜지 않으면 자동 걸음이 없다');
+    assert.ok(forest.runs.every((run) => run.combats > 0));
+
+    // 3단계 전망 — 측정하는 동안만 지도 지역이 사냥 지역 전부이고, 끝나면 되돌린다.
+    const ALL = { ...SHORT, maxSteps: 1500, field: 'all' };
+    const all = await runNaturalPlay(ALL);
+    assert.deepEqual([...BALANCE.FIELD_MAP_REGIONS], regions, '지도 지역 목록을 되돌린다');
+    assert.deepEqual(await runNaturalPlay(ALL), all);
+    assert.equal(all.runs[0].field.fallbacks, 0);
+    assert.ok(all.runs[0].field.maps > record.maps, '모든 사냥 지역에서 걷는다');
+
+    // 자동 탐험 — 클리어한 지역의 새 지도에서 켜고, 하루 횟수를 넘지 않는다(가짜 시계 1,500행동 ≈ 6시간 = 하루 안).
+    const AUTO = { ...SHORT, maxSteps: 1500, field: 'forest', fieldAuto: 'on', bagRoom: 'tidy' };
+    const auto = await runNaturalPlay(AUTO);
+    assert.deepEqual(await runNaturalPlay(AUTO), auto);
+    const autoRecord = auto.runs[0].field;
+    assert.ok(autoRecord.autoRuns >= 1 && autoRecord.autoRuns <= BALANCE.FIELD_AUTO_RUNS_PER_DAY, JSON.stringify(autoRecord));
+    assert.ok(autoRecord.autoSteps > 0 && autoRecord.autoSteps <= autoRecord.steps);
+    assert.ok(autoRecord.lateAutoSteps <= autoRecord.lateSteps);
+    // 하루 횟수를 다 쓴 뒤 끝난 자동 지도에서 출구로 걷는 걸음이 이어 가기와 진동하지 않는다(걸음 상한 → 탐험 대체 0).
+    assert.equal(autoRecord.fallbacks, 0, JSON.stringify(autoRecord));
+    for (const key of Object.keys(autoRecord.inputs)) assert.ok(autoRecord.late[key] <= autoRecord.inputs[key], key);
+    // 측정 전용 `unlimited`는 하루 횟수를 지운다 — 같은 예산에서 `on`보다 적게 켜지 않는다.
+    const unlimited = await runNaturalPlay({ ...AUTO, fieldAuto: 'unlimited' });
+    assert.ok(unlimited.runs[0].field.autoRuns >= autoRecord.autoRuns);
+
+    await assert.rejects(() => runNaturalPlay({ ...SHORT, field: 'yes' }), /unknown field/);
+    await assert.rejects(() => runNaturalPlay({ ...SHORT, fieldAuto: 'on' }), /needs field/);
 });
