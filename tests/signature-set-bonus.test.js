@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { computeSignatureSetBonus, getSignatureSet, getSignatureSetDefinitions, getSignatureSetProgress } from '../src/utils/signatureSetBonus.js';
+import { computeSignatureSetBonus, getSignatureSetDefinitions, getSignatureSetProgress } from '../src/utils/signatureSetBonus.js';
 
 test('no signature items equipped → neutral bonus', () => {
     const result = computeSignatureSetBonus({
@@ -88,10 +88,11 @@ test('worldtree 2-piece (검 + 로브) triggers bonus', () => {
     assert.ok(result.hpMult > 1);
 });
 
-test('getSignatureSet returns definition or null', () => {
-    assert.ok(getSignatureSet('worldtree'));
-    assert.ok(getSignatureSet('celestial'));
-    assert.equal(getSignatureSet('unknown-set'), null);
+test('getSignatureSetDefinitions has worldtree and celestial, not unknown keys', () => {
+    const defs = getSignatureSetDefinitions();
+    assert.ok(defs.worldtree);
+    assert.ok(defs.celestial);
+    assert.equal(defs['unknown-set'], undefined);
 });
 
 test('getSignatureSetDefinitions returns all 5 known sets', () => {

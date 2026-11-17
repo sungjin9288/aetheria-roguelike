@@ -8,7 +8,7 @@ import { BALANCE } from '../src/data/constants.js';
 import { MSG } from '../src/data/messages.js';
 import {
     getAreaBossName,
-    isAreaBossUndefeated,
+    isAreaBossChallengeable,
     getBossGaugeValue,
     isBossGaugeFull,
     advanceBossGauge,
@@ -31,7 +31,7 @@ const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
  * 만충 시 다음 탐험에서 "도전 vs 회피" 선택 카드를 제시한다 (StS식 위험 선택).
  */
 
-// ── getAreaBossName / isAreaBossUndefeated ──────────────────────────────────
+// ── getAreaBossName / isAreaBossChallengeable(수락한 임무 없음 = 미격파 판정) ──────────────────────────────────
 
 test('getAreaBossName: mapData.boss가 문자열이면 그 이름 반환', () => {
     assert.equal(getAreaBossName({ boss: '고대 호수의 수호신' }), '고대 호수의 수호신');
@@ -47,29 +47,29 @@ test('getAreaBossName: mapData.boss 없으면 null', () => {
     assert.equal(getAreaBossName(undefined), null);
 });
 
-test('isAreaBossUndefeated: 구역 보스 있고 미격파 → true', () => {
+test('isAreaBossChallengeable: 구역 보스 있고 미격파 → true', () => {
     const mapData = { boss: '고대 호수의 수호신' };
     const player = { stats: {} };
-    assert.equal(isAreaBossUndefeated(mapData, player), true);
+    assert.equal(isAreaBossChallengeable(mapData, player), true);
 });
 
-test('isAreaBossUndefeated: areaBossDefeated에 등록되면 → false', () => {
+test('isAreaBossChallengeable: areaBossDefeated에 등록되면 → false', () => {
     const mapData = { boss: '고대 호수의 수호신' };
     const player = { stats: { areaBossDefeated: { '고대 호수의 수호신': true } } };
-    assert.equal(isAreaBossUndefeated(mapData, player), false);
+    assert.equal(isAreaBossChallengeable(mapData, player), false);
 });
 
-test('isAreaBossUndefeated: boss가 boolean(true)이면 이름 불명이라 false', () => {
+test('isAreaBossChallengeable: boss가 boolean(true)이면 이름 불명이라 false', () => {
     const mapData = { boss: true };
     const player = { stats: {} };
-    assert.equal(isAreaBossUndefeated(mapData, player), false);
+    assert.equal(isAreaBossChallengeable(mapData, player), false);
 });
 
-test('isAreaBossUndefeated: 구세이브(player.stats.areaBossDefeated undefined) 방어 — 크래시 없이 true', () => {
+test('isAreaBossChallengeable: 구세이브(player.stats.areaBossDefeated undefined) 방어 — 크래시 없이 true', () => {
     const mapData = { boss: '고대 호수의 수호신' };
     const player = { stats: {} };
-    assert.doesNotThrow(() => isAreaBossUndefeated(mapData, player));
-    assert.equal(isAreaBossUndefeated(mapData, player), true);
+    assert.doesNotThrow(() => isAreaBossChallengeable(mapData, player));
+    assert.equal(isAreaBossChallengeable(mapData, player), true);
 });
 
 // ── getBossGaugeValue / isBossGaugeFull ─────────────────────────────────────

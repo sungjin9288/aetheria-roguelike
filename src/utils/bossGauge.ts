@@ -28,13 +28,6 @@ export const getAreaBossName = (mapData: GameMap | null | undefined): string | n
     typeof mapData?.boss === 'string' ? mapData.boss : null
 );
 
-/** 해당 지역에 구역 보스(이름 확정)가 있고 아직 미격파 상태인지 (player.stats.areaBossDefeated 기준). */
-export const isAreaBossUndefeated = (mapData: GameMap | null | undefined, player: Player | null | undefined): boolean => {
-    const bossName = getAreaBossName(mapData);
-    if (!bossName) return false;
-    return !player?.stats?.areaBossDefeated?.[bossName];
-};
-
 /**
  * 지금 이 지역의 구역 보스에 도전할 수 있는가 — 게이지 · 도전 카드 · 출현 · 지도 배지 · 원정 HUD · 이동 안내가
  * 모두 이 판정을 읽는다(2026-10 Wave 74).

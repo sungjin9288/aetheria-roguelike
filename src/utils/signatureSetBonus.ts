@@ -152,9 +152,6 @@ export const computeSignatureSetBonus = (equip: EquipSlots | null | undefined) =
 /** UI 도움용: 세트 정의 전체 조회. */
 export const getSignatureSetDefinitions = () => SETS;
 
-/** UI 도움용: 특정 setGroup의 정의. */
-export const getSignatureSet = (key: string) => SETS[key] || null;
-
 /**
  * 현재 장착 구성에서 가장 "가까운" signature 세트의 진행도를 반환.
  *

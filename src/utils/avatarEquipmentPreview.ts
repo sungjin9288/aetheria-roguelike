@@ -1,12 +1,7 @@
 import type { Item } from '../types/index.js';
 import { getEquipmentArtProfile } from './equipmentArt.js';
 import { getArmorStyleFromItem, getAvatarLoadoutStyle, getOffhandVisualKey, getWeaponVisualKey } from './itemVisuals.js';
-import {
-    getArmorPlacement,
-    getOffhandPlacement,
-    getWeaponPlacement,
-    placementToTransform,
-} from './anchorPoints.js';
+import { getWeaponPlacement, placementToTransform } from './anchorPoints.js';
 
 const HOLY_PREVIEW_PATTERNS = ['성', '천', '심판', '성광', '이지스', '기사'];
 const SHADOW_PREVIEW_PATTERNS = ['암흑', '어둠', '심연', '공허', '그림자'];
@@ -107,10 +102,6 @@ const resolvePreviewJobFromOffhand = (item: Item | null | undefined, visualKey: 
 };
 
 export const getWeaponTransform = (profile: EquipmentArtStylingProfile | null | undefined) => placementToTransform(getWeaponPlacement(profile?.style));
-
-export const getOffhandTransform = (profile: EquipmentArtStylingProfile | null | undefined) => placementToTransform(getOffhandPlacement(profile?.style));
-
-export const getArmorTransform = (profile: EquipmentArtStylingProfile | null | undefined) => placementToTransform(getArmorPlacement(profile));
 
 /** `withVariant()`가 받는 기본 배치값 — 카드/기본 두 variant 공용 6필드. */
 interface EquipmentPreviewStage {

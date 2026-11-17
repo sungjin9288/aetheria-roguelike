@@ -1,4 +1,4 @@
-import { getFieldNeighbor, getFieldTileDanger } from './fieldMapWalk';
+import { FIELD_DIRECTIONS, firstFieldStepToward, getFieldNeighbor, getFieldTileDanger } from './fieldMapWalk';
 import type { FieldDirection, FieldMapLayout, FieldMapState } from '../types/fieldMap';
 
 /**
@@ -27,37 +27,11 @@ export interface FieldAutoWalkOptions {
     acknowledgedChests?: readonly number[];
 }
 
-const DIRECTIONS: FieldDirection[] = ['up', 'right', 'down', 'left'];
-
 const stop = (reason: FieldAutoWalkStopReason, chestId?: number): FieldAutoWalkPlan => (
     chestId === undefined ? { kind: 'stop', reason } : { kind: 'stop', reason, chestId }
 );
 
-/** `blocked`를 지나지 않고 `isGoal` 칸까지 가장 짧은 길의 첫 걸음 — 지금 칸은 목표가 아니다. 없으면 null. */
-const firstStepToward = (
-    layout: FieldMapLayout,
-    start: number,
-    blocked: ReadonlySet<number>,
-    isGoal: (index: number) => boolean,
-): FieldDirection | null => {
-    const firstStep = new Map<number, FieldDirection>();
-    const queue = [start];
-    const seen = new Set([start]);
-    for (let head = 0; head < queue.length; head += 1) {
-        const current = queue[head];
-        if (current !== start && isGoal(current)) return firstStep.get(current) ?? null;
-        for (const direction of DIRECTIONS) {
-            const next = getFieldNeighbor(layout, current, direction);
-            if (next === null || seen.has(next) || blocked.has(next)) continue;
-            seen.add(next);
-            firstStep.set(next, current === start ? direction : firstStep.get(current)!);
-            queue.push(next);
-        }
-    }
-    return null;
-};
-
-const neighborsOf = (layout: FieldMapLayout, index: number): number[] => DIRECTIONS
+const neighborsOf = (layout: FieldMapLayout, index: number): number[] => FIELD_DIRECTIONS
     .map((direction) => getFieldNeighbor(layout, index, direction))
     .filter((next): next is number => next !== null);
 
@@ -73,7 +47,7 @@ export const planFieldAutoWalk = (field: FieldMapState, layout: FieldMapLayout, 
     if (options.door !== null) blocked.add(options.door);
 
     const visited = new Set(field.visited);
-    const toDanger = firstStepToward(layout, field.pos, blocked, (index) => (
+    const toDanger = firstFieldStepToward(layout, field.pos, blocked, (index) => (
         !visited.has(index) && getFieldTileDanger(layout.tiles[index]) > 0
     ));
     if (toDanger) return { kind: 'step', direction: toDanger };
@@ -83,6 +57,6 @@ export const planFieldAutoWalk = (field: FieldMapState, layout: FieldMapLayout, 
     if (goals.length === 0) return stop('stuck');
     if (goals.some((goal) => around.has(goal))) return stop(reason);
     const beside = new Set(goals.flatMap((goal) => neighborsOf(layout, goal)).filter((index) => !blocked.has(index)));
-    const toGoal = firstStepToward(layout, field.pos, blocked, (index) => beside.has(index));
+    const toGoal = firstFieldStepToward(layout, field.pos, blocked, (index) => beside.has(index));
     return toGoal ? { kind: 'step', direction: toGoal } : stop('stuck');
 };

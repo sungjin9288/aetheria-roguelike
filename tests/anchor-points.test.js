@@ -14,11 +14,7 @@ import {
     placementLayer,
     placementToTransform,
 } from '../src/utils/anchorPoints.js';
-import {
-    getArmorTransform,
-    getOffhandTransform,
-    getWeaponTransform,
-} from '../src/utils/avatarEquipmentPreview.js';
+import { getWeaponTransform } from '../src/utils/avatarEquipmentPreview.js';
 
 test('AVATAR_ANCHORS defines the 6 canonical anchor points', () => {
     for (const name of ['head_top', 'head_center', 'torso_center', 'hand_front', 'hand_back', 'back_anchor', 'feet']) {
@@ -136,44 +132,44 @@ test('backwards compatibility: dagger weapon transform is unchanged', () => {
 });
 
 test('backwards compatibility: kite-shield offhand transform is unchanged', () => {
-    assert.equal(getOffhandTransform({ style: 'kite-shield' }), 'translate(11 31) rotate(-6 12 12) scale(0.33)');
+    assert.equal(placementToTransform(getOffhandPlacement('kite-shield')), 'translate(11 31) rotate(-6 12 12) scale(0.33)');
 });
 
 test('backwards compatibility: grimoire offhand transform is unchanged', () => {
-    assert.equal(getOffhandTransform({ style: 'grimoire' }), 'translate(13 35) rotate(-10 12 12) scale(0.23)');
+    assert.equal(placementToTransform(getOffhandPlacement('grimoire')), 'translate(13 35) rotate(-10 12 12) scale(0.23)');
 });
 
 test('backwards compatibility: plate body transform is unchanged', () => {
     assert.equal(
-        getArmorTransform({ bodyStyle: 'plate', headgearStyle: 'none', isHeadgearOnly: false }),
+        placementToTransform(getArmorPlacement({ bodyStyle: 'plate', headgearStyle: 'none', isHeadgearOnly: false })),
         'translate(8 20) scale(0.7)'
     );
 });
 
 test('backwards compatibility: robe body transform is unchanged', () => {
     assert.equal(
-        getArmorTransform({ bodyStyle: 'robe', headgearStyle: 'none', isHeadgearOnly: false }),
+        placementToTransform(getArmorPlacement({ bodyStyle: 'robe', headgearStyle: 'none', isHeadgearOnly: false })),
         'translate(8 19) scale(0.72)'
     );
 });
 
 test('backwards compatibility: straw-hat headgear-only transform is unchanged', () => {
     assert.equal(
-        getArmorTransform({ bodyStyle: 'none', headgearStyle: 'straw-hat', isHeadgearOnly: true }),
+        placementToTransform(getArmorPlacement({ bodyStyle: 'none', headgearStyle: 'straw-hat', isHeadgearOnly: true })),
         'translate(12 6) scale(0.48)'
     );
 });
 
 test('backwards compatibility: circlet headgear-only transform is unchanged', () => {
     assert.equal(
-        getArmorTransform({ bodyStyle: 'none', headgearStyle: 'circlet', isHeadgearOnly: true }),
+        placementToTransform(getArmorPlacement({ bodyStyle: 'none', headgearStyle: 'circlet', isHeadgearOnly: true })),
         'translate(15 10) scale(0.42)'
     );
 });
 
 test('backwards compatibility: cloak body transform is unchanged', () => {
     assert.equal(
-        getArmorTransform({ bodyStyle: 'cloak', headgearStyle: 'none', isHeadgearOnly: false }),
+        placementToTransform(getArmorPlacement({ bodyStyle: 'cloak', headgearStyle: 'none', isHeadgearOnly: false })),
         'translate(7 18) scale(0.74)'
     );
 });

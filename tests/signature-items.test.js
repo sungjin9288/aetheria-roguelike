@@ -4,9 +4,7 @@ import assert from 'node:assert/strict';
 import {
     SIGNATURE_CANDIDATES,
     SIGNATURE_ITEM_REGISTRY,
-    getSignatureItemCount,
     getSignatureMetadata,
-    getSignatureSpriteKey,
     hasDedicatedSignatureArt,
     isSignatureItem,
 } from '../src/data/signatureItems.js';
@@ -30,22 +28,22 @@ test('isSignatureItem returns false for plain family items', () => {
     assert.equal(isSignatureItem(undefined), false);
 });
 
-test('getSignatureSpriteKey returns the dedicated signature key when available', () => {
-    const key = getSignatureSpriteKey({ name: '성검 에테르니아' });
+test('getSignatureMetadata spriteKey returns the dedicated signature key when available', () => {
+    const key = (getSignatureMetadata({ name: '성검 에테르니아' })?.spriteKey ?? null);
     assert.equal(key, 'signature-weapon-ethernia');
 });
 
-test('getSignatureSpriteKey returns null for tinted-named items (only dedicated get a key)', () => {
+test('getSignatureMetadata spriteKey returns null for tinted-named items (only dedicated get a key)', () => {
     // 현자의 예복 is in SPECIAL_ITEM_ICON_KEYS but not in SIGNATURE_ITEM_REGISTRY.
     // signatureItems는 순수 dedicated 레지스트리만 다루고, tinted 경로는 itemVisuals가 처리.
-    assert.equal(getSignatureSpriteKey({ name: '현자의 예복' }), null);
+    assert.equal((getSignatureMetadata({ name: '현자의 예복' })?.spriteKey ?? null), null);
     // itemVisuals 쪽에서는 여전히 tinted 키가 존재하는지 sanity check
     assert.ok(SPECIAL_ITEM_ICON_KEYS['현자의 예복']);
 });
 
-test('getSignatureSpriteKey returns null for family items', () => {
-    assert.equal(getSignatureSpriteKey({ name: '녹슨 단검' }), null);
-    assert.equal(getSignatureSpriteKey(null), null);
+test('getSignatureMetadata spriteKey returns null for family items', () => {
+    assert.equal((getSignatureMetadata({ name: '녹슨 단검' })?.spriteKey ?? null), null);
+    assert.equal((getSignatureMetadata(null)?.spriteKey ?? null), null);
 });
 
 test('hasDedicatedSignatureArt distinguishes dedicated Tier S/A art from tinted named items', () => {
@@ -96,10 +94,9 @@ test('SIGNATURE_CANDIDATES has 10-20 entries as per art direction guidance', () 
     assert.ok(SIGNATURE_CANDIDATES.length <= 25, `Expected at most 25 candidates, got ${SIGNATURE_CANDIDATES.length}`);
 });
 
-test('getSignatureItemCount returns dedicated count only (tinted fallback moved to itemVisuals)', () => {
-    const count = getSignatureItemCount();
-    assert.ok(count.dedicated >= 20, 'At least 20 dedicated signatures (Tier S/A/B)');
-    assert.equal(count.total, count.dedicated);
+test('SIGNATURE_ITEM_REGISTRY counts dedicated signatures only (tinted fallback moved to itemVisuals)', () => {
+    const dedicated = Object.keys(SIGNATURE_ITEM_REGISTRY).length;
+    assert.ok(dedicated >= 20, 'At least 20 dedicated signatures (Tier S/A/B)');
 });
 
 test('SIGNATURE_ITEM_REGISTRY has the 5 Tier S entries with dedicated sprite keys', () => {
@@ -132,8 +129,8 @@ test('SIGNATURE_ITEM_REGISTRY has the 5 Tier B entries', () => {
 });
 
 test('registry reaches 20 dedicated signatures total', () => {
-    const count = getSignatureItemCount();
-    assert.ok(count.dedicated >= 20, `Expected at least 20 dedicated signatures, got ${count.dedicated}`);
+    const dedicated = Object.keys(SIGNATURE_ITEM_REGISTRY).length;
+    assert.ok(dedicated >= 20, `Expected at least 20 dedicated signatures, got ${dedicated}`);
 });
 
 test('every SIGNATURE_ITEM_REGISTRY entry maps to a real item in DB.ITEMS', () => {

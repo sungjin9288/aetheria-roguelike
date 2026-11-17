@@ -121,12 +121,6 @@ export const getSignatureBaseName = (item: Item | null | undefined): string | nu
 /** 아이템이 dedicated signature인지 확인 (Tier S/A/B 고유 아트 보유) — 접두어가 붙은 사본 포함. */
 export const isSignatureItem = (item: Item | null | undefined): boolean => getSignatureBaseName(item) !== null;
 
-/** 아이템의 dedicated signature sprite key 반환 (없으면 null). */
-export const getSignatureSpriteKey = (item: Item | null | undefined): string | null => {
-    const baseName = getSignatureBaseName(item);
-    return baseName ? SIGNATURE_ITEM_REGISTRY[baseName].spriteKey : null;
-};
-
 /** 진짜 고유 아트가 있는지 (tint 기반 named는 제외) — UI badge/effects에 사용. */
 export const hasDedicatedSignatureArt = (item: Item | null | undefined): boolean => isSignatureItem(item);
 
@@ -135,10 +129,3 @@ export const getSignatureMetadata = (item: Item | null | undefined): SignatureIt
     const baseName = getSignatureBaseName(item);
     return baseName ? SIGNATURE_ITEM_REGISTRY[baseName] : null;
 };
-
-/** 현재 dedicated signature를 가진 아이템 수 (telemetry용). */
-export const getSignatureItemCount = () => {
-    const dedicated = Object.keys(SIGNATURE_ITEM_REGISTRY).length;
-    return { total: dedicated, dedicated };
-};
-

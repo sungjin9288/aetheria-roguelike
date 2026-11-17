@@ -11334,3 +11334,16 @@ aware가 실제로 행동을 바꾸는 세 조합만 키웠다(셋째 박자 · 
 ### 181.4 받아들인 것 · 남긴 것
 - 1회차 사망 증가(+0.15/판, 유의)와 Lv21 ~ 40 미믹전 생명 손실 중앙값 47%는 고위험의 몫으로 받아들였다. 수치로 메우지 않는다.
 - Lv1 ~ 20 행동 중앙값 7번은 "약 세 번 행동" 겨냥과 어긋난다 — 초반 생명 배율을 낮추는 대안은 고르지 않았다(같은 날 소유자 결정 "이대로 확정"). 사람 플레이테스트에서 초반 미믹이 지루하면 다시 본다.
+
+## 182. 코드 정리 — 지도 최단 경로 한 벌 · 테스트만 읽는 export 7개 (2026-11-17, 베이스 = `main` `b28fcb0b`, 브랜치 `chore/dedupe-field-path-test-exports`)
+
+§180.2가 남긴 정리 후보 두 가지다. 게임 판정 · 난수 · 세이브 봉투는 바꾸지 않았다.
+
+### 182.1 바꾼 것
+- **지도 최단 경로 첫걸음이 한 벌이다**: 지도 자동 탐험(`planFieldAutoStep`)과 자동 걷기(`planFieldAutoWalk`의 `firstStepToward`)가 같은 BFS를 따로 들고 있었다. `systems/fieldMapWalk.ts`의 `firstFieldStepToward`(막힌 칸 · 목표 술어)와 방향 순서 `FIELD_DIRECTIONS` 하나를 둘이 읽는다 — 방향 순서가 같은 거리의 길을 가르므로 두 벌이 갈라지면 같은 지도에서 두 기능이 다른 길을 고른다.
+- **앱이 읽지 않고 테스트만 읽던 export 7개를 지웠다**: `isAreaBossUndefeated`(판정은 `isAreaBossChallengeable` — Wave 74) · `resolvePlayerProgressionProfile` · `getSignatureSpriteKey` · `getSignatureItemCount` · `getOffhandTransform` · `getArmorTransform` · `getSignatureSet`. 목록은 src · scripts · tests · functions를 다시 검색해 앱 · 도구 사용 0, 테스트 사용만 있는 것으로 확정했다. 지키던 값은 앱이 실제로 쓰는 경로로 옮겼다 — 보조 칸 · 방어구 배치는 `placementToTransform(getOffhandPlacement | getArmorPlacement)`(`AvatarEquipmentOverlay`와 같은 계산, 기대값 그대로), 전설 각인 그림 키는 `getSignatureMetadata().spriteKey`, 레지스트리 수 · 세트 정의는 레지스트리 · `getSignatureSetDefinitions`, 미격파 판정은 수락한 임무가 없을 때의 `isAreaBossChallengeable`, 원정 성장 프로필은 `getActiveProgressionProfile`. 지운 함수만 쓰던 import도 함께 지웠다.
+
+### 182.2 검증
+- `npm run verify`: 6,744건 중 성장 진단 증빙 1건이 붉었다 — 증빙이 바꾼 소스 7개의 해시를 고정하기 때문이다. `progression:diagnostic:write`로 다시 썼고 `report` 본문은 바이트 그대로, 바뀐 것은 그 7개 파일의 해시뿐이다.
+- `npm run evidence:verify`: 장비 전투력 증빙이 `signatureSetBonus.ts`를 고정해 붉었다(Wave 103과 같은 경우 — 단위 스위트는 이 바이트를 보지 않는다). `scripts/verify-equipment-combat-power.mjs --write`로 다시 썼고 바뀐 것은 `authority.productionOwners.signatureSetBonus`와 소스 스냅숏의 그 파일 해시뿐이다. 다시 쓴 뒤 15/15.
+- 자연 플레이 짝 비교(main worktree 대 이 브랜치, `--field all --field-auto on --field-walk-auto on --bag-room tidy --runs 2`, 나이트 · 성직자 × 시드 1 ~ 3): 결과 파일 12쌍이 바이트 동일. 한 판에 자동 걷기 4,172걸음 · 지도 자동 탐험 341걸음이 지났다.
