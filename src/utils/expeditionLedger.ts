@@ -4,8 +4,6 @@ import { CLASSES } from '../data/classes.js';
 import {
     BASELINE_PROGRESSION_PROFILE,
     normalizeProgressionProfile,
-    getActiveProgressionProfile,
-    resolveProgressionProfile,
 } from '../data/progressionProfiles.js';
 import type {
     ExpeditionInventoryCheckpoint,
@@ -18,7 +16,7 @@ import type {
 import type { Item } from '../types/item.js';
 import type { Quest } from '../types/quest.js';
 import type { SkillBranchChoice } from '../types/class.js';
-import type { ProgressionProfile, ProgressionProfileRef } from '../types/progression.js';
+import type { ProgressionProfile } from '../types/progression.js';
 import {
     getActiveExpeditionFocusQuestIds,
     getPreparedExpeditionFocusQuestIds,
@@ -288,14 +286,6 @@ export const normalizeExpeditionSummary = (value: unknown): ExpeditionSummary | 
             || { ...BASELINE_PROGRESSION_PROFILE },
     };
 };
-
-export const resolvePlayerProgressionProfile = (
-    player: Player,
-    currentReference: ProgressionProfileRef,
-): Readonly<ProgressionProfile> => (
-    (player.activeExpedition ? getActiveProgressionProfile(player) : null)
-    || resolveProgressionProfile(currentReference)
-);
 
 export const startExpedition = (
     player: Player,

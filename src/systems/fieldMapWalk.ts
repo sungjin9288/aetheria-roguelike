@@ -176,7 +176,34 @@ export const areAllFieldChestsOpened = (state: Pick<FieldMapState, 'openedChests
     layout.chests.every((chest) => state.openedChests.includes(chest.id))
 );
 
-const DIRECTIONS: FieldDirection[] = ['up', 'right', 'down', 'left'];
+export const FIELD_DIRECTIONS: readonly FieldDirection[] = ['up', 'right', 'down', 'left'];
+
+/**
+ * `blocked`를 지나지 않고 `isGoal` 칸까지 가장 짧은 길의 첫 걸음 — 지금 칸은 목표가 아니다. 없으면 null.
+ * 방향 순서(`FIELD_DIRECTIONS`)가 같은 거리의 길을 가른다 — 자동 탐험 · 자동 걷기가 같은 이 함수를 쓴다.
+ */
+export const firstFieldStepToward = (
+    layout: FieldMapLayout,
+    start: number,
+    blocked: ReadonlySet<number>,
+    isGoal: (index: number) => boolean,
+): FieldDirection | null => {
+    const firstStep = new Map<number, FieldDirection>();
+    const queue = [start];
+    const seen = new Set([start]);
+    for (let head = 0; head < queue.length; head += 1) {
+        const current = queue[head];
+        if (current !== start && isGoal(current)) return firstStep.get(current) ?? null;
+        for (const direction of FIELD_DIRECTIONS) {
+            const next = getFieldNeighbor(layout, current, direction);
+            if (next === null || seen.has(next) || blocked.has(next)) continue;
+            seen.add(next);
+            firstStep.set(next, current === start ? direction : firstStep.get(current)!);
+            queue.push(next);
+        }
+    }
+    return null;
+};
 
 /**
  * 자동 탐험의 다음 걸음(설계 §7) — 열지 않은 상자 중 가장 가까운 곳, 다 열었으면 입구로. 입구에 닿았고 상자가 없으면 null(끝).
@@ -192,19 +219,5 @@ export const planFieldAutoStep = (state: FieldMapState, layout: FieldMapLayout, 
         if (state.pos === layout.entrance) return null;
         targets.add(layout.entrance);
     }
-    const firstStep = new Map<number, FieldDirection>();
-    const queue = [state.pos];
-    const seen = new Set([state.pos]);
-    for (let head = 0; head < queue.length; head += 1) {
-        const current = queue[head];
-        if (targets.has(current) && current !== state.pos) return firstStep.get(current) ?? null;
-        for (const direction of DIRECTIONS) {
-            const next = getFieldNeighbor(layout, current, direction);
-            if (next === null || seen.has(next) || exits.has(next)) continue;
-            seen.add(next);
-            firstStep.set(next, current === state.pos ? direction : firstStep.get(current)!);
-            queue.push(next);
-        }
-    }
-    return null;
+    return firstFieldStepToward(layout, state.pos, exits, (index) => targets.has(index));
 };

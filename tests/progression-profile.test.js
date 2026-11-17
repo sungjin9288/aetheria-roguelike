@@ -6,6 +6,7 @@ import {
     BASELINE_PROGRESSION_PROFILE,
     EXPLORATION_RHYTHM_PROFILE,
     EXPLORATION_RHYTHM_V3_PROFILE,
+    getActiveProgressionProfile,
     getProgressionMinimumOrdinaryGap,
     resolveProgressionProfile,
     scaleProgressionExpReward,
@@ -15,7 +16,6 @@ import {
     finishExpedition,
     normalizeActiveExpedition,
     normalizeExpeditionSummary,
-    resolvePlayerProgressionProfile,
     startExpedition,
     trackExpeditionVitals,
 } from '../src/utils/expeditionLedger.ts';
@@ -111,7 +111,7 @@ test('active expedition snapshots the full profile and ignores a mid-expedition 
     );
     assert.deepEqual(started.activeExpedition.progressionProfile, profile);
     assert.notStrictEqual(started.activeExpedition.progressionProfile, profile);
-    assert.deepEqual(resolvePlayerProgressionProfile(started, { id: 'baseline', version: 1 }), profile);
+    assert.deepEqual(getActiveProgressionProfile(started), profile);
     assert.equal(scaleProgressionExpReward(started, 101), 111);
 
     const tracked = trackExpeditionVitals(started, { ...started, hp: started.hp - 1 });
