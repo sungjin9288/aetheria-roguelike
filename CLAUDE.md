@@ -14,6 +14,7 @@ agent 이름은 Claude가 하이픈(`evidence-qa`), Codex가 밑줄(`evidence_qa
 
 - 핵심 루프·새 기능·모드·진행 설계, GDD 검토: `game-designer` agent. 수치·곡선·보상표: `game-balancing` skill.
 - 밸런스 측정·플레이테스트 판정이 몇 판으로 믿을 만한지: `statistician` agent.
+- 원인이 불분명한 결함·회귀·느려짐 진단: `diagnosing-bugs` skill.
 - Playwright E2E 작성·불안정 테스트 정리·CI 연결: `e2e-test-engineer` agent.
 - "된다"는 결과를 완료로 판정하기 전 재현 가능한 증거 검증: `evidence-qa` agent.
 - 여러 세션·도구가 고친 코드의 파일 간 엇갈림·죽은 코드·낡은 문서 점검: `codebase-archaeologist` agent(읽기 전용).
