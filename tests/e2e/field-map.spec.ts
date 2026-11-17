@@ -14,6 +14,8 @@ const SIZES = [
 ];
 
 const readState = (page: Page) => page.evaluate(() => JSON.parse(window.render_game_to_text?.() || '{}'));
+// 상태 요약(render_game_to_text)에는 가방이 없다 — 가방은 QA 테스트 API의 투자 스냅숏으로 읽는다.
+const readInventory = (page: Page) => page.evaluate(() => window.__AETHERIA_TEST_API__?.getInvestmentSnapshot?.().inventory ?? []);
 
 const seed = async (page: Page, kind: 'walk' | 'mimic' | 'opened' | 'cleared' | 'paid') => {
     const ok = await page.evaluate((value) => window.__AETHERIA_TEST_API__?.seedFieldMapScenario?.(value), kind);
@@ -79,14 +81,14 @@ for (const size of SIZES) {
             expect(combat.enemy.name).toContain('미믹');
             const goldBefore = combat.player.gold;
             const countMaterials = (inv: Array<{ name?: string }>) => inv.filter((item) => item.name === '강화 재료').length;
-            const materialsBefore = countMaterials(combat.player.inv);
-            const invBefore = combat.player.inv.length;
+            const invBefore = await readInventory(page);
             await settleFieldInterruption(page);
             const won = await readState(page);
+            const invAfter = await readInventory(page);
             expect(won.player.gold).toBeGreaterThan(goldBefore);
             // 고위험 고보상(2026-11-17): 강화 재료 2개와 이 직업 장비 하나는 확정이다.
-            expect(countMaterials(won.player.inv) - materialsBefore).toBe(2);
-            expect(won.player.inv.length).toBeGreaterThanOrEqual(invBefore + 3);
+            expect(countMaterials(invAfter) - countMaterials(invBefore)).toBe(2);
+            expect(invAfter.length).toBeGreaterThanOrEqual(invBefore.length + 3);
             expect(won.player.fieldMap.pending).toBeNull();
             await expectFieldLayout(page, size.width);
         });
