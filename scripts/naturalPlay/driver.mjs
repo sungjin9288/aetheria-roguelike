@@ -790,7 +790,7 @@ export const runNaturalPlay = async (options) => {
             if (mimicRef && run.field) {
                 run.field.mimics += 1;
                 const reward = getFieldChestReward(mimicRef.loc, DB.MAPS[mimicRef.loc], mimicRef.seed, mimicRef.chestId, true);
-                fieldMimicFight = { rare: reward.items.includes(CONSTANTS.ENHANCE_MATERIAL_NAME) };
+                fieldMimicFight = { rare: (reward.guaranteed ?? []).includes(CONSTANTS.ENHANCE_MATERIAL_NAME) };
             }
         }
         // 지도 자동 탐험 — 판정이 일반 공격 · 고른 기술이면 그것, 아니면 멈추고 손으로 싸운다.

@@ -11,11 +11,15 @@ import { resolveCombatActionTurn } from '../src/systems/combatActionTurn.ts';
 import {
     buildFieldMimic,
     getFieldChestReward,
+    getFieldMimicHpMult,
     getFieldRegionMaterials,
     grantFieldChestReward,
     isFieldChestMimic,
+    pickFieldMimicGear,
     settleFieldMimicVictory,
 } from '../src/systems/fieldChest.ts';
+import { createFieldActions } from '../src/hooks/gameActions/fieldActions.ts';
+import { canEquip } from '../src/utils/equipmentValidation.ts';
 import { MSG } from '../src/data/messages.ts';
 import { getFieldAutoAvailability, getFieldAutoButtonText, getFieldAutoLockText } from '../src/utils/fieldAuto.ts';
 import { getSellPrice } from '../src/utils/equipmentUtils.ts';
@@ -149,14 +153,14 @@ test('계약 7: 걷기 · 상자 · 미믹 판정은 게임 난수를 쓰지 않
     }
 });
 
-test('계약 7: 미믹 비율은 상자의 약 5%다(해시 분포)', () => {
+test('계약 7: 미믹 비율은 상자의 약 2%다(해시 분포 — 고위험 고보상이라 드물다)', () => {
     let mimics = 0;
     const samples = 20000;
     for (let index = 0; index < samples; index += 1) {
         if (isFieldChestMimic(LOC, index * 7919 + 3, index % 7)) mimics += 1;
     }
     const rate = mimics / samples;
-    assert.ok(Math.abs(rate - BALANCE.FIELD_MIMIC_CHANCE) < 0.01, `미믹 비율 ${rate}`);
+    assert.ok(Math.abs(rate - BALANCE.FIELD_MIMIC_CHANCE) < 0.005, `미믹 비율 ${rate}`);
 });
 
 test('계약 8: 손으로 연 미믹 상자는 미믹 처리할 일, 자동 탐험이 연 같은 상자는 보통 상자다', () => {
@@ -303,18 +307,21 @@ test('상자 소모품은 같은 이름이 이미 가방에 있으면 판매가 
     assert.equal(fullGrant.player.inv.length, capacity);
 });
 
-test('계약 10: 미믹은 초반 지역 ×1.4 · 그 위 ×2.5이고 정예 목격 칭호를 남기지 않는다', () => {
+test('계약 10: 미믹 생명은 지역 레벨에 비례하고(6 + 1.2 × 레벨, 최대 ×36) 공격력 · 경험 · 골드는 정예 배율이며 정예 목격 칭호를 남기지 않는다', () => {
     const player = basePlayer();
     const ref = { loc: LOC, seed: 42, chestId: 1 };
-    const cases = [
-        [LOC, BALANCE.FIELD_MIMIC_EARLY_MULT],
-        [Object.keys(DB.MAPS).find((name) => {
-            const map = DB.MAPS[name];
-            const level = Array.isArray(map.level) ? map.level[0] : map.level;
-            return map.type !== 'safe' && typeof level === 'number' && level > BALANCE.EARLY_ELITE_LEVEL_CAP + 10;
-        }), BALANCE.FIELD_MIMIC_MULT],
-    ];
-    for (const [loc, mult] of cases) {
+    const levelOf = (map) => (Array.isArray(map.level) ? map.level[0] : map.level);
+    const late = Object.keys(DB.MAPS).find((name) => {
+        const map = DB.MAPS[name];
+        return map.type !== 'safe' && typeof levelOf(map) === 'number' && levelOf(map) > BALANCE.EARLY_ELITE_LEVEL_CAP + 25;
+    });
+    const cases = [[LOC, BALANCE.FIELD_MIMIC_EARLY_ATK_MULT], [late, BALANCE.FIELD_MIMIC_ATK_MULT]];
+    // 비례 · 상한: 레벨이 오르면 두꺼워지고 상한에서 멈춘다. 초반 구간도 정예보다 훨씬 두껍다(한 방에 끝나지 않는다).
+    assert.equal(getFieldMimicHpMult(1), BALANCE.FIELD_MIMIC_HP_MULT_BASE + BALANCE.FIELD_MIMIC_HP_MULT_PER_LEVEL);
+    assert.ok(getFieldMimicHpMult(20) > getFieldMimicHpMult(5));
+    assert.equal(getFieldMimicHpMult(60), BALANCE.FIELD_MIMIC_HP_MULT_MAX);
+    assert.ok(getFieldMimicHpMult(1) > BALANCE.FIELD_MIMIC_ATK_MULT * 2);
+    for (const [loc, atkMult] of cases) {
         const mapData = DB.MAPS[loc];
         const mimic = buildFieldMimic(player, mapData, { ...ref, loc });
         assert.ok(mimic, loc);
@@ -324,9 +331,11 @@ test('계약 10: 미믹은 초반 지역 ×1.4 · 그 위 ×2.5이고 정예 목
             rng: createDomainRandom(ref.seed, loc, ref.chestId, 'mimic-spawn'),
         }).mStats;
         assert.ok(base, loc);
-        assert.equal(mimic.maxHp, Math.floor(base.maxHp * mult), `${loc}: 생명 ×${mult}`);
-        assert.equal(mimic.atk, Math.floor(base.atk * mult), `${loc}: 공격력 ×${mult}`);
-        assert.equal(mimic.gold, Math.floor(base.gold * mult), `${loc}: 골드 ×${mult}`);
+        const hpMult = getFieldMimicHpMult(levelOf(mapData));
+        assert.equal(mimic.maxHp, Math.floor(base.maxHp * hpMult), `${loc}: 생명 ×${hpMult}`);
+        assert.equal(mimic.atk, Math.floor(base.atk * atkMult), `${loc}: 공격력 ×${atkMult}`);
+        assert.equal(mimic.exp, Math.floor(base.exp * atkMult), `${loc}: 경험은 정예 배율`);
+        assert.equal(mimic.gold, Math.floor(base.gold * atkMult), `${loc}: 골드는 정예 배율`);
         assert.ok(!mimic.isElite, `${loc}: 정예 목격 칭호를 남기지 않는다`);
         assert.ok(mimic.phase2, `${loc}: 정예처럼 격노한다`);
         assert.deepEqual(mimic.fieldMimic, { ...ref, loc });
@@ -334,17 +343,76 @@ test('계약 10: 미믹은 초반 지역 ×1.4 · 그 위 ×2.5이고 정예 목
     }
 });
 
-test('계약 10: 미믹 승리 보상은 상자 보상의 골드 2배 · 지역 재료 확정이고 전투 난수와 무관하다', () => {
+test('계약 10: 미믹 승리 보상은 골드 5배 · 지역 재료 · 강화 재료 2개 · 착용할 수 있는 이 직업 장비이고 전투 난수와 무관하다', () => {
     const player = basePlayer({ gold: 0 });
     const ref = { loc: LOC, seed: 4242, chestId: 2 };
     const plain = getFieldChestReward(LOC, MAP, ref.seed, ref.chestId);
     const mimicReward = getFieldChestReward(LOC, MAP, ref.seed, ref.chestId, true);
     assert.equal(mimicReward.gold, plain.gold * BALANCE.FIELD_MIMIC_GOLD_MULT);
+    assert.equal(plain.guaranteed, undefined, '보통 상자에는 확정 보상이 없다');
+    assert.deepEqual(mimicReward.guaranteed, Array(BALANCE.FIELD_MIMIC_ENHANCE_MATERIALS).fill(CONSTANTS.ENHANCE_MATERIAL_NAME));
+    assert.ok(mimicReward.items.some((name) => getFieldRegionMaterials(MAP).includes(name)), '지역 재료 확정');
+
+    const gear = pickFieldMimicGear(player, MAP, ref);
+    assert.ok(gear, '장비 하나를 고른다');
+    const gearItem = findItemByName(gear);
+    assert.ok(['weapon', 'armor', 'shield'].includes(gearItem.type) || gearItem.tier, gear);
+    assert.equal(canEquip(gearItem, player, {}).ok, true, `${gear}: 지금 착용할 수 있다`);
+
     const settled = settleFieldMimicVictory(player, { fieldMimic: ref }, NOW);
     assert.equal(settled.player.gold, mimicReward.gold);
-    assert.equal(settled.player.inv.length, mimicReward.items.length);
-    assert.equal(settleFieldMimicVictory(player, { fieldMimic: ref }, NOW).player.gold, settled.player.gold);
+    const names = settled.player.inv.map((item) => item.name);
+    assert.equal(names.filter((name) => name === CONSTANTS.ENHANCE_MATERIAL_NAME).length, BALANCE.FIELD_MIMIC_ENHANCE_MATERIALS);
+    assert.ok(names.includes(gear), '장비가 가방에 들어온다');
+    assert.equal(names.length, mimicReward.items.length + BALANCE.FIELD_MIMIC_ENHANCE_MATERIALS + 1);
+    assert.deepEqual(
+        settleFieldMimicVictory(player, { fieldMimic: ref }, NOW).player.inv.map((item) => item.name),
+        names,
+        '같은 상자 · 같은 직업은 같은 보상이다',
+    );
     assert.equal(settleFieldMimicVictory(player, null, NOW).player, player, '미믹이 아니면 그대로다');
+});
+
+test('계약 10: 미믹의 확정 보상(강화 재료 · 장비)은 가방이 가득 차도 들어오고, 보통 상자 내용은 미믹 규칙과 무관하다', () => {
+    const material = getFieldRegionMaterials(MAP)[0];
+    const filler = findItemByName(material);
+    const capacity = getInventoryCapacity(basePlayer());
+    const inv = Array.from({ length: capacity }, (_, index) => makeItem(filler, createDomainRandom(9, LOC, index, 'fill'), () => NOW));
+    const full = basePlayer({ gold: 0, inv });
+    const ref = { loc: LOC, seed: 4242, chestId: 2 };
+    const settled = settleFieldMimicVictory(full, { fieldMimic: ref }, NOW);
+    const added = settled.player.inv.slice(capacity).map((item) => item.name);
+    assert.equal(added.filter((name) => name === CONSTANTS.ENHANCE_MATERIAL_NAME).length, BALANCE.FIELD_MIMIC_ENHANCE_MATERIALS);
+    assert.ok(added.includes(pickFieldMimicGear(full, MAP, ref)), '장비는 가방 상한을 넘어 들어온다');
+
+    // 보통 상자의 추첨 순서는 그대로다 — 같은 시드의 보통 상자와 미믹 상자의 지역 재료 · 소모품 고르기가 같다.
+    for (let chestId = 0; chestId < 6; chestId += 1) {
+        const plain = getFieldChestReward(LOC, MAP, 777, chestId);
+        const mimic = getFieldChestReward(LOC, MAP, 777, chestId, true);
+        assert.equal(mimic.items[0], plain.items[0], '같은 소모품');
+    }
+});
+
+test('계약 10: 미믹이 나타날 때의 위협 줄은 미믹 자신의 이름이고 정예라 부르지 않는다', async () => {
+    const player = basePlayer();
+    const sample = MSG.FIELD_MIMIC_THREAT(120, 500, 24, 5);
+    assert.match(sample, /미믹/);
+    assert.doesNotMatch(sample, /정예/);
+    const logs = [];
+    const dispatched = [];
+    const deps = {
+        player: { ...player, fieldMap: { ...player.fieldMap, pending: { kind: 'mimic', chestId: findMimicSeed().chest.id }, seed: findMimicSeed().seed } },
+        gameState: GS.IDLE,
+        dispatch: (action) => dispatched.push(action),
+        addLog: (type, text) => logs.push({ type, text }),
+        getFullStats: () => ({}),
+        rng: () => 0.5,
+    };
+    const actions = createFieldActions(deps, { explore: () => undefined, move: () => undefined });
+    await actions.processFieldPending();
+    const texts = logs.map((log) => log.text);
+    assert.ok(texts.some((text) => text.startsWith('🩸 미믹의 가장 센 한 방')), texts.join(' / '));
+    assert.equal(texts.some((text) => text.includes('정예의 가장 센 한 방')), false);
 });
 
 test('계약 11: 미믹에게서 달아나면 상자가 비었다는 줄을 남긴다 — 다른 적의 도주에는 없다(설계 §6, 통합 수용 8차)', () => {

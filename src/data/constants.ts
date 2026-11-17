@@ -746,11 +746,19 @@ export const BALANCE = {
     FIELD_DANGER_SIGNAL_STEPS: [0.45, 0.6, 0.75],
     FIELD_CHEST_GOLD_MULT: 1.5,
     FIELD_CHEST_MATERIAL_CHANCE: 0.25,
-    FIELD_MIMIC_CHANCE: 0.05,
-    FIELD_MIMIC_GOLD_MULT: 2,
-    FIELD_MIMIC_RARE_MAT_CHANCE: 0.03,
-    FIELD_MIMIC_EARLY_MULT: 1.4,
-    FIELD_MIMIC_MULT: 2.5,
+    // 미믹은 고위험 고보상이다(2026-11-17 소유자 결정 "강한 대신 죽지 않고 잡으면 좋은 걸, 그래서 출현률이 낮아야"):
+    //   상자의 2%만 미믹이고, 공격력은 정예와 같은 배율(초반 구간은 Wave 115와 같이 ×1.4)이며 생명은 지역 레벨에 비례한다 —
+    //   6 + 1.2 × 지역 레벨, 최대 ×36(원장 §181: 자연 플레이에서 미믹전 행동 중앙값 3번 · Lv1 ~ 20은 7번, 생명 손실 중앙값 30%.
+    //   플레이어 화력이 지역 레벨보다 빨리 자라 고정 배율은 어느 구간에서든 한 방이었다). 경험 · 골드는 정예 배율이다(생명 배율을 따르면 수십 배).
+    //   처치하면 골드 5배 · 지역 재료 · 강화 재료 2개 · 지금 착용할 수 있는 이 직업 장비(위력 상위 1/4)를 확정으로 준다.
+    FIELD_MIMIC_CHANCE: 0.02,
+    FIELD_MIMIC_GOLD_MULT: 5,
+    FIELD_MIMIC_ENHANCE_MATERIALS: 2,
+    FIELD_MIMIC_HP_MULT_BASE: 6,
+    FIELD_MIMIC_HP_MULT_PER_LEVEL: 1.2,
+    FIELD_MIMIC_HP_MULT_MAX: 36,
+    FIELD_MIMIC_EARLY_ATK_MULT: 1.4,
+    FIELD_MIMIC_ATK_MULT: 2.5,
     FIELD_MIMIC_SPECIES: '미믹',        // 미믹 종(몬스터 데이터의 이름) — 정해진 종 경로로 만든다
     // 자동 탐험 하루 횟수(2026-11 소유자 결정 "무료 5 + 골드 1 + 크리스탈 3, 광고는 추후") — 무료를 다 쓰면 다음 한 번은 골드
     //   (레벨 × 200), 그 뒤 세 번은 크리스탈(점점 비싸진다). 광고 한 번은 광고를 켤 때 무료 다음 칸으로 넣는다(출시 범위 밖).

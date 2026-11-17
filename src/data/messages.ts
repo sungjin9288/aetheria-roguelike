@@ -2228,6 +2228,8 @@ export const MSG = {
         [`미믹이 품고 있던 보물 — 골드 ${gold}`, ...items, ...converted.map((name) => `${name}(골드로 바꿈)`)].join(' · ')
     ),
     FIELD_MIMIC_FLED: '미믹에게서 달아났습니다. 상자는 비어 버렸습니다.',
+    // 미믹은 정예가 아니다(정예 칭호 · 정예 칩 없음) — 나타날 때의 줄도 자기 이름으로 말한다(2026-11-17 고위험 고보상). 권고는 붙이지 않는다(Wave 88).
+    FIELD_MIMIC_THREAT: (hit: number, maxHp: number, pct: number, hits: number) => `🩸 미믹의 가장 센 한 방 예상 최대 ${hit} — 최대 생명 ${maxHp}의 ${pct}% (${hits}번에 쓰러짐)`,
     FIELD_CLEARED: (loc: string) => `${withJosa(loc, '을/를')} 모두 둘러봤습니다 — 이제 자동 탐험을 쓸 수 있습니다.`,
     FIELD_A11Y_MAP: '지역 지도',
     FIELD_A11Y_PAD: '걷기',

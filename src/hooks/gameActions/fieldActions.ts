@@ -40,9 +40,9 @@ export const createFieldActions = (deps: GameActionDeps, links: FieldActionLinks
         dispatch({ type: AT.SET_ENEMY, payload: mimic });
         dispatch({ type: AT.SET_GAME_STATE, payload: GS.COMBAT });
         addLog('combat', MSG.ENEMY_APPEAR(mimic.name || ''));
-        // 정예와 같은 위협 줄(Wave 111) — 행동 권고는 붙이지 않는다(Wave 88).
+        // 정예와 같은 추정기(Wave 111)로 미믹 자신의 위협 줄 — 행동 권고는 붙이지 않는다(Wave 88).
         const threat = getEnemyThreat(player, mimic);
-        addLog('warning', MSG.ELITE_THREAT(threat.hit, threat.maxHp, threat.pct, threat.hits));
+        addLog('warning', MSG.FIELD_MIMIC_THREAT(threat.hit, threat.maxHp, threat.pct, threat.hits));
     };
 
     /**
