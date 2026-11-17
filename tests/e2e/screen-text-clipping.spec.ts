@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { expect, test, type Page } from '@playwright/test';
 import { openTownFacilities, startE2ERun } from './testHelpers';
+import { visitNewScreens } from './screenSweepScreens';
 
 /**
  * 출시 전 통합 수용 7차(원장 §149): 실제 화면이 글을 말줄임 · 넘침 숨김으로 자르지 않는다 — 세 폭(375 · 390 · 430).
@@ -176,5 +177,14 @@ for (const viewport of [{ width: 375, height: 667 }, { width: 390, height: 844 }
             await expect(page.getByTestId('legendary-codex-detail')).toContainText(name);
             await expectNoClipping(page, `전설 도감 상세 ${name}`);
         }
+    });
+}
+
+// 2026-11 신규 화면: 오버월드 지도 · 보스 문 · 자동 걷기 멈춤 · 강화 갈래 · 장 보스 규칙 · 충전 강타.
+for (const viewport of [{ width: 375, height: 667 }, { width: 390, height: 844 }, { width: 430, height: 932 }]) {
+    test(`${viewport.width}px: 신규 화면(지도 · 보스 문 · 자동 걷기 · 강화 갈래 · 장 보스 규칙 · 충전 강타)의 글이 잘리지 않는다`, async ({ page }) => {
+        test.setTimeout(120_000);
+        await page.setViewportSize(viewport);
+        await visitNewScreens(page, (screen) => expectNoClipping(page, screen));
     });
 }

@@ -7,6 +7,7 @@ import { AT } from '../src/reducers/actionTypes.ts';
 import { GS } from '../src/reducers/gameStates.ts';
 import { INITIAL_STATE, gameReducer } from '../src/reducers/gameReducer.ts';
 import { CombatEngine } from '../src/systems/CombatEngine.ts';
+import { resolveCombatActionTurn } from '../src/systems/combatActionTurn.ts';
 import {
     buildFieldMimic,
     getFieldChestReward,
@@ -344,4 +345,22 @@ test('계약 10: 미믹 승리 보상은 상자 보상의 골드 2배 · 지역 
     assert.equal(settled.player.inv.length, mimicReward.items.length);
     assert.equal(settleFieldMimicVictory(player, { fieldMimic: ref }, NOW).player.gold, settled.player.gold);
     assert.equal(settleFieldMimicVictory(player, null, NOW).player, player, '미믹이 아니면 그대로다');
+});
+
+test('계약 11: 미믹에게서 달아나면 상자가 비었다는 줄을 남긴다 — 다른 적의 도주에는 없다(설계 §6, 통합 수용 8차)', () => {
+    const player = basePlayer();
+    const mimic = buildFieldMimic(player, MAP, { loc: LOC, seed: 42, chestId: 1 });
+    assert.ok(mimic);
+    const plain = { ...mimic };
+    delete plain.fieldMimic;
+    const fled = (enemy) => {
+        for (let seed = 1; seed < 400; seed += 1) {
+            const result = resolveCombatActionTurn({ player, enemy, kind: 'escape', seed, now: NOW });
+            if (result.kind === 'escape') return result;
+        }
+        throw new Error('400개 씨앗 안에서 도주가 한 번도 성공하지 않았다');
+    };
+    const mimicTexts = fled(mimic).logs.map((log) => log.text);
+    assert.ok(mimicTexts.includes(MSG.FIELD_MIMIC_FLED), mimicTexts.join(' / '));
+    assert.equal(fled(plain).logs.some((log) => log.text === MSG.FIELD_MIMIC_FLED), false);
 });

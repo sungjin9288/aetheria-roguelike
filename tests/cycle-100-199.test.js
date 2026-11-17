@@ -830,7 +830,7 @@ import { readFile, readdir } from 'node:fs/promises';
       // 정리 후에도 active MSG 키들은 유지되어야 함.
       const KEEP = [
           'COMBAT_ATTACK_DETAIL', 'COMBAT_NOT_IN_BATTLE', 'COMBAT_CRIT',
-          'INV_FULL', 'INV_ITEM_NOT_FOUND',
+          'INV_FULL',
           'REST_DONE_FULL', 'REST_GOLD_INSUFFICIENT', 'REST_SAFE_ONLY',
           'STATUS_DOT', 'PLAYER_STATUS_SKIP',
           'BUFF_EXPIRED',
