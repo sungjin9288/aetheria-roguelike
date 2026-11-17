@@ -14,6 +14,8 @@ const SIZES = [
 ];
 
 const readState = (page: Page) => page.evaluate(() => JSON.parse(window.render_game_to_text?.() || '{}'));
+// 상태 요약(render_game_to_text)에는 가방이 없다 — 가방은 QA 테스트 API의 투자 스냅숏으로 읽는다.
+const readInventory = (page: Page) => page.evaluate(() => window.__AETHERIA_TEST_API__?.getInvestmentSnapshot?.().inventory ?? []);
 
 const seed = async (page: Page, kind: 'walk' | 'mimic' | 'opened' | 'cleared' | 'paid') => {
     const ok = await page.evaluate((value) => window.__AETHERIA_TEST_API__?.seedFieldMapScenario?.(value), kind);
@@ -71,16 +73,22 @@ for (const size of SIZES) {
             await expect(page.getByTestId('field-map')).toHaveAttribute('data-field-chests', new RegExp(`^${opened.player.fieldMap.openedChests.length}/`));
         });
 
-        test('미믹이 깨어나면 전투가 되고, 이기면 골드 2배 상자 보상을 받는다', async ({ page }) => {
+        test('미믹이 깨어나면 전투가 되고, 이기면 골드 · 강화 재료 2개 · 장비를 확정으로 받는다', async ({ page }) => {
             await seed(page, 'mimic');
             await expect(page.getByTestId('combat-action-attack')).toBeVisible({ timeout: 8_000 });
             const combat = await readState(page);
             expect(combat.gameState).toBe('combat');
             expect(combat.enemy.name).toContain('미믹');
             const goldBefore = combat.player.gold;
+            const countMaterials = (inv: Array<{ name?: string }>) => inv.filter((item) => item.name === '강화 재료').length;
+            const invBefore = await readInventory(page);
             await settleFieldInterruption(page);
             const won = await readState(page);
+            const invAfter = await readInventory(page);
             expect(won.player.gold).toBeGreaterThan(goldBefore);
+            // 고위험 고보상(2026-11-17): 강화 재료 2개와 이 직업 장비 하나는 확정이다.
+            expect(countMaterials(invAfter) - countMaterials(invBefore)).toBe(2);
+            expect(invAfter.length).toBeGreaterThanOrEqual(invBefore.length + 3);
             expect(won.player.fieldMap.pending).toBeNull();
             await expectFieldLayout(page, size.width);
         });
