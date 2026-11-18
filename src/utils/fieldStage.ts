@@ -2,6 +2,7 @@ import { DB } from '../data/db';
 import { GS, type GameMode } from '../reducers/gameStates';
 import { getLogBadgeKind, type LogBadgeKind } from '../data/logBadge';
 import { canBossAppearInMap } from './bossPresence';
+import { FIRST_STORY_QUEST_ID } from '../data/quests';
 import type { Player } from '../types/index.js';
 import type { LogEntry } from '../types/session.js';
 
@@ -25,6 +26,23 @@ export const isFieldStageMode = (player: Player | null | undefined, gameState: G
     const map = DB.MAPS[player.loc];
     return Boolean(map) && map.type !== 'safe';
 };
+
+/**
+ * 2026-11 마을 무대 — 안전지대의 대기 화면도 기록 창 자리의 위쪽이 무대(마을 그림 · 주인공)이고, 기록은 아래 띠다.
+ * 표시 판정이다 — 마을 규칙 · 시설 동작은 바꾸지 않는다.
+ */
+export const isTownStageMode = (player: Player | null | undefined, gameState: GameMode | null | undefined): boolean => {
+    if (!player?.loc || gameState !== GS.IDLE) return false;
+    return DB.MAPS[player.loc]?.type === 'safe';
+};
+
+/** 첫 여정 안내(숲에 남은 전쟁의 흔적) — 첫 이야기 임무를 받고 아직 시작하지 않은 첫 회차의 시작 마을. 기록 창과 마을 무대가 같이 읽는다. */
+export const isFirstJourneyIntro = (player: Player | null | undefined, gameState: GameMode | null | undefined): boolean => (
+    gameState === GS.IDLE && player?.loc === '시작의 마을'
+    && !(player.meta?.prestigeRank || 0)
+    && !player.stats?.claimedQuestIds?.includes(FIRST_STORY_QUEST_ID)
+    && Boolean(player.quests?.some((quest) => quest.id === FIRST_STORY_QUEST_ID && quest.progress === 0))
+);
 
 /**
  * 무대 위 카드가 보이는 기록 종류 — 방금 탐험이 낳은 결과(사건 · 실제로 얻은 줄 · 전설 · 안내 · 주의 · 오류).

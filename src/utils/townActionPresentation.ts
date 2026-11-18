@@ -222,7 +222,6 @@ export const getTownActionPresentation = ({
         quickKeys,
         exploreIntent,
         facilityKeys,
-        facilitySummary: facilityKeys.map((key) => MSG.TOWN_FACILITY_LABELS[key]).join(' · '),
         facilityStatus: {
             rest: needsRest ? '회복 가능' : '정비 완료',
             quests: preparation?.isClaimable

@@ -370,7 +370,7 @@ const ControlPanel = ({
           quickCount={townQuickButtons.length}
           facilityButtons={townFacilityButtons.map((button) => renderActionButton(button, '', {}))}
           facilityCount={townFacilityButtons.length}
-          facilitySummary={townPresentation.facilitySummary}
+          facilityIcons={townFacilityButtons.map(({ key, icon: Icon }) => <Icon key={key} size={14} />)}
         />
       ) : (
         <FieldDock

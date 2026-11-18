@@ -2559,6 +2559,146 @@
   100% { transform: translateY(0); opacity: 1; }
 }
 
+/* 2026-11 마을 무대 — 안전지대의 대기 화면. 마을 그림을 흐린 배경과 선명한 창 하나로 두 번 그리고 주인공이 창 앞에 선다.
+   글은 지역 이름 · 첫 여정 제목뿐이다(소유자 2026-11-18 "글자의 나열을 최소로"). 칸 접힘은 필드 무대와 같은 규칙이다. */
+.ae-town-stage {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  grid-template-areas: "title" "scene" "story";
+  row-gap: 0.375rem;
+  padding: 0.625rem 0.75rem;
+  isolation: isolate;
+  background: linear-gradient(180deg, rgb(var(--aether-s3-rgb) / 0.8) 0%, rgb(var(--aether-s1-rgb) / 0.95) 100%);
+  box-shadow: inset 0 1px 0 var(--aether-rim);
+}
+
+.ae-town-stage-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  image-rendering: pixelated;
+  opacity: 0.5;
+  filter: blur(6px) saturate(1.1);
+  transform: scale(1.15);
+  pointer-events: none;
+}
+
+/* 전경 그림이 있는 마을(시작의 마을) — 그림이 무대를 채우고, 마을 건물 쪽(아래 2/3)을 보인다. */
+.ae-town-stage-panorama {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 68%;
+  pointer-events: none;
+}
+
+.ae-town-stage[data-town-scene="panorama"] .ae-town-stage-scene { justify-content: center; padding-left: 34%; }
+.ae-town-stage[data-town-scene="panorama"] .ae-town-stage-hero { margin-left: 0; }
+
+.ae-town-stage::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background:
+    radial-gradient(ellipse at 50% 55%, transparent 0%, rgb(var(--aether-void-rgb) / 0.55) 85%),
+    linear-gradient(180deg, rgb(var(--aether-s1-rgb) / 0.55) 0%, transparent 30%, rgb(var(--aether-s1-rgb) / 0.7) 100%);
+  pointer-events: none;
+}
+
+.ae-town-stage-title,
+.ae-town-stage-scene,
+.ae-town-stage-story { position: relative; z-index: 2; }
+
+.ae-town-stage-title {
+  grid-area: title;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-shadow: 0 2px 6px rgb(var(--aether-void-rgb) / 0.8);
+}
+
+.ae-town-stage-scene {
+  grid-area: scene;
+  min-height: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  /* 창 + 주인공 묶음을 가운데로 — 주인공이 창에 걸친 만큼 오른쪽으로 민다. */
+  padding-left: 48px;
+}
+
+/* 선명한 창 — 무대 높이를 채우는 정사각형(원본 그림의 정수 배율이 아니어도 픽셀은 각지게). */
+.ae-town-stage-window {
+  position: relative;
+  height: 100%;
+  max-height: 260px;
+  aspect-ratio: 1 / 1;
+  max-width: 100%;
+}
+
+/* 지역 그림은 제 테두리를 그린다 — 창에는 테두리 없이 그림자만 둔다. */
+.ae-town-stage-window img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  image-rendering: pixelated;
+  filter: drop-shadow(0 10px 18px rgb(var(--aether-void-rgb) / 0.65));
+}
+
+/* 주인공은 창 오른쪽 아래에 걸쳐 선다. */
+.ae-town-stage-hero {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 104px;
+  height: 104px;
+  margin-left: -48px;
+}
+
+.ae-town-stage-story {
+  grid-area: story;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  font-family: var(--aether-readable-font);
+  font-size: 13px;
+  font-weight: 600;
+  color: rgb(var(--aether-gold-text-rgb));
+  text-shadow: 0 1px 4px rgb(var(--aether-void-rgb) / 0.85);
+}
+
+@container ae-field-stage (min-height: 300px) {
+  .ae-town-stage-hero { width: 152px; height: 152px; margin-left: -72px; }
+  .ae-town-stage-hero .ae-field-hero-art { width: 144px; height: 144px; }
+}
+
+/* 낮은 무대 — 창은 왼쪽 작은 정사각형, 이름은 오른쪽이다. */
+@container ae-field-stage (max-height: 200px) {
+  .ae-town-stage {
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr);
+    grid-template-areas: "scene title" "scene story";
+    column-gap: 0.75rem;
+    align-items: center;
+  }
+
+  .ae-town-stage-story { justify-content: flex-start; align-self: start; }
+  .ae-town-stage-scene { padding-left: 0; }
+  .ae-town-stage-hero { width: 72px; height: 72px; margin-left: -28px; }
+  .ae-town-stage-hero .ae-field-hero-art { width: 64px; height: 64px; }
+}
+
 /* 지역별 미세 입자(장식) — 색 · 방향은 지역 색 테마가 고른다. 모션 감소 설정이면 그리지 않는다. */
 .ae-field-motes {
   position: absolute;
@@ -3139,6 +3279,39 @@
   border-radius: inherit;
 }
 
+/* 2026-11 마을 · 지도 무대: 지역 그림을 칸 아래에 흐리게 깔고(안개 너머로 비친다), 바이옴 색을 가장자리에 입힌다. 표시만 한다. */
+.ae-field-map-backdrop {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  image-rendering: pixelated;
+  opacity: 0.55;
+  filter: blur(3px) saturate(1.15);
+  transform: scale(1.08);
+  pointer-events: none;
+}
+
+.ae-field-map::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  border-radius: inherit;
+  background: radial-gradient(ellipse at 50% 50%, transparent 45%, rgb(var(--ae-biome-tint-rgb, var(--aether-void-rgb)) / 0.32) 100%);
+}
+
+.ae-field-map[data-field-biome="forest"] { --ae-biome-tint-rgb: var(--aether-good-rgb); }
+.ae-field-map[data-field-biome="water"] { --ae-biome-tint-rgb: var(--aether-will-rgb); }
+.ae-field-map[data-field-biome="ember"] { --ae-biome-tint-rgb: var(--aether-gold-rgb); }
+.ae-field-map[data-field-biome="frost"] { --ae-biome-tint-rgb: var(--aether-ether-hi-rgb); }
+.ae-field-map[data-field-biome="sky"] { --ae-biome-tint-rgb: var(--aether-ether-rgb); }
+.ae-field-map[data-field-biome="arcane"] { --ae-biome-tint-rgb: var(--aether-exp-rgb); }
+.ae-field-map[data-field-biome="abyss"] { --ae-biome-tint-rgb: var(--aether-threat-rgb); }
+.ae-field-map[data-field-biome="ruin"] { --ae-biome-tint-rgb: var(--aether-ink-3-rgb); }
+
 .ae-field-map.is-encounter::after {
   animation: ae-field-encounter 380ms ease-out both;
 }
@@ -3150,6 +3323,7 @@
 
 .ae-field-map-top {
   position: absolute;
+  z-index: 2;
   top: 8px;
   left: 8px;
   right: 8px;
@@ -3187,6 +3361,7 @@
 
 .ae-field-map-news {
   position: absolute;
+  z-index: 2;
   left: 8px;
   right: 8px;
   bottom: 8px;

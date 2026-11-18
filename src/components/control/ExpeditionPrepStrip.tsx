@@ -1,4 +1,4 @@
-import { Backpack, BookOpen, GraduationCap, ListChecks, Map as MapIcon, Moon, Route, ScrollText } from 'lucide-react';
+import { Backpack, BookOpen, GraduationCap, ListChecks, Map as MapIcon, MapPin, Moon, Route, ScrollText, Target } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import ActionButton from '../ui/ActionButton';
 import Chip from '../ui/Chip';
@@ -40,9 +40,10 @@ const ExpeditionPrepStrip = ({
   dailyComplete,
 }: ExpeditionPrepStripProps) => {
   const PrimaryIcon = townPrimaryIcons[primary.kind] || Route;
+  // 2026-11 마을 무대: 칸 이름(목적지 · 목표)은 글이 아니라 아이콘이다 — 소유자 2026-11-18 "글자의 나열을 최소로".
   const checks = [
-    { label: '목적지', value: preparation.destination },
-    { label: '목표', value: preparation.goalLabel },
+    { key: 'destination', label: '목적지', Icon: MapPin, value: preparation.destination },
+    { key: 'goal', label: '목표', Icon: Target, value: preparation.goalLabel },
   ];
 
   return (
@@ -56,10 +57,9 @@ const ExpeditionPrepStrip = ({
         {/* 2026-11 고도화 E2: 오늘의 임무 줄은 머리 줄의 왼쪽 칸에 겹쳐 놓는다 — 이 줄은 '모험 기록' 단추로 이미 44px라
             줄을 새로 쓰지 않는다(새 줄이 기록 창을 줄여 이야기 기록이 잘렸다, 원장 §159). */}
         <div className="min-w-0">
-          <div className="ae-eyebrow">원정 준비</div>
           <div
             data-testid="control-town-daily"
-            className="mt-0.5 flex items-center gap-1 aether-type-meta text-ae-ink-2"
+            className="flex items-center gap-1 aether-type-meta text-ae-ink-2"
           >
             <ListChecks size={13} aria-hidden="true" className={`shrink-0 ${dailyComplete ? 'text-ae-good' : 'text-ae-gold'}`} />
             <span className="font-fira tabular-nums">{dailyLine}</span>
@@ -83,13 +83,14 @@ const ExpeditionPrepStrip = ({
         </div>
       </div>
 
-      <div className="mt-2.5 grid grid-cols-2 gap-1.5">
-        {checks.map((check) => (
-          <div key={check.label} className="aether-expedition-check ae-well min-w-0 rounded-ae-sm px-2.5 py-2">
-            <div className="ae-eyebrow">{check.label}</div>
-            <div className="mt-0.5 break-words aether-type-body font-semibold text-ae-ink" title={check.value}>
-              {check.value}
-            </div>
+      <div className="mt-2 grid grid-cols-[auto_minmax(0,1fr)] gap-1.5">
+        {checks.map(({ key, label, Icon, value }) => (
+          <div key={key} className="aether-expedition-check ae-well flex min-w-0 items-center gap-1.5 rounded-ae-sm px-2.5 py-2">
+            <Icon size={14} aria-hidden="true" className="shrink-0 text-ae-gold" />
+            <span className="sr-only">{label}</span>
+            <span className="min-w-0 break-words aether-type-body font-semibold text-ae-ink" title={value}>
+              {value}
+            </span>
           </div>
         ))}
       </div>

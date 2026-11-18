@@ -7,9 +7,8 @@ import type { LogEntry } from '../types/session.js';
 import { GS } from '../reducers/gameStates';
 import type { GameMode } from '../reducers/gameStates';
 import { getVisibleLocationName, getVisibleLocationVisual } from '../utils/challengeRules';
-import { getFieldSceneKind } from '../utils/fieldStage';
+import { getFieldSceneKind, isFirstJourneyIntro } from '../utils/fieldStage';
 import Chip from './ui/Chip';
-import { FIRST_STORY_QUEST_ID } from '../data/quests';
 import { MSG } from '../data/messages';
 import { ENEMY_ACTION_LOG_TYPE, ENEMY_HEAVY_LOG_TYPE, getLogBadgeKind, type LogBadgeKind } from '../data/logBadge';
 import { DB } from '../data/db';
@@ -222,10 +221,8 @@ const TerminalView = ({
     // 2026-10 Wave 62 (원장 §61.2 A10): 길 잃은 여행이면 지역 그림을 그리지 않는다(판정은 utils/challengeRules.ts).
     const locationVisual = getVisibleLocationVisual(player);
     const showLocationVisual = Boolean(gameState === GS.IDLE && locationVisual);
-    const showFirstJourney = gameState === GS.IDLE && player?.loc === '시작의 마을'
-        && !(player.meta?.prestigeRank || 0)
-        && !player.stats?.claimedQuestIds?.includes(FIRST_STORY_QUEST_ID)
-        && player.quests?.some((quest) => quest.id === FIRST_STORY_QUEST_ID && quest.progress === 0);
+    // 무대(필드 · 마을)가 선 동안에는 무대가 첫 여정을 보인다 — 기록 띠는 기록만 그린다.
+    const showFirstJourney = !hideScene && isFirstJourneyIntro(player, gameState);
 
     // 화면 모드가 바뀌면(전투 · 펼침 · 요약 차례) 처음부터 맞춘다.
     //   감사 GF-07: 요약이 한 차례를 통째로 보일 때는 그 차례의 첫 줄('내 행동')부터 보인다. 그 밖에는 맨 아래다.
