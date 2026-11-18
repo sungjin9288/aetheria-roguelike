@@ -17,7 +17,8 @@ interface TownActionsProps {
   quickCount: number;
   facilityButtons: ReactNode;
   facilityCount: number;
-  facilitySummary: string;
+  /** 접힌 시설 줄의 작은 아이콘(이름 나열 대신 — 소유자 2026-11-18 "글자의 나열을 최소로"). */
+  facilityIcons: ReactNode[];
 }
 
 // 2026-10 통합 감사(UX-01): 접힌 마을 시설을 열면 단추가 화면 아래(작은 폰에서는 전부)에 그려져
@@ -44,7 +45,7 @@ const TownActions = ({
   quickCount,
   facilityButtons,
   facilityCount,
-  facilitySummary,
+  facilityIcons,
 }: TownActionsProps) => (
   <>
     {lastExpedition && (
@@ -81,8 +82,8 @@ const TownActions = ({
         <summary className="flex min-h-[48px] cursor-pointer list-none items-center gap-2 px-3 py-2 text-left font-readable [&::-webkit-details-marker]:hidden">
           <Landmark size={16} aria-hidden="true" className="shrink-0 text-ae-gold" />
           <span className="shrink-0 aether-type-title font-semibold text-ae-ink">{MSG.TOWN_FACILITIES_TITLE}</span>
-          <span className="min-w-0 flex-1 text-right aether-type-meta text-ae-ink-2">
-            {facilitySummary}
+          <span aria-hidden="true" className="ae-town-facility-icons flex min-w-0 flex-1 items-center justify-end gap-2 text-ae-ink-2">
+            {facilityIcons}
           </span>
           <ChevronDown size={16} aria-hidden="true" className="ae-town-facilities-chevron shrink-0 text-ae-ink-3" />
         </summary>

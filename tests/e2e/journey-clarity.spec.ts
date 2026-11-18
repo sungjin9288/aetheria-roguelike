@@ -47,10 +47,13 @@ test('좁은 상태바는 지표 이름과 수치를 겹치거나 잘라 표시�
 test('첫 출발의 이유를 읽고 탐험하면 시작 안내가 반복되지 않는다', async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 667 });
     await startE2ERun(page);
-    const opening = page.getByTestId('first-journey-context');
-    await expect(opening).toContainText('마법전쟁');
-    await expect(opening).toContainText('고요한 숲');
+    // 2026-11 마을 무대(소유자 결정 "마을+지도 함께 또한 글자의 나열을 최소로"): 첫 여정 안내는 기록 창의 설명 카드가 아니라
+    //   마을 무대 위의 제목 한 줄이고, 갈 곳은 첫 출발 단추가 말한다 — 이유 문단('마법전쟁…')은 그리지 않는다.
+    const opening = page.getByTestId('town-stage-story');
+    await expect(opening).toContainText('숲에 남은 전쟁의 흔적');
     await expect(opening).toBeInViewport({ ratio: 1 });
+    await expect(page.getByTestId('first-journey-context')).toHaveCount(0);
+    await expect(page.getByTestId('control-expedition-start')).toContainText('고요한 숲');
     await expect(page.getByTestId('control-expedition-start')).toBeInViewport({ ratio: 1 });
     await page.screenshot({ path: 'output/playwright/clarity-20260928/first-town-375.png' });
     await page.getByTestId('control-expedition-start').click();

@@ -6,8 +6,9 @@ import ControlPanel from '../ControlPanel';
 import EnemyStatus from '../combat/EnemyStatus';
 import FieldStage from '../field/FieldStage';
 import FieldMapView from '../field/FieldMapView';
+import TownStage from '../town/TownStage';
 import { useFieldMapControl } from '../field/fieldMapContext';
-import { isFieldStageMode } from '../../utils/fieldStage';
+import { isFieldStageMode, isTownStageMode } from '../../utils/fieldStage';
 import { getVisibleLocationVisual } from '../../utils/challengeRules';
 import { getEnemyIntent } from '../../utils/enemyIntent';
 import { usePreloadPostCombatCard, useStageEnterClass } from './stageLayoutHooks';
@@ -76,6 +77,9 @@ const MobileGameLayout = ({
     // 2026-11 지역 지도 걷기: 지도 지역의 대기 화면은 무대 대신 지도다(기록 띠는 아래에 그대로).
     const fieldMap = useFieldMapControl();
     const showFieldMap = showFieldStage && Boolean(fieldMap?.active && fieldMap.field && fieldMap.layout);
+    // 2026-11 마을 무대: 안전지대의 대기 화면도 위쪽이 마을 그림 · 주인공이고, 기록은 아래 띠다(필드 무대와 같은 칸 · 같은 접힘 규칙).
+    const showTownStage = !isPanelFocusState && !stageEnemy && !showFieldStage && isTownStageMode(engine.player, engine.gameState, engine.logs);
+    const showScene = showFieldStage || showTownStage;
     const archiveAvailable = !isPanelFocusState && mobileArchiveDockVisible;
     const modeEnterClass = useStageEnterClass(engine.gameState);
     usePreloadPostCombatCard(isCombat);
@@ -134,11 +138,11 @@ const MobileGameLayout = ({
                     //   전투 ↔ 필드 ↔ 마을 전환마다 TerminalView가 다시 마운트되어 화면 낭독기 차례 알림의 생명 줄 · 기록 펼침 · 스크롤이 초기화됐다
                     //   (e2e overlay-dialog-focus '전투 차례는 … 기록 줄을 더하지 않고 실린다').
                     <div
-                        data-testid={stageEnemy ? 'combat-stage' : showFieldStage ? 'field-stage-column' : undefined}
+                        data-testid={stageEnemy ? 'combat-stage' : showFieldStage ? 'field-stage-column' : showTownStage ? 'town-stage-column' : undefined}
                         className={stageEnemy
                             ? 'ae-combat-stage-column order-1 flex min-h-[116px] min-w-0 flex-1 flex-col gap-1.5'
-                            : showFieldStage
-                                ? 'ae-field-stage-column flex min-h-[96px] min-w-0 flex-1 flex-col gap-1.5'
+                            : showScene
+                                ? `ae-field-stage-column flex min-w-0 flex-1 flex-col gap-1.5 ${showTownStage ? 'is-town min-h-[96px] [&:has(~*_.ae-town-facilities[open])]:min-h-[56px]' : 'min-h-[96px]'}`
                                 : `flex min-w-0 flex-1 flex-col ${isCombat ? 'order-1 min-h-[132px]' : 'min-h-[240px] min-[740px]:min-h-[280px] [&:has(~*_.ae-town-facilities[open])]:min-h-[56px] [&:has(~*_.ae-field-dock)]:min-h-[96px]'}`}
                     >
                         {stageEnemy && (
@@ -157,12 +161,16 @@ const MobileGameLayout = ({
                             <div className="ae-field-map-slot flex min-h-0 min-w-0 flex-1">
                                 <FieldMapView player={engine.player} field={fieldMap.field} layout={fieldMap.layout} logs={engine.logs} door={fieldMap.door} />
                             </div>
-                        ) : showFieldStage && (
+                        ) : showFieldStage ? (
                             <div className="ae-field-stage-slot flex min-h-0 min-w-0 flex-1">
                                 <FieldStage player={engine.player} logs={engine.logs} />
                             </div>
+                        ) : showTownStage && (
+                            <div className="ae-field-stage-slot is-town flex min-h-0 min-w-0 flex-1">
+                                <TownStage player={engine.player} />
+                            </div>
                         )}
-                        <div className={stageEnemy ? 'ae-combat-log-strip flex min-w-0' : showFieldMap ? 'ae-field-log-strip is-map flex min-w-0' : showFieldStage ? 'ae-field-log-strip flex min-w-0' : 'flex min-h-0 min-w-0 flex-1'}>
+                        <div className={stageEnemy ? 'ae-combat-log-strip flex min-w-0' : showFieldMap ? 'ae-field-log-strip is-map flex min-w-0' : showScene ? 'ae-field-log-strip flex min-w-0' : 'flex min-h-0 min-w-0 flex-1'}>
                             <TerminalView
                                 logs={engine.logs}
                                 gameState={engine.gameState}
@@ -171,7 +179,7 @@ const MobileGameLayout = ({
                                 quickSlots={engine.quickSlots}
                                 onQuickSlotUse={handleQuickSlotUse}
                                 maxHp={fullStats?.maxHp}
-                                hideScene={showFieldStage}
+                                hideScene={showScene}
                             />
                         </div>
                     </div>

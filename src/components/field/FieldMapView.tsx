@@ -6,7 +6,7 @@ import { toCoord } from '../../systems/fieldMapGen';
 import { getFieldDangerSignal, getFieldEncounterThreshold, getFieldRevealed } from '../../systems/fieldMapWalk';
 import { deriveCharacterAppearance } from '../../utils/characterAppearance';
 import { getAvatarSpriteCandidates } from '../../utils/avatarSpriteCandidates';
-import { getVisibleLocationName, isBlindMap } from '../../utils/challengeRules';
+import { getVisibleLocationName, getVisibleLocationVisual, isBlindMap } from '../../utils/challengeRules';
 import { getChapterOf } from '../../utils/chapters';
 import { selectFieldNews } from '../../utils/fieldStage';
 import { fieldColor, readFieldBiomePalette, readFieldMapPalette } from '../../utils/fieldMapPalette';
@@ -31,6 +31,13 @@ interface FieldMapViewProps {
     /** 지금 보이는 보스 문의 칸(오버월드 3단계) — 닫혀 있으면 null */
     door?: number | null;
 }
+
+// 2026-11 마을 · 지도 무대: 휴대폰 폭에서 가로로 보이는 칸 수 — 칸 크기는 폭 ÷ 이 수(최소 BALANCE.FIELD_TILE_PX, 최대 아래 상한)다.
+//   38px 고정이던 동안 390px 폭에서 칸이 작고 밝혀지지 않은 칸이 화면의 대부분을 검게 남겼다. 표시만 한다(걷기 · 판정 불변).
+const FIELD_MAP_VISIBLE_COLS = 8;
+const FIELD_MAP_TILE_MAX_PX = 56;
+// 밝혀지지 않은 칸 위의 안개 — 그 아래로 지역 그림이 흐리게 비친다. 지역 그림이 없으면(길 잃은 여행) 불투명 배경 그대로다.
+const FIELD_MAP_FOG_ALPHA = 0.62;
 
 const useHeroImage = (src: string | undefined) => {
     const [image, setImage] = useState<HTMLImageElement | null>(null);
@@ -57,6 +64,8 @@ const FieldMapView = ({ player, field, layout, logs, door = null }: FieldMapView
     const biomeColors = useMemo(() => readFieldBiomePalette(biome), [biome]);
     const heroSrc = useMemo(() => getAvatarSpriteCandidates(deriveCharacterAppearance(player))[0], [player]);
     const heroImage = useHeroImage(heroSrc);
+    // 지역 그림(흐린 배경) — 길 잃은 여행이면 없다.
+    const backdropSrc = getVisibleLocationVisual(player)?.src ?? null;
 
     // 마지막으로 걸은 방향 — 왼쪽이면 주인공을 뒤집는다.
     const prevPosRef = useRef(field.pos);
@@ -93,10 +102,10 @@ const FieldMapView = ({ player, field, layout, logs, door = null }: FieldMapView
         if (!ctx) return;
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
         ctx.clearRect(0, 0, size.width, size.height);
-        ctx.fillStyle = fieldColor(palette.bg, 1);
+        ctx.fillStyle = fieldColor(palette.bg, backdropSrc ? FIELD_MAP_FOG_ALPHA : 1);
         ctx.fillRect(0, 0, size.width, size.height);
 
-        const tile = BALANCE.FIELD_TILE_PX;
+        const tile = Math.min(FIELD_MAP_TILE_MAX_PX, Math.max(BALANCE.FIELD_TILE_PX, Math.floor(size.width / FIELD_MAP_VISIBLE_COLS)));
         const hero = toCoord(layout.width, field.pos);
         // 카메라는 언제나 주인공을 가운데에 둔다 — 가장자리에서 멈추면 주인공이 위 · 아래 덧씌움(상자 수 · 한 줄 소식) 밑에 숨는다.
         const camX = hero.x * tile + tile / 2 - size.width / 2;
@@ -166,7 +175,7 @@ const FieldMapView = ({ player, field, layout, logs, door = null }: FieldMapView
             ctx.arc(hx + tile / 2, hy + tile / 2, tile * 0.3, 0, Math.PI * 2);
             ctx.fill();
         }
-    }, [size, palette, biome, biomeColors, door, layout, field.pos, field.openedChests, revealed, heroImage, facingLeft]);
+    }, [size, palette, backdropSrc, biome, biomeColors, door, layout, field.pos, field.openedChests, revealed, heroImage, facingLeft]);
 
     const threshold = getFieldEncounterThreshold(player, layout.loc);
     const signal = getFieldDangerSignal(field.danger, threshold);
@@ -192,6 +201,9 @@ const FieldMapView = ({ player, field, layout, logs, door = null }: FieldMapView
             aria-label={MSG.FIELD_STAGE_ARIA(locationName)}
             className={`ae-field-map relative h-full min-h-0 w-full overflow-hidden rounded-ae-lg${encounterFlash ? ' is-encounter' : ''}`}
         >
+            {backdropSrc && (
+                <img data-testid="field-map-backdrop" src={backdropSrc} alt="" aria-hidden="true" className="ae-field-map-backdrop" />
+            )}
             <div ref={wrapRef} className="absolute inset-0">
                 <canvas ref={canvasRef} role="img" aria-label={MSG.FIELD_A11Y_MAP} className="block h-full w-full" />
             </div>

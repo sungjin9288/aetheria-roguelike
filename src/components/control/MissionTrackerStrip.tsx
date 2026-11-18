@@ -1,4 +1,4 @@
-import { Gift } from 'lucide-react';
+import { Gift, MapPin, Undo2 } from 'lucide-react';
 import type { QuestTracker } from '../../utils/adventureGuide';
 import { MAX_EXPEDITION_FOCUS_QUESTS } from '../../utils/expeditionMissionFocus';
 
@@ -57,12 +57,15 @@ const MissionTrackerStrip = ({ tracker, canClaimReward, onClaimReward }: Mission
         data-testid="control-mission-context"
         className="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1 aether-type-meta text-ae-ink"
       >
-        <div className="min-w-0 font-semibold">
-          <span className="mr-1 font-normal text-ae-ink-3">장소</span>
+        {/* 2026-11 마을 · 지도 무대: 칸 이름(장소 · 귀환)은 아이콘이다 — 소유자 2026-11-18 "글자의 나열을 최소로". 낭독기는 이름을 읽는다. */}
+        <div className="inline-flex min-w-0 items-center gap-1 font-semibold">
+          <MapPin size={13} aria-hidden="true" className="shrink-0 text-ae-ink-3" />
+          <span className="sr-only">장소</span>
           {tracker.routeLabel || '현재 지역'}
         </div>
-        <div className="min-w-0 font-semibold">
-          <span className="mr-1 font-normal text-ae-ink-3">귀환</span>
+        <div className="inline-flex min-w-0 items-center gap-1 font-semibold">
+          <Undo2 size={13} aria-hidden="true" className="shrink-0 text-ae-ink-3" />
+          <span className="sr-only">귀환</span>
           {tracker.returnLabel || '계속 진행'}
         </div>
       </div>

@@ -2,6 +2,7 @@ import { DB } from '../data/db';
 import { GS, type GameMode } from '../reducers/gameStates';
 import { getLogBadgeKind, type LogBadgeKind } from '../data/logBadge';
 import { canBossAppearInMap } from './bossPresence';
+import { FIRST_STORY_QUEST_ID } from '../data/quests';
 import type { Player } from '../types/index.js';
 import type { LogEntry } from '../types/session.js';
 
@@ -25,6 +26,34 @@ export const isFieldStageMode = (player: Player | null | undefined, gameState: G
     const map = DB.MAPS[player.loc];
     return Boolean(map) && map.type !== 'safe';
 };
+
+/**
+ * 2026-11 마을 무대 — 안전지대의 대기 화면도 기록 창 자리의 위쪽이 무대(마을 그림 · 주인공)이고, 기록은 아래 띠다.
+ * 표시 판정이다 — 마을 규칙 · 시설 동작은 바꾸지 않는다.
+ */
+export const isTownStageMode = (
+    player: Player | null | undefined,
+    gameState: GameMode | null | undefined,
+    logs: readonly LogEntry[] = [],
+): boolean => {
+    if (!player?.loc || gameState !== GS.IDLE) return false;
+    if (DB.MAPS[player.loc]?.type !== 'safe') return false;
+    // 마지막 줄이 이야기 · 사건이면 무대가 비켜서고 기록 창이 열 전체를 쓴다 — 임무 수령의 단서 + 장의 본문은 260px 안팎이라
+    //   무대와 나눈 띠(약 170px)에서는 둘 중 하나가 잘렸다(e2e event-choice-visual). 다음 행동의 줄이 오면 무대가 돌아온다.
+    const latestType = logs.length > 0 ? logs[logs.length - 1]?.type : undefined;
+    return !(latestType && READ_FIRST_LOG_TYPES.has(latestType));
+};
+
+/** 한 묶음이 기록 창에 다 들어가지 않을 때 처음부터 읽혀야 하는 기록 종류 — 기록 창의 묶음 맞춤과 마을 무대의 비켜서기가 같이 읽는다. */
+export const READ_FIRST_LOG_TYPES: ReadonlySet<string> = new Set(['story', 'event']);
+
+/** 첫 여정 안내(숲에 남은 전쟁의 흔적) — 첫 이야기 임무를 받고 아직 시작하지 않은 첫 회차의 시작 마을. 기록 창과 마을 무대가 같이 읽는다. */
+export const isFirstJourneyIntro = (player: Player | null | undefined, gameState: GameMode | null | undefined): boolean => (
+    gameState === GS.IDLE && player?.loc === '시작의 마을'
+    && !(player.meta?.prestigeRank || 0)
+    && !player.stats?.claimedQuestIds?.includes(FIRST_STORY_QUEST_ID)
+    && Boolean(player.quests?.some((quest) => quest.id === FIRST_STORY_QUEST_ID && quest.progress === 0))
+);
 
 /**
  * 무대 위 카드가 보이는 기록 종류 — 방금 탐험이 낳은 결과(사건 · 실제로 얻은 줄 · 전설 · 안내 · 주의 · 오류).

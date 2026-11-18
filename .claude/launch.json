@@ -24,6 +24,20 @@
         "5180"
       ],
       "port": 5180
+    },
+    {
+      "name": "aetheria-playtest-preview",
+      "runtimeExecutable": "/Users/sungjin/.local/share/mise/installs/node/lts/bin/node",
+      "runtimeArgs": [
+        "/Users/sungjin/dev/personal/aetheria-roguelike/node_modules/.bin/vite",
+        "preview",
+        "--outDir",
+        "dist",
+        "--host",
+        "--port",
+        "4173"
+      ],
+      "port": 4173
     }
   ]
 }

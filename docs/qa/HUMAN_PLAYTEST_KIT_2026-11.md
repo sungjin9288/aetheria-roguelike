@@ -40,7 +40,7 @@
 
 ## 2. 어떤 빌드로 할까
 
-**공개 주소로 하지 않는다.** `aetheria-roguelike.pages.dev`는 GitHub와 연결돼 있지 않아 머지로 바뀌지 않는다 — 지금은 `b8c78c3c`(2026-11-16 손 배포, 배포 `68e9074e`)이지만 다음 머지부터 다시 뒤처진다. 운영 Firestore에 클라우드 저장 · 순위표를 쓰고, 테스트 중에 배포가 바뀌면 빌드가 섞인다. 토스 샌드박스는 업로드가 개발 완료 뒤로 정해져 있어 지금 쓰지 않는다.
+**공개 주소로 하지 않는다.** `aetheria-roguelike.pages.dev`는 GitHub와 연결돼 있지 않아 머지로 바뀌지 않는다 — 지금은 `ab198691`(2026-11-17 손 배포, 배포 `6dc5ad8a`)이지만 다음 게임 변경부터 다시 뒤처진다. 운영 Firestore에 클라우드 저장 · 순위표를 쓰고, 테스트 중에 배포가 바뀌면 빌드가 섞인다. 토스 샌드박스는 업로드가 개발 완료 뒤로 정해져 있어 지금 쓰지 않는다.
 
 | 안 | 내용 | 장점 | 한계 |
 |---|---|---|---|
@@ -56,7 +56,12 @@
 VITE_FIREBASE_CONFIG='{}' VITE_USE_AI_PROXY=false VITE_RELEASE_ID=playtest-<커밋> npx vite build --outDir <임시 폴더> --emptyOutDir
 ```
 
-**iPhone 앱.** 빌드 뒤 `npx cap sync ios`로 넣고 [iPhone 런북](IPHONE_ACCEPTANCE_RUNBOOK.md) §1의 아카이브 · 설치 경로를 쓴다(`npm run cap:sync`는 다시 빌드해 Firebase 설정이 돌아오므로 쓰지 않는다). 번들은 `com.aetheria.roguelike.playtest`이고 기존 QA 앱과 세이브를 나눠 쓰지 않는다. 팀의 개발 프로필은 **7일 뒤 만료**된다(이번 설치는 2026-11-11 → 11-18 만료). 만료되면 앱이 열리지 않으니 같은 번들로 다시 설치한다. **11-11 설치본에는 H1 · H4 · H5(PR #220)도 오버월드(PR #222 · #224 · #226)도 장 보스 규칙(PR #226)도 없다** — 테스트를 시작하기 전에 `b8c78c3c` 이후 빌드로 다시 설치한다. 다시 설치한 날부터 7일 뒤 만료되니, 세션 3을 며칠에 나눠 하려면 만료일을 시트에 적어 둔다. 세이브는 새로 시작한다. 아카이브는 기기를 찾지 못해 실패했고, 연결된 기기를 지정한 `xcodebuild build`(`-destination id=<UDID> -allowProvisioningUpdates`)로 만들었다.
+**iPhone 앱.** 빌드 뒤 `npx cap sync ios`로 넣고 [iPhone 런북](IPHONE_ACCEPTANCE_RUNBOOK.md) §1의 아카이브 · 설치 경로를 쓴다(`npm run cap:sync`는 다시 빌드해 Firebase 설정이 돌아오므로 쓰지 않는다). 번들은 `com.aetheria.roguelike.playtest`이고 기존 QA 앱과 세이브를 나눠 쓰지 않는다. 팀의 개발 프로필은 **만든 날부터 7일 뒤 만료**된다 — 설치한 날이 아니라 Xcode가 프로필을 만든 날이다. 만료되면 앱이 열리지 않으니 같은 번들로 다시 설치한다. **지금 설치본은 `219b65f7`(2026-11-18 설치, `VITE_RELEASE_ID=playtest-219b65f7`)이고, 프로필은 2026-11-13에 만든 것을 다시 써 2026-11-20 15:03(한국 시각)에 만료된다.** 세션 3을 며칠에 나눠 하려면 그 전에 다시 설치하고(Xcode가 새 프로필을 만든다) 만료일을 시트에 적어 둔다. 이전 설치본 위에 덮어 설치했으므로 이전 세이브가 남아 있다 — 테스트는 새 세이브로 시작한다. 아카이브는 기기를 찾지 못해 실패했고, 연결된 기기를 지정한 `xcodebuild build`로 만든다.
+
+```bash
+xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Release -destination id=<UDID> -derivedDataPath <임시 폴더> -allowProvisioningUpdates PRODUCT_BUNDLE_IDENTIFIER=com.aetheria.roguelike.playtest build
+xcrun devicectl device install app --device <UDID> <임시 폴더>/Build/Products/Release-iphoneos/App.app
+```
 
 **A로 올리기.** `functions/`가 함께 올라가지 않도록 임시 폴더에서 올린다.
 
@@ -70,7 +75,7 @@ cd <임시 폴더> && npx wrangler pages deploy . --project-name=aetheria-roguel
 npx vite preview --outDir <임시 폴더> --host --port 4173
 ```
 
-`335c63c1`의 로컬 저장 빌드(`VITE_RELEASE_ID=playtest-335c63c1`)를 Chromium 390 × 844에서 확인했다(2026-11-13): 외부 요청 0 · 콘솔 오류 0 · 시험 API 없음 · 다시 불러오면 전투까지 복원 · 번들에 E9 · 묶음 A · H1(연속 탐험 멈춤 문턱) · H3(장의 선물) · H6(강화 갈래) 문구 포함. 이전 확인은 `07afc335`였다. 배포와 iPhone 설치는 이번에도 하지 않았다.
+`219b65f7`의 로컬 저장 빌드(`VITE_RELEASE_ID=playtest-219b65f7`)를 확인했다(2026-11-18): 번들에 Firebase 주소 없음 · AI 프록시 꺼짐 · 시험 API 없음, Chromium 390 × 844 미리보기(`.claude/launch.json`의 `aetheria-playtest-preview`)에서 외부 요청 0(localhost뿐) · 콘솔 오류 0 · 새 게임 → 고요한 숲 지도 · 걸음 · 다시 불러오면 지도 화면 복원 · 로컬 활동 기록이 쌓인다. 같은 빌드를 iPhone 14 Pro Max에 설치했다(실행은 기기가 잠겨 있어 소유자가 연다). 이전 확인은 `335c63c1`이었다. 배포는 하지 않았다.
 
 ---
 
