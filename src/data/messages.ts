@@ -904,6 +904,12 @@ export const MSG = {
     A11Y_COMBAT_ACTIONS_HEADING: '전투 행동',
     A11Y_PLAYER_STATUS_HEADING: '내 상태',
     A11Y_LOG_HEADING: '모험 기록',
+    // 2026-11 화면 B안: 기록 창 대신 한 줄 소식 + 지난 소식 시트(단추 · 시트 제목이 같은 이름)
+    LOG_SHEET_TITLE: '지난 소식',
+    LOG_SHEET_OPEN_LABEL: '지난 소식',
+    LOG_SHEET_OPEN_ARIA: '지난 소식 전체 보기',
+    LOG_SHEET_CLOSE_ARIA: '지난 소식 닫기',
+    FIELD_TAP_HINT: '칸을 누르면 그곳까지 걷습니다',
     A11Y_COMBAT_LIVE_LABEL: '이번 차례',
     A11Y_COMBAT_HP: (hp: number, maxHp: number) => `생명 ${hp}/${maxHp}`,
     COMBAT_LOG_SUMMARY_LABEL: '최근 전투',

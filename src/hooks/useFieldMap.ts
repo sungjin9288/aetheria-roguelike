@@ -4,7 +4,7 @@ import { DB } from '../data/db';
 import { MSG } from '../data/messages';
 import { GS } from '../reducers/gameStates';
 import { getFieldDoor } from '../systems/fieldDoor';
-import { getFieldMapLayout, isFieldMapRegion, planFieldAutoStep } from '../systems/fieldMapWalk';
+import { firstFieldStepToward, getFieldMapLayout, getFieldRevealed, isFieldMapRegion, planFieldAutoStep } from '../systems/fieldMapWalk';
 import { getAutoExploreStep, type AutoExploreState } from '../utils/autoExplore';
 import {
     getFieldAutoAvailability, getFieldAutoStopText, getFieldWalkStopText, isFieldAutoWalkUnlocked, planPlayerFieldAutoWalk,
@@ -53,6 +53,10 @@ export interface FieldMapControl {
     /** 지금 손으로 걸을 수 있다(대기 상태 · 처리할 일 없음 · 자동 탐험 꺼짐) */
     canWalk: boolean;
     walk: (direction: FieldDirection) => void;
+    /** 칸을 눌러 걷기(2026-11 화면 B안) — 밝혀진 칸까지 한 걸음씩 걷는다. 같은 칸 · 걸을 수 없는 칸이면 멈춘다. */
+    walkTo: (index: number) => void;
+    /** 지금 걸어가는 목표 칸 — 없으면 null */
+    walkTarget: number | null;
     auto: FieldAutoAvailability & { running: boolean; canStart: boolean };
     startAuto: () => void;
     stopAuto: () => void;
@@ -210,10 +214,47 @@ export function useFieldMap({ state, actions, addLog, blocked, paused, timeScale
     }, [looping, halt, stopText]);
 
     const idle = gameState === GS.IDLE && !postCombatResult && !pendingRelics && !currentEvent;
+    const door = getFieldDoor(player, loc, mapData, layout);
     const canWalk = Boolean(field && layout && idle && !pending && !looping && !blocked);
     const walk = useCallback((direction: FieldDirection) => {
         actionsRef.current.fieldStep(direction, false);
     }, []);
+
+    // 칸을 눌러 걷기(2026-11 화면 B안) — 방향 패드 대신 지도 칸을 누르면 그 칸까지 한 걸음씩 걷는다. 걸음은 손으로 누른
+    //   한 걸음과 같은 `fieldStep(…, false)`이고(판정은 리듀서), 길은 밝혀진 칸만 지난다(안개 너머의 모양을 새지 않는다).
+    //   조우 · 상자 · 출구로 걸을 수 없게 되면 그 자리에서 멈춘다. 출구 · 보스 문은 목표일 때만 밟는다.
+    const [walkTarget, setWalkTarget] = useState<number | null>(null);
+    const walkTo = useCallback((index: number) => {
+        const current = stateRef.current.player?.fieldMap;
+        if (!current || index === current.pos) {
+            setWalkTarget(null);
+            return;
+        }
+        setWalkTarget(index);
+    }, []);
+    // 다음 한 걸음 — 밝혀진 칸만 지난다. 출구 · 보스 문은 목표일 때만 밟는다. 도착했거나 길이 없으면 null.
+    const walkStep = useMemo<FieldDirection | null>(() => {
+        if (walkTarget === null || !field || !layout || field.pos === walkTarget) return null;
+        const revealed = getFieldRevealed(layout, field.visited);
+        const blockedTiles = new Set<number>();
+        for (let index = 0; index < layout.tiles.length; index += 1) {
+            if (!revealed.has(index) && index !== walkTarget) blockedTiles.add(index);
+        }
+        for (const exit of layout.exits) if (exit.index !== walkTarget) blockedTiles.add(exit.index);
+        if (door !== null && door !== walkTarget) blockedTiles.add(door);
+        return firstFieldStepToward(layout, field.pos, blockedTiles, (index) => index === walkTarget);
+    }, [walkTarget, field, layout, door]);
+    // 도착 · 길 없음 · 조우 · 상자 · 자동 탐험 · 대기 상태가 아님이면 목표를 지운다(렌더 중 상태 조정 — 다시 걷지 않는다).
+    //   잠깐 막힌 것(`blocked` — 덮개 화면)은 지우지 않고 기다린다.
+    const walkCleared = walkTarget !== null && (walkStep === null || Boolean(pending) || looping || !idle);
+    if (walkCleared) setWalkTarget(null);
+    // 걸음마다 다시 건다 — 다음 방향이 지난 방향과 같아도(위 → 위) 위치가 바뀌었으니 타이머를 새로 건다.
+    const walkFrom = field?.pos ?? null;
+    useEffect(() => {
+        if (!walkStep || walkCleared || !canWalk || walkFrom === null) return undefined;
+        const timer = window.setTimeout(() => walk(walkStep), BALANCE.FIELD_WALK_REPEAT_MS * timeScale);
+        return () => window.clearTimeout(timer);
+    }, [walkStep, walkCleared, canWalk, walk, timeScale, walkFrom]);
 
     // 방향 키 — 입력 칸에 글을 쓰는 동안은 받지 않는다.
     useEffect(() => {
@@ -268,14 +309,14 @@ export function useFieldMap({ state, actions, addLog, blocked, paused, timeScale
     const stopAutoWalk = useCallback(() => {
         if (walking) halt(getFieldWalkStopText('manual', stateRef.current.player));
     }, [walking, halt]);
-    const door = getFieldDoor(player, loc, mapData, layout);
-
     return {
         active: Boolean(field && layout),
         field,
         layout,
         canWalk,
         walk,
+        walkTo,
+        walkTarget,
         auto: { ...availability, running, canStart },
         startAuto,
         stopAuto,

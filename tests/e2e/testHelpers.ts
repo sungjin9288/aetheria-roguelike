@@ -65,6 +65,17 @@ export const waitForModeTransition = async (page: Page) => {
 
 type FieldDirection = 'up' | 'down' | 'left' | 'right';
 
+const FIELD_KEYS: Record<FieldDirection, string> = { up: 'ArrowUp', down: 'ArrowDown', left: 'ArrowLeft', right: 'ArrowRight' };
+
+/**
+ * 지도에서 한 걸음 — 2026-11 화면 B안부터 휴대폰은 방향 패드를 화면에서 빼고(화면 낭독기 · 키보드 차례에만 남는다) 칸 누르기 ·
+ *   방향 키로 걷는다. 방향 키는 패드와 같은 `fieldStep`을 부른다. 걸을 수 있게 될 때까지(패드가 켜질 때까지) 기다린 뒤 누른다.
+ */
+export const stepField = async (page: Page, direction: FieldDirection) => {
+    await expect(page.getByTestId(`field-pad-${direction}`)).toBeEnabled({ timeout: 8_000 });
+    await page.keyboard.press(FIELD_KEYS[direction]);
+};
+
 interface FieldSnapshot {
     gameState: string;
     explores: number;
@@ -154,9 +165,7 @@ export const exploreOnce = async (page: Page, options: { maxSteps?: number } = {
         }
         const direction = nextFieldStep(snapshot);
         if (!direction) throw new Error('지도에서 더 걸을 칸이 없다');
-        const pad = page.getByTestId(`field-pad-${direction}`);
-        await expect(pad).toBeEnabled({ timeout: 8_000 });
-        await pad.click();
+        await stepField(page, direction);
         await expect.poll(async () => {
             const after = await readFieldSnapshot(page);
             return after.pos !== snapshot.pos || after.pending !== null || after.explores > start.explores || after.gameState !== start.gameState;
@@ -247,7 +256,7 @@ export const walkFieldTo = async (page: Page, target: number, options: { maxStep
         }
         const direction = first.get(target);
         if (!direction) throw new Error(`지도 칸 ${target}에 닿는 길이 없다`);
-        await page.getByTestId(`field-pad-${direction}`).click();
+        await stepField(page, direction);
         await expect.poll(async () => {
             const after = await readFieldSnapshot(page);
             return after.pos !== pos || after.pending !== null || after.gameState !== 'idle';

@@ -1,5 +1,7 @@
 import { useRef, useEffect, useMemo, useState } from 'react';
-import { BookOpen, ChevronUp, Filter, ScrollText } from 'lucide-react';
+import type { ReactNode } from 'react';
+import { createPortal } from 'react-dom';
+import { BookOpen, ChevronUp, Filter, ScrollText, X } from 'lucide-react';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
 import QuickSlot from './QuickSlot';
 import type { Item, Player } from '../types/index.js';
@@ -13,6 +15,7 @@ import { MSG } from '../data/messages';
 import { ENEMY_ACTION_LOG_TYPE, ENEMY_HEAVY_LOG_TYPE, getLogBadgeKind, type LogBadgeKind } from '../data/logBadge';
 import { DB } from '../data/db';
 import { isModalFocusScopeOpen } from '../platform/modalFocus';
+import { useOverlayDialog } from '../hooks/useOverlayDialog';
 import { resolveGlobalShortcut } from '../utils/keyboardShortcuts';
 import { isKeyboardShortcutsEnabled } from '../utils/playerSettings';
 import {
@@ -96,7 +99,45 @@ interface TerminalViewProps {
     maxHp?: number;
     /** 2026-11 A2: 위에 필드 무대가 지역 이름 · 그림을 그릴 때는 장면 머리를 그리지 않는다(그림은 화면에 하나). */
     hideScene?: boolean;
+    /**
+     * 2026-11 화면 B안: 'ticker'면 기록 창 대신 한 줄 소식(방금의 기록 한 줄 — 몇 초 뒤 흐려진다)과 '지난 소식' 단추를 그린다.
+     *   전체 기록은 단추 뒤 시트에 있다. 기본 'panel'은 지금까지의 기록 창이다.
+     */
+    variant?: 'panel' | 'ticker';
 }
+
+interface LogSheetProps {
+    onClose: () => void;
+    children: ReactNode;
+}
+
+/** 지난 소식 시트 — 아래에서 올라오는 대화상자(포커스 가두기 · Escape · 닫힌 뒤 포커스 되돌리기는 `useOverlayDialog`). */
+const LogSheet = ({ onClose, children }: LogSheetProps) => {
+    const dialog = useOverlayDialog({ label: MSG.LOG_SHEET_TITLE, onEscape: onClose });
+    // 지도 칸 · 조작판이 변형(transform) · 칸 질의 안에 있어 `fixed`가 그 칸에 갇힌다 — 문서 끝으로 꺼낸다(나가기 확인과 같다).
+    return createPortal(
+        <div className="ae-log-sheet-layer fixed inset-0 z-[200] flex items-end justify-center px-2 pt-[max(var(--aether-safe-area-top),0.5rem)] pb-[max(var(--aether-safe-area-bottom),0.5rem)]">
+            <div aria-hidden="true" className="ae-scrim" onClick={onClose} />
+            <div {...dialog} data-testid="log-sheet" className="ae-sheet ae-log-sheet relative flex w-full max-w-[640px] flex-col px-3 pb-3 pt-2">
+                <div className="flex min-h-11 shrink-0 items-center justify-between gap-2 px-1">
+                    <h2 className="font-display text-[16px] font-bold text-ae-ink">{MSG.LOG_SHEET_TITLE}</h2>
+                    <button
+                        type="button"
+                        data-testid="log-sheet-close"
+                        aria-label={MSG.LOG_SHEET_CLOSE_ARIA}
+                        onClick={onClose}
+                        className="ae-btn ae-btn-ghost inline-flex min-h-11 min-w-11 items-center justify-center gap-1"
+                    >
+                        <X size={16} aria-hidden="true" />
+                        <span>{MSG.UI_CLOSE}</span>
+                    </button>
+                </div>
+                {children}
+            </div>
+        </div>,
+        document.body,
+    );
+};
 
 // cycle 576: logs default [] 제거 — 1 production caller (MobileGameLayout:85
 //   <TerminalView logs={engine.logs} />) 명시 전달이라 default 도달 불가.
@@ -110,7 +151,11 @@ const TerminalView = ({
     onQuickSlotUse,
     maxHp,
     hideScene = false,
+    variant = 'panel',
 }: TerminalViewProps) => {
+    const isTicker = variant === 'ticker';
+    const [sheetOpen, setSheetOpen] = useState(false);
+    const showSheet = isTicker && sheetOpen;
     const logViewportRef = useRef<HTMLDivElement>(null);
     const lastSeenLogIdRef = useRef<string | null>(null);
     // 지금 묶음의 첫 줄과 마지막으로 새 줄이 들어온 시각.
@@ -178,7 +223,7 @@ const TerminalView = ({
     //   감사 GF-07: 지역 분위기 문장(지역 설명 · 처음 방문 이야기)은 요약에서 뺀다(전체 보기에는 남는다).
     const compactMobileLogCount = 12;
     const hasAnyQuickSlot = Array.isArray(quickSlots) && quickSlots.some(Boolean);
-    const shouldCompactMobileLogs = !logExpanded && !isCombat;
+    const shouldCompactMobileLogs = !logExpanded && !isCombat && !showSheet;
     const playerLoc = player?.loc;
     const ambientTexts = useMemo(
         () => getAmbientLogTexts(playerLoc ? DB.MAPS[playerLoc] : null, [MSG.MOVE_AREA_DESC_BLIND]),
@@ -214,8 +259,8 @@ const TerminalView = ({
         setLiveHp({ tailId: liveTurnTailId, text: liveHpText });
     }
     const showQuickSlots = Boolean(player && quickSlots && hasAnyQuickSlot);
-    const showExpandToggle = isCombat || logs.length > compactMobileLogCount;
-    const showNarrativePulse = Boolean(latestStory) && gameState !== GS.COMBAT && (logExpanded || logs.length > compactMobileLogCount);
+    const showExpandToggle = !showSheet && (isCombat || logs.length > compactMobileLogCount);
+    const showNarrativePulse = !showSheet && Boolean(latestStory) && gameState !== GS.COMBAT && (logExpanded || logs.length > compactMobileLogCount);
     // 2026-10 Wave 62 (원장 §61.2 A10): 길 잃은 여행이면 지역 그림을 그리지 않는다(판정은 utils/challengeRules.ts).
     const locationVisual = getVisibleLocationVisual(player);
     const showLocationVisual = Boolean(gameState === GS.IDLE && locationVisual);
@@ -228,7 +273,7 @@ const TerminalView = ({
         const viewport = logViewportRef.current;
         if (!viewport) return;
         viewport.scrollTo({ top: summaryTurnKey ? 0 : viewport.scrollHeight, behavior: 'auto' });
-    }, [isCombat, logExpanded, summaryTurnKey]);
+    }, [isCombat, logExpanded, summaryTurnKey, showSheet]);
 
     // 2026-10-26: 새 줄이 들어오면 그 묶음의 첫 줄부터 보이고, 다 들어가면 맨 아래다. 맨 아래만 붙이던 동안 한 번에 여러 줄이 들어오면
     //   (임무 수령 = 완료 · 단서 · 장의 본문) 첫 줄이 위로 잘렸다 — 글꼴이 넓은 기기(Linux CI)에서 단서 줄이 27% 잘렸다.
@@ -277,6 +322,208 @@ const TerminalView = ({
     const sceneKind = getFieldSceneKind(player, playerLoc);
     const sceneKindTone = sceneKind === 'boss' ? 'threat' : sceneKind === 'safe' ? 'good' : 'ether';
 
+    const logViewport = (
+        <div ref={logViewportRef} className="custom-scrollbar relative z-10 flex min-h-0 w-full flex-1 flex-col overflow-y-auto overflow-x-hidden pr-0.5">
+            {showToolbar && (
+                <div className="mb-1.5 flex min-h-8 shrink-0 items-center justify-between gap-2 px-1">
+                    {isCombat && (
+                        <h2 id={TERMINAL_HEADING_ID} className="font-readable text-[12px] font-semibold text-ae-ink-2">{MSG.COMBAT_LOG_SUMMARY_LABEL}</h2>
+                    )}
+                    {showExpandToggle && (
+                        <button
+                            type="button"
+                            data-testid="combat-log-toggle"
+                            aria-expanded={logExpanded}
+                            onClick={() => setLogExpanded((open) => !open)}
+                            className="ae-btn ae-btn-ghost ae-log-toggle ml-auto"
+                        >
+                            {isCombat
+                                ? (logExpanded
+                                    ? <span className="inline-flex items-center gap-1"><ChevronUp size={14} aria-hidden="true" /> 요약</span>
+                                    : <span className="inline-flex items-center gap-1"><Filter size={14} aria-hidden="true" /> 전체 <span className="font-fira tabular-nums">{hiddenCount > 0 ? `+${hiddenCount}` : ''}</span></span>)
+                                : (logExpanded ? '접기' : <span>전체 <span className="font-fira tabular-nums">+{hiddenCount}</span></span>)}
+                        </button>
+                    )}
+                </div>
+            )}
+
+            {showNarrativePulse && (
+                <div className="ae-well mb-2 flex shrink-0 items-start gap-2.5 px-3 py-2.5">
+                    <BookOpen size={16} aria-hidden="true" className="mt-0.5 shrink-0 text-ae-ether" />
+                    <div className="min-w-0">
+                        <div className="ae-eyebrow mb-0.5">이야기 흐름</div>
+                        <p className="font-readable text-[13px] leading-relaxed text-ae-ink-2">{latestStory?.text}</p>
+                    </div>
+                </div>
+            )}
+
+            {/* 아래 4px 여백: 맨 아래로 붙인 스크롤이 소수점 높이에서 마지막 줄을 1px 자르지 않게 한다. */}
+            <div className="shrink-0 pb-1">
+                {logs.length === 0 && (
+                    <div className="flex flex-col items-center py-4 text-center font-readable text-[13px] text-ae-ink-2">
+                        <ScrollText size={24} aria-hidden="true" className="mx-auto mb-3 text-ae-ether" />
+                        모험 기록을 준비하고 있습니다.
+                    </div>
+                )}
+
+                {/* 2026-10-26: 줄은 나타날 때만 움직이고 사라질 때는 곧바로 빠진다 — 나가는 줄이 한 프레임 남아 있던 동안
+                    새 묶음의 첫 줄에 맞춘 위치가 그 줄이 빠지면서 82px씩 들쭉날쭉했다. */}
+                {/* 소유자 결정 D25(감사 GF-07): 전투 요약에서 지난 차례는 흐린 한 줄로 접는다 — 첫 줄('내 행동')과 접힌 줄 수.
+                    표시만이다(기록 줄 · 줄 수는 그대로, '전체'를 누르면 모든 줄이 보인다). */}
+                {combatSummary?.previousTurn && (
+                    <div
+                        data-testid="combat-log-previous-turn"
+                        data-previous-turn-key={combatSummary.previousTurn.turnKey}
+                        className="aether-log-row ae-log-row is-previous-turn font-readable text-[13px] leading-[1.55] text-ae-ink-3"
+                    >
+                        <span aria-hidden="true" className="ae-log-badge" />
+                        <span className="min-w-0 whitespace-pre-wrap break-words">
+                            {MSG.COMBAT_LOG_PREVIOUS_TURN(combatSummary.previousTurn.first.text, combatSummary.previousTurn.moreCount)}
+                        </span>
+                    </div>
+                )}
+
+                {displayLogs.map((log) => {
+                    const style = LOG_STYLES[log.type] || DEFAULT_STYLE;
+                    const badgeKind = getLogBadgeKind(log);
+                    const badge = badgeKind ? MOBILE_LOG_BADGES[badgeKind] : undefined;
+
+                    return (
+                        <Motion.div
+                            key={log.id}
+                            initial={{ opacity: 0, y: 4 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.2, ease: [0.2, 0.8, 0.2, 1] }}
+                            data-log-id={log.id}
+                            data-log-type={log.type || 'default'}
+                            data-log-badge={badgeKind ?? undefined}
+                            className={`aether-log-row ae-log-row ${style.tone} font-readable text-[14px] leading-[1.55] ${style.text}`}
+                        >
+                            {badge ? (
+                                <span data-testid="log-type-badge" className={`aether-log-badge ae-log-badge ${badge.className}`}>
+                                    {badge.label}
+                                </span>
+                            ) : <span aria-hidden="true" className="ae-log-badge" />}
+                            <span className="min-w-0 whitespace-pre-wrap break-words">{renderLogText(log.text)}</span>
+                        </Motion.div>
+                    );
+                })}
+
+                {showFirstJourney && (
+                    <section data-testid="first-journey-context" className="ae-first-journey px-1 pb-1 pt-3 font-readable">
+                        <div className="flex items-center gap-3">
+                            {locationVisual && <div data-testid="terminal-location-visual" data-location-visual={locationVisual.key} aria-hidden="true" className="ae-scene-art flex h-12 w-12 shrink-0 items-center justify-center"><img src={locationVisual.src} alt="" className="h-10 w-10 object-contain [image-rendering:pixelated]" /></div>}
+                            <h2 className="font-display text-[15px] font-bold text-ae-gold-text">{MSG.FIRST_JOURNEY_TITLE}</h2>
+                        </div>
+                        <p className="mt-1.5 text-[14px] leading-[1.55] text-ae-ink-2">{MSG.FIRST_JOURNEY_REASON}</p>
+                    </section>
+                )}
+                <AnimatePresence>
+                    {logs.length > 0 && logs[logs.length - 1].type === 'loading' && (
+                        <Motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="mt-3 flex items-center gap-2 pl-3 font-readable text-[12px] text-ae-ink-3"
+                        >
+                            <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-ae-ether motion-reduce:animate-none" style={{ animationDelay: '0ms' }}></span>
+                            <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-ae-ether motion-reduce:animate-none" style={{ animationDelay: '150ms' }}></span>
+                            <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-ae-ether motion-reduce:animate-none" style={{ animationDelay: '300ms' }}></span>
+                            <span className="ml-2">이야기를 이어가는 중...</span>
+                        </Motion.div>
+                    )}
+                </AnimatePresence>
+            </div>
+        </div>
+    );
+
+    const quickSlotFooter = showQuickSlots && (
+        <div className="ae-chronicle-footer z-20 mt-2 shrink-0 pt-2">
+            <QuickSlot
+                slots={quickSlots || []}
+                onUse={(item, idx) => onQuickSlotUse?.(item, idx)}
+                gameState={gameState}
+            />
+        </div>
+    );
+
+    const liveRegion = (
+        <div
+            data-testid="combat-live-region"
+            role="log"
+            aria-live="polite"
+            aria-relevant="additions"
+            aria-label={MSG.A11Y_COMBAT_LIVE_LABEL}
+            className="sr-only"
+        >
+            {liveTurn.entries.map((log) => <p key={log.id}>{log.text}</p>)}
+            {liveHp.tailId !== null && liveHp.tailId === liveTurnTailId && liveHp.text && (
+                <p key={`hp-${liveHp.tailId}`}>{liveHp.text}</p>
+            )}
+        </div>
+    );
+
+    // 2026-11 화면 B안: 한 줄 소식 — 방금의 기록 한 줄(몇 초 뒤 흐려진다)과 '지난 소식' 단추. 줄을 눌러도 시트가 열린다.
+    if (isTicker) {
+        const latest = [...logs].reverse().find((log) => log.type !== 'loading') ?? null;
+        const latestBadgeKind = latest ? getLogBadgeKind(latest) : null;
+        const latestBadge = latestBadgeKind ? MOBILE_LOG_BADGES[latestBadgeKind] : undefined;
+        const latestStyle = latest ? LOG_STYLES[latest.type] || DEFAULT_STYLE : DEFAULT_STYLE;
+        return (
+            <div
+                data-testid="terminal-panel"
+                data-log-variant="ticker"
+                role="region"
+                aria-labelledby={TERMINAL_HEADING_ID}
+                className="ae-log-ticker relative flex min-w-0 flex-1 flex-col gap-1.5"
+            >
+                <h2 id={TERMINAL_HEADING_ID} className="sr-only">{MSG.A11Y_LOG_HEADING}</h2>
+                <div className="flex min-h-11 min-w-0 items-center gap-2">
+                    <button
+                        type="button"
+                        data-testid="log-ticker"
+                        aria-label={MSG.LOG_SHEET_OPEN_ARIA}
+                        onClick={() => setSheetOpen(true)}
+                        className="ae-log-ticker-line flex min-h-11 min-w-0 flex-1 items-center gap-2 rounded-ae-md px-3 text-left"
+                    >
+                        {latest && (
+                            <span
+                                key={latest.id}
+                                data-testid="log-ticker-text"
+                                data-log-id={latest.id}
+                                data-log-type={latest.type || 'default'}
+                                className={`ae-log-ticker-text flex min-w-0 items-baseline gap-2 font-readable text-[14px] leading-[1.45] ${latestStyle.text}`}
+                            >
+                                {latestBadge && (
+                                    <span data-testid="log-type-badge" className={`aether-log-badge ae-log-badge shrink-0 ${latestBadge.className}`}>
+                                        {latestBadge.label}
+                                    </span>
+                                )}
+                                <span className="ae-log-ticker-body min-w-0 break-words">{renderLogText(latest.text)}</span>
+                            </span>
+                        )}
+                    </button>
+                    <button
+                        type="button"
+                        data-testid="log-sheet-open"
+                        onClick={() => setSheetOpen(true)}
+                        className="ae-btn ae-btn-glass inline-flex min-h-11 shrink-0 items-center gap-1.5 px-3"
+                    >
+                        <ScrollText size={16} aria-hidden="true" />
+                        <span>{MSG.LOG_SHEET_OPEN_LABEL}</span>
+                    </button>
+                </div>
+                {quickSlotFooter}
+                {liveRegion}
+                {showSheet && (
+                    <LogSheet onClose={() => setSheetOpen(false)}>
+                        {logViewport}
+                    </LogSheet>
+                )}
+            </div>
+        );
+    }
+
     return (
         <div
             data-testid="terminal-panel"
@@ -312,143 +559,11 @@ const TerminalView = ({
                 </header>
             )}
 
-            <div ref={logViewportRef} className="custom-scrollbar relative z-10 flex min-h-0 w-full flex-1 flex-col overflow-y-auto overflow-x-hidden pr-0.5">
-                {showToolbar && (
-                    <div className="mb-1.5 flex min-h-8 shrink-0 items-center justify-between gap-2 px-1">
-                        {isCombat && (
-                            <h2 id={TERMINAL_HEADING_ID} className="font-readable text-[12px] font-semibold text-ae-ink-2">{MSG.COMBAT_LOG_SUMMARY_LABEL}</h2>
-                        )}
-                        {showExpandToggle && (
-                            <button
-                                type="button"
-                                data-testid="combat-log-toggle"
-                                aria-expanded={logExpanded}
-                                onClick={() => setLogExpanded((open) => !open)}
-                                className="ae-btn ae-btn-ghost ae-log-toggle ml-auto"
-                            >
-                                {isCombat
-                                    ? (logExpanded
-                                        ? <span className="inline-flex items-center gap-1"><ChevronUp size={14} aria-hidden="true" /> 요약</span>
-                                        : <span className="inline-flex items-center gap-1"><Filter size={14} aria-hidden="true" /> 전체 <span className="font-fira tabular-nums">{hiddenCount > 0 ? `+${hiddenCount}` : ''}</span></span>)
-                                    : (logExpanded ? '접기' : <span>전체 <span className="font-fira tabular-nums">+{hiddenCount}</span></span>)}
-                            </button>
-                        )}
-                    </div>
-                )}
+            {logViewport}
 
-                {showNarrativePulse && (
-                    <div className="ae-well mb-2 flex shrink-0 items-start gap-2.5 px-3 py-2.5">
-                        <BookOpen size={16} aria-hidden="true" className="mt-0.5 shrink-0 text-ae-ether" />
-                        <div className="min-w-0">
-                            <div className="ae-eyebrow mb-0.5">이야기 흐름</div>
-                            <p className="font-readable text-[13px] leading-relaxed text-ae-ink-2">{latestStory?.text}</p>
-                        </div>
-                    </div>
-                )}
+            {quickSlotFooter}
 
-                {/* 아래 4px 여백: 맨 아래로 붙인 스크롤이 소수점 높이에서 마지막 줄을 1px 자르지 않게 한다. */}
-                <div className="shrink-0 pb-1">
-                    {logs.length === 0 && (
-                        <div className="flex flex-col items-center py-4 text-center font-readable text-[13px] text-ae-ink-2">
-                            <ScrollText size={24} aria-hidden="true" className="mx-auto mb-3 text-ae-ether" />
-                            모험 기록을 준비하고 있습니다.
-                        </div>
-                    )}
-
-                    {/* 2026-10-26: 줄은 나타날 때만 움직이고 사라질 때는 곧바로 빠진다 — 나가는 줄이 한 프레임 남아 있던 동안
-                        새 묶음의 첫 줄에 맞춘 위치가 그 줄이 빠지면서 82px씩 들쭉날쭉했다. */}
-                    {/* 소유자 결정 D25(감사 GF-07): 전투 요약에서 지난 차례는 흐린 한 줄로 접는다 — 첫 줄('내 행동')과 접힌 줄 수.
-                        표시만이다(기록 줄 · 줄 수는 그대로, '전체'를 누르면 모든 줄이 보인다). */}
-                    {combatSummary?.previousTurn && (
-                        <div
-                            data-testid="combat-log-previous-turn"
-                            data-previous-turn-key={combatSummary.previousTurn.turnKey}
-                            className="aether-log-row ae-log-row is-previous-turn font-readable text-[13px] leading-[1.55] text-ae-ink-3"
-                        >
-                            <span aria-hidden="true" className="ae-log-badge" />
-                            <span className="min-w-0 whitespace-pre-wrap break-words">
-                                {MSG.COMBAT_LOG_PREVIOUS_TURN(combatSummary.previousTurn.first.text, combatSummary.previousTurn.moreCount)}
-                            </span>
-                        </div>
-                    )}
-
-                    {displayLogs.map((log) => {
-                        const style = LOG_STYLES[log.type] || DEFAULT_STYLE;
-                        const badgeKind = getLogBadgeKind(log);
-                        const badge = badgeKind ? MOBILE_LOG_BADGES[badgeKind] : undefined;
-
-                        return (
-                            <Motion.div
-                                key={log.id}
-                                initial={{ opacity: 0, y: 4 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ duration: 0.2, ease: [0.2, 0.8, 0.2, 1] }}
-                                data-log-id={log.id}
-                                data-log-type={log.type || 'default'}
-                                data-log-badge={badgeKind ?? undefined}
-                                className={`aether-log-row ae-log-row ${style.tone} font-readable text-[14px] leading-[1.55] ${style.text}`}
-                            >
-                                {badge ? (
-                                    <span data-testid="log-type-badge" className={`aether-log-badge ae-log-badge ${badge.className}`}>
-                                        {badge.label}
-                                    </span>
-                                ) : <span aria-hidden="true" className="ae-log-badge" />}
-                                <span className="min-w-0 whitespace-pre-wrap break-words">{renderLogText(log.text)}</span>
-                            </Motion.div>
-                        );
-                    })}
-
-                    {showFirstJourney && (
-                        <section data-testid="first-journey-context" className="ae-first-journey px-1 pb-1 pt-3 font-readable">
-                            <div className="flex items-center gap-3">
-                                {locationVisual && <div data-testid="terminal-location-visual" data-location-visual={locationVisual.key} aria-hidden="true" className="ae-scene-art flex h-12 w-12 shrink-0 items-center justify-center"><img src={locationVisual.src} alt="" className="h-10 w-10 object-contain [image-rendering:pixelated]" /></div>}
-                                <h2 className="font-display text-[15px] font-bold text-ae-gold-text">{MSG.FIRST_JOURNEY_TITLE}</h2>
-                            </div>
-                            <p className="mt-1.5 text-[14px] leading-[1.55] text-ae-ink-2">{MSG.FIRST_JOURNEY_REASON}</p>
-                        </section>
-                    )}
-                    <AnimatePresence>
-                        {logs.length > 0 && logs[logs.length - 1].type === 'loading' && (
-                            <Motion.div
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                exit={{ opacity: 0 }}
-                                className="mt-3 flex items-center gap-2 pl-3 font-readable text-[12px] text-ae-ink-3"
-                            >
-                                <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-ae-ether motion-reduce:animate-none" style={{ animationDelay: '0ms' }}></span>
-                                <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-ae-ether motion-reduce:animate-none" style={{ animationDelay: '150ms' }}></span>
-                                <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-ae-ether motion-reduce:animate-none" style={{ animationDelay: '300ms' }}></span>
-                                <span className="ml-2">이야기를 이어가는 중...</span>
-                            </Motion.div>
-                        )}
-                    </AnimatePresence>
-                </div>
-            </div>
-
-            {/* QuickSlot footer */}
-            {showQuickSlots && (
-                <div className="ae-chronicle-footer z-20 mt-2 shrink-0 pt-2">
-                    <QuickSlot
-                        slots={quickSlots || []}
-                        onUse={(item, idx) => onQuickSlotUse?.(item, idx)}
-                        gameState={gameState}
-                    />
-                </div>
-            )}
-
-            <div
-                data-testid="combat-live-region"
-                role="log"
-                aria-live="polite"
-                aria-relevant="additions"
-                aria-label={MSG.A11Y_COMBAT_LIVE_LABEL}
-                className="sr-only"
-            >
-                {liveTurn.entries.map((log) => <p key={log.id}>{log.text}</p>)}
-                {liveHp.tailId !== null && liveHp.tailId === liveTurnTailId && liveHp.text && (
-                    <p key={`hp-${liveHp.tailId}`}>{liveHp.text}</p>
-                )}
-            </div>
+            {liveRegion}
         </div>
     );
 };

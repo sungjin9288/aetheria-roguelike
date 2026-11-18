@@ -159,7 +159,7 @@ const MobileGameLayout = ({
                         )}
                         {showFieldMap && fieldMap?.field && fieldMap.layout ? (
                             <div className="ae-field-map-slot flex min-h-0 min-w-0 flex-1">
-                                <FieldMapView player={engine.player} field={fieldMap.field} layout={fieldMap.layout} logs={engine.logs} door={fieldMap.door} />
+                                <FieldMapView player={engine.player} field={fieldMap.field} layout={fieldMap.layout} door={fieldMap.door} onTileTap={fieldMap.walkTo} walkTarget={fieldMap.walkTarget} />
                             </div>
                         ) : showFieldStage ? (
                             <div className="ae-field-stage-slot flex min-h-0 min-w-0 flex-1">
@@ -180,6 +180,7 @@ const MobileGameLayout = ({
                                 onQuickSlotUse={handleQuickSlotUse}
                                 maxHp={fullStats?.maxHp}
                                 hideScene={showScene}
+                                variant={showFieldMap ? 'ticker' : 'panel'}
                             />
                         </div>
                     </div>

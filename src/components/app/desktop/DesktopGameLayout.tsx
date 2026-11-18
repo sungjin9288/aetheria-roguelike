@@ -137,7 +137,7 @@ const DesktopGameLayout = ({
                     <>
                         {showFieldMap && fieldMap?.field && fieldMap.layout && engine.player && (
                             <div className="ae-field-map-slot is-desktop flex min-w-0">
-                                <FieldMapView player={engine.player} field={fieldMap.field} layout={fieldMap.layout} logs={engine.logs} door={fieldMap.door} />
+                                <FieldMapView player={engine.player} field={fieldMap.field} layout={fieldMap.layout} door={fieldMap.door} onTileTap={fieldMap.walkTo} walkTarget={fieldMap.walkTarget} />
                             </div>
                         )}
                         <div className={showFieldMap ? 'ae-desktop-field-log flex min-w-0' : 'flex min-h-[200px] min-w-0 flex-1'}>
