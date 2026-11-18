@@ -78,7 +78,7 @@ const MobileGameLayout = ({
     const fieldMap = useFieldMapControl();
     const showFieldMap = showFieldStage && Boolean(fieldMap?.active && fieldMap.field && fieldMap.layout);
     // 2026-11 마을 무대: 안전지대의 대기 화면도 위쪽이 마을 그림 · 주인공이고, 기록은 아래 띠다(필드 무대와 같은 칸 · 같은 접힘 규칙).
-    const showTownStage = !isPanelFocusState && !stageEnemy && !showFieldStage && isTownStageMode(engine.player, engine.gameState);
+    const showTownStage = !isPanelFocusState && !stageEnemy && !showFieldStage && isTownStageMode(engine.player, engine.gameState, engine.logs);
     const showScene = showFieldStage || showTownStage;
     const archiveAvailable = !isPanelFocusState && mobileArchiveDockVisible;
     const modeEnterClass = useStageEnterClass(engine.gameState);

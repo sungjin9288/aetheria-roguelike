@@ -7,7 +7,7 @@ import type { LogEntry } from '../types/session.js';
 import { GS } from '../reducers/gameStates';
 import type { GameMode } from '../reducers/gameStates';
 import { getVisibleLocationName, getVisibleLocationVisual } from '../utils/challengeRules';
-import { getFieldSceneKind, isFirstJourneyIntro } from '../utils/fieldStage';
+import { getFieldSceneKind, isFirstJourneyIntro, READ_FIRST_LOG_TYPES } from '../utils/fieldStage';
 import Chip from './ui/Chip';
 import { MSG } from '../data/messages';
 import { ENEMY_ACTION_LOG_TYPE, ENEMY_HEAVY_LOG_TYPE, getLogBadgeKind, type LogBadgeKind } from '../data/logBadge';
@@ -63,8 +63,6 @@ const TERMINAL_HEADING_ID = 'terminal-log-heading';
 // 앞선 새 줄과 이 간격 안에 들어온 기록 줄은 한 행동의 묶음이다(한 행동의 렌더는 4 ~ 7ms 간격, 사람의 다음 누름은 그보다 훨씬 뒤)
 //   — 기록 창은 그 묶음의 첫 줄부터 보인다.
 const LOG_BATCH_WINDOW_MS = 50;
-// 한 묶음이 기록 창에 다 들어가지 않을 때 처음부터 읽혀야 하는 줄.
-const READ_FIRST_LOG_TYPES = new Set(['story', 'event']);
 
 // slice 20: 로그 핵심 숫자 강조 — 데미지/HP/보상 수치(+21, 16, 73/89, 35%)를
 //   본문보다 한 단계 밝고 굵게 렌더. "라벨보다 숫자가 먼저 읽혀야 한다"는

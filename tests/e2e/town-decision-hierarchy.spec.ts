@@ -48,28 +48,25 @@ test.describe('Town decision hierarchy', () => {
         expect(Math.abs(archiveBounds!.y - readinessBounds!.y)).toBeLessThan(16);
         expect(await archive.evaluate((node) => node.closest('[data-testid="control-expedition-prep"]') !== null)).toBe(true);
 
-        const terminalBounds = await page.getByTestId('terminal-panel').boundingBox();
-        expect(terminalBounds).not.toBeNull();
-        expect(terminalBounds!.height).toBeGreaterThanOrEqual(280);
-
-        const locationVisual = page.getByTestId('terminal-location-visual');
-        await expect(locationVisual).toHaveAttribute('data-location-visual', 'start-village');
-        await expect.poll(() => locationVisual.locator('img').evaluate((image) => (
-            image instanceof HTMLImageElement
-            && image.complete
-            && image.naturalWidth === 96
-            && image.naturalHeight === 96
+        // 2026-11 마을 무대(소유자 결정 "마을+지도 함께 또한 글자의 나열을 최소로"): 마을의 위쪽은 기록 창이 아니라 마을 무대다 —
+        //   시작의 마을은 전경 그림 위에 주인공이 서고, 기록은 그 아래 띠다(필드 무대와 같은 칸). 지역 그림은 화면에 하나다.
+        const stage = page.getByTestId('town-stage');
+        await expect(stage).toBeVisible();
+        await expect(page.getByTestId('terminal-location-visual')).toHaveCount(0);
+        const panorama = page.getByTestId('town-stage-panorama');
+        await expect.poll(() => panorama.evaluate((image) => (
+            image instanceof HTMLImageElement && image.complete && image.naturalWidth > 0
         ))).toBe(true);
-        const locationBounds = await locationVisual.boundingBox();
-        expect(locationBounds).not.toBeNull();
-        expect(locationBounds!.x).toBeGreaterThanOrEqual(terminalBounds!.x);
-        expect(locationBounds!.x + locationBounds!.width).toBeLessThanOrEqual(terminalBounds!.x + terminalBounds!.width);
-        expect(locationBounds!.y + locationBounds!.height).toBeLessThanOrEqual(terminalBounds!.y + terminalBounds!.height);
-        const terminalScroll = await page.getByTestId('terminal-panel').locator('.custom-scrollbar').evaluate((viewport) => ({
-            clientHeight: viewport.clientHeight,
-            scrollHeight: viewport.scrollHeight,
-        }));
-        expect(terminalScroll.scrollHeight).toBeLessThanOrEqual(terminalScroll.clientHeight + 1);
+        const [stageBounds, terminalBounds] = await Promise.all([
+            stage.boundingBox(),
+            page.getByTestId('terminal-panel').boundingBox(),
+        ]);
+        expect(stageBounds).not.toBeNull();
+        expect(terminalBounds).not.toBeNull();
+        expect(stageBounds!.height).toBeGreaterThanOrEqual(88);
+        expect(terminalBounds!.y).toBeGreaterThanOrEqual(stageBounds!.y + stageBounds!.height);
+        expect(terminalBounds!.y + terminalBounds!.height).toBeLessThanOrEqual(primaryBounds!.y);
+        const locationVisual = page.getByTestId('terminal-location-visual');
 
         const pageWidth = await page.evaluate(() => ({
             viewport: window.innerWidth,
