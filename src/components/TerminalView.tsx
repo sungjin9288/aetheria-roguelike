@@ -24,6 +24,7 @@ import {
     selectCombatLogSummary,
     selectLatestCombatTurn,
 } from '../utils/combatLogSummary';
+import { selectTickerLines } from '../utils/logTicker';
 
 // 2026-10 에테르 유리 — 기록은 연대기다: 줄마다 머리말(종류) 한 칸 + 본문, 줄 사이는 머리카락 선 하나.
 //   색은 토큰만 쓴다(감사 VD-06 · VD-09 · UX-13). 전설은 희귀도 색 한 곳(`ae-rarity-legendary`)을 읽고 위협 색을 쓰지 않는다.
@@ -66,6 +67,8 @@ const TERMINAL_HEADING_ID = 'terminal-log-heading';
 // 앞선 새 줄과 이 간격 안에 들어온 기록 줄은 한 행동의 묶음이다(한 행동의 렌더는 4 ~ 7ms 간격, 사람의 다음 누름은 그보다 훨씬 뒤)
 //   — 기록 창은 그 묶음의 첫 줄부터 보인다.
 const LOG_BATCH_WINDOW_MS = 50;
+// 2026-11 화면 B안: 한 줄 소식이 한 번에 보이는 최대 줄 수(전투 한 차례 · 임무 수령 묶음).
+const TICKER_MAX_LINES = 3;
 
 // slice 20: 로그 핵심 숫자 강조 — 데미지/HP/보상 수치(+21, 16, 73/89, 35%)를
 //   본문보다 한 단계 밝고 굵게 렌더. "라벨보다 숫자가 먼저 읽혀야 한다"는
@@ -229,7 +232,8 @@ const TerminalView = ({
         () => getAmbientLogTexts(playerLoc ? DB.MAPS[playerLoc] : null, [MSG.MOVE_AREA_DESC_BLIND]),
         [playerLoc],
     );
-    const combatSummary = isCombat && !logExpanded
+    // 한 줄 소식의 '지난 소식' 시트는 전체 기록이다 — 요약은 기록 창(panel)에서만 쓴다(시트에는 요약 토글이 없다).
+    const combatSummary = isCombat && !logExpanded && !isTicker
         ? selectCombatLogSummary(logs, {
             types: COMBAT_LOG_TYPES,
             fallbackCount: SUMMARY_LOG_COUNT,
@@ -258,6 +262,32 @@ const TerminalView = ({
     if (liveHp.tailId !== liveTurnTailId) {
         setLiveHp({ tailId: liveTurnTailId, text: liveHpText });
     }
+
+    // 2026-11 화면 B안: 한 줄 소식은 마지막 묶음(짧은 간격 안에 들어온 줄)을 보인다 — 묶음 규칙은 기록 창의 첫 줄 맞춤과 같다.
+    const [tickerBatch, setTickerBatch] = useState<{ firstId: string | null; at: number }>(() => ({ firstId: lastLogId, at: -Infinity }));
+    const tickerLastSeenIdRef = useRef<string | null>(lastLogId);
+    useEffect(() => {
+        if (!isTicker) return;
+        const previousLastId = tickerLastSeenIdRef.current;
+        tickerLastSeenIdRef.current = lastLogId;
+        if (lastLogId === previousLastId) return;
+        const previousIndex = previousLastId === null ? -1 : logs.findIndex((log) => log.id === previousLastId);
+        const firstNewId = previousIndex >= 0 ? logs[previousIndex + 1]?.id ?? lastLogId : lastLogId;
+        const now = performance.now();
+        setTickerBatch((batch) => (now - batch.at <= LOG_BATCH_WINDOW_MS
+            ? { firstId: batch.firstId, at: now }
+            : { firstId: firstNewId, at: now }));
+    }, [isTicker, logs, lastLogId]);
+    const tickerLines = useMemo(
+        () => (isTicker
+            ? selectTickerLines(logs, {
+                batchFirstId: tickerBatch.firstId,
+                combatTurn: isCombat ? liveTurn.entries : null,
+                maxLines: TICKER_MAX_LINES,
+            })
+            : []),
+        [isTicker, logs, tickerBatch.firstId, isCombat, liveTurn.entries],
+    );
     const showQuickSlots = Boolean(player && quickSlots && hasAnyQuickSlot);
     const showExpandToggle = !showSheet && (isCombat || logs.length > compactMobileLogCount);
     const showNarrativePulse = !showSheet && Boolean(latestStory) && gameState !== GS.COMBAT && (logExpanded || logs.length > compactMobileLogCount);
@@ -465,10 +495,6 @@ const TerminalView = ({
 
     // 2026-11 화면 B안: 한 줄 소식 — 방금의 기록 한 줄(몇 초 뒤 흐려진다)과 '지난 소식' 단추. 줄을 눌러도 시트가 열린다.
     if (isTicker) {
-        const latest = [...logs].reverse().find((log) => log.type !== 'loading') ?? null;
-        const latestBadgeKind = latest ? getLogBadgeKind(latest) : null;
-        const latestBadge = latestBadgeKind ? MOBILE_LOG_BADGES[latestBadgeKind] : undefined;
-        const latestStyle = latest ? LOG_STYLES[latest.type] || DEFAULT_STYLE : DEFAULT_STYLE;
         return (
             <div
                 data-testid="terminal-panel"
@@ -484,24 +510,30 @@ const TerminalView = ({
                         data-testid="log-ticker"
                         aria-label={MSG.LOG_SHEET_OPEN_ARIA}
                         onClick={() => setSheetOpen(true)}
-                        className="ae-log-ticker-line flex min-h-11 min-w-0 flex-1 items-center gap-2 rounded-ae-md px-3 text-left"
+                        className="ae-log-ticker-line flex min-h-11 min-w-0 flex-1 flex-col justify-center gap-1 rounded-ae-md px-3 py-1.5 text-left"
                     >
-                        {latest && (
-                            <span
-                                key={latest.id}
-                                data-testid="log-ticker-text"
-                                data-log-id={latest.id}
-                                data-log-type={latest.type || 'default'}
-                                className={`ae-log-ticker-text flex min-w-0 items-baseline gap-2 font-readable text-[14px] leading-[1.45] ${latestStyle.text}`}
-                            >
-                                {latestBadge && (
-                                    <span data-testid="log-type-badge" className={`aether-log-badge ae-log-badge shrink-0 ${latestBadge.className}`}>
-                                        {latestBadge.label}
-                                    </span>
-                                )}
-                                <span className="ae-log-ticker-body min-w-0 break-words">{renderLogText(latest.text)}</span>
-                            </span>
-                        )}
+                        {tickerLines.map((line) => {
+                            const badgeKind = getLogBadgeKind(line);
+                            const badge = badgeKind ? MOBILE_LOG_BADGES[badgeKind] : undefined;
+                            const style = LOG_STYLES[line.type] || DEFAULT_STYLE;
+                            return (
+                                <span
+                                    key={line.id}
+                                    data-testid="log-ticker-text"
+                                    data-log-id={line.id}
+                                    data-log-type={line.type || 'default'}
+                                    data-log-badge={badgeKind ?? undefined}
+                                    className={`ae-log-ticker-text flex min-w-0 items-baseline gap-2 font-readable text-[14px] leading-[1.45] ${style.text}`}
+                                >
+                                    {badge && (
+                                        <span data-testid="log-type-badge" className={`aether-log-badge ae-log-badge shrink-0 ${badge.className}`}>
+                                            {badge.label}
+                                        </span>
+                                    )}
+                                    <span className="ae-log-ticker-body min-w-0 break-words">{renderLogText(line.text)}</span>
+                                </span>
+                            );
+                        })}
                     </button>
                     <button
                         type="button"

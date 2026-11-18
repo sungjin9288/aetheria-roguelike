@@ -180,7 +180,8 @@ const MobileGameLayout = ({
                                 onQuickSlotUse={handleQuickSlotUse}
                                 maxHp={fullStats?.maxHp}
                                 hideScene={showScene}
-                                variant={showFieldMap ? 'ticker' : 'panel'}
+                                // 2026-11 화면 B안: 무대(지도 · 필드 · 마을 · 전투) 아래의 기록은 한 줄 소식이다 — 전체 기록은 '지난 소식' 시트.
+                                variant={showScene || stageEnemy ? 'ticker' : 'panel'}
                             />
                         </div>
                     </div>

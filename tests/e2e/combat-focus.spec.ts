@@ -46,7 +46,8 @@ test.describe('Combat focus mode', () => {
         await page.screenshot({ path: 'playtest-artifacts/monster-region-art/combat-forest.png' });
     });
 
-    test('아이템과 전투 기록을 펼쳐도 주 행동 상태를 유지한다', async ({ page }) => {
+    // 2026-11 화면 B안: 전투 무대 아래 기록은 한 줄 소식이고 전체 기록은 '지난 소식' 시트다 — 시트를 열고 닫아도 주 행동은 제자리다.
+    test('아이템과 지난 소식을 열어도 주 행동 상태를 유지한다', async ({ page }) => {
         const attack = page.getByTestId('combat-action-attack');
         const before = await attack.boundingBox();
 
@@ -56,9 +57,15 @@ test.describe('Combat focus mode', () => {
         await expect(page.getByRole('button', { name: /회복 물약/ })).toBeVisible();
         await itemAction.click();
 
-        const logToggle = page.getByTestId('combat-log-toggle');
-        await logToggle.click();
-        await expect(logToggle).toHaveAttribute('aria-expanded', 'true');
+        await expect(page.getByTestId('combat-log-toggle')).toHaveCount(0);
+        const sheetOpen = page.getByTestId('log-sheet-open');
+        await sheetOpen.click();
+        const sheet = page.getByTestId('log-sheet');
+        await expect(sheet).toBeVisible();
+        await expect(sheet.locator('[data-log-id]').first()).toBeVisible();
+        await page.keyboard.press('Escape');
+        await expect(sheet).toHaveCount(0);
+        await expect(sheetOpen).toBeFocused();
         await expect(attack).toBeVisible();
 
         const after = await attack.boundingBox();
@@ -159,9 +166,56 @@ test.describe('Combat focus mode', () => {
     });
 });
 
-// 소유자 결정 D25(2026-10-26): 전투 기록 요약은 지난 차례를 한 줄로 접고, 적의 행동은 '적 행동' 배지다(적 강타에 '치명타' 배지 없음).
-test('D25 전투 기록은 지난 차례를 한 줄로 접고 적 행동을 따로 표시한다', async ({ page }) => {
+// 소유자 결정 D25(2026-10-26): 적의 행동은 '적 행동' 배지다(적 강타에 '치명타' 배지 없음).
+//   2026-11 화면 B안: 휴대폰 전투 무대 아래 기록은 한 줄 소식이라 이번 차례만 보이고(내 행동이 첫 줄), 지난 차례는 '지난 소식' 시트에 있다.
+//   지난 차례를 한 줄로 접는 요약은 기록 창(panel) 몫이다 — 단위 계약 `selectCombatLogSummary`가 지킨다.
+test('D25 전투 한 줄 소식은 이번 차례만 보이고 적 행동을 따로 표시한다', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
+    await startE2ERun(page);
+    expect(await page.evaluate(() => window.__AETHERIA_TEST_API__?.seedCombatFocusScenario?.(false))).toBe(true);
+    await expect(page.getByTestId('combat-focus-panel')).toBeVisible({ timeout: 8_000 });
+    await waitForModeTransition(page);
+
+    const ticker = page.getByTestId('log-ticker');
+    const attack = page.getByTestId('combat-action-attack');
+    const lines = ticker.getByTestId('log-ticker-text');
+    const readTurn = () => lines.evaluateAll((nodes) => nodes.map((node) => ({
+        id: node.getAttribute('data-log-id'),
+        badge: node.getAttribute('data-log-badge'),
+    })));
+
+    await attack.click();
+    await expect(ticker.locator('[data-log-badge="enemy"]').first()).toBeVisible({ timeout: 5_000 });
+    const firstTurn = await readTurn();
+    expect(firstTurn.length).toBeGreaterThan(0);
+    expect(firstTurn.length).toBeLessThanOrEqual(3);
+    expect(firstTurn[0].badge, '첫 줄은 내 행동').not.toBe('enemy');
+
+    await expect(attack).toBeEnabled({ timeout: 5_000 });
+    await attack.click();
+    await expect.poll(async () => (await readTurn()).some((line) => firstTurn.some((prev) => prev.id === line.id)), {
+        message: '지난 차례 줄은 한 줄 소식에서 빠진다',
+        timeout: 5_000,
+    }).toBe(false);
+    const enemyRows = ticker.locator('[data-log-badge="enemy"]');
+    for (const row of await enemyRows.all()) {
+        await expect(row.getByTestId('log-type-badge')).toHaveText('적 행동');
+    }
+    await expect(ticker.locator('[data-log-type="enemy-heavy"] [data-testid="log-type-badge"]', { hasText: '치명타' })).toHaveCount(0);
+    await expect(page.getByTestId('combat-log-previous-turn')).toHaveCount(0);
+
+    // 지난 차례는 시트에 그대로 있다.
+    await page.getByTestId('log-sheet-open').click();
+    const sheet = page.getByTestId('log-sheet');
+    await expect(sheet).toBeVisible();
+    for (const line of firstTurn) {
+        await expect(sheet.locator(`[data-log-id="${line.id}"]`)).toHaveCount(1);
+    }
+});
+
+// 데스크톱 배치(1024px 이상)의 기록 창은 지난 차례를 한 줄로 접는다(D25).
+test('D25 (데스크톱 기록 창) 전투 기록은 지난 차례를 한 줄로 접고 적 행동을 따로 표시한다', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 800 });
     await startE2ERun(page);
     // 정예 시나리오다 — 보스 시나리오(공격력 120)는 시작 능력치의 플레이어를 두 차례 안에 쓰러뜨릴 수 있어 기록을 재기 전에 여정이 끝났다.
     expect(await page.evaluate(() => window.__AETHERIA_TEST_API__?.seedCombatFocusScenario?.(false))).toBe(true);
