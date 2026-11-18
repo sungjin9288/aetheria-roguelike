@@ -25,12 +25,15 @@ const seed = async (page: Page, kind: 'walk' | 'mimic' | 'opened' | 'cleared' | 
 const expectFieldLayout = async (page: Page, width: number) => {
     await expect(page.getByTestId('field-map')).toBeVisible({ timeout: 8_000 });
     await expect(page.getByTestId('control-explore')).toHaveCount(0);
-    for (const direction of ['up', 'down', 'left', 'right']) {
-        const box = await page.getByTestId(`field-pad-${direction}`).boundingBox();
-        expect(box, direction).not.toBeNull();
-        expect(box!.width, `${direction} 너비`).toBeGreaterThanOrEqual(44);
-        expect(box!.height, `${direction} 높이`).toBeGreaterThanOrEqual(44);
-        expect(box!.x + box!.width, `${direction} 화면 안`).toBeLessThanOrEqual(width);
+    // 2026-11 화면 B안: 휴대폰은 칸을 눌러 걷는다 — 방향 패드는 화면에서 빠지고 키보드 · 화면 낭독기 차례에만 남는다.
+    //   누르는 것은 지도 칸과 한 줄 행동 막대(이동 · 지도 · 정찰 · 가방)다.
+    await expect(page.getByTestId('field-pad').getByRole('button'), '방향 패드는 키보드 차례에 남는다').toHaveCount(4);
+    for (const id of ['control-move', 'control-map-open', 'control-scout', 'control-open-bag']) {
+        const box = await page.getByTestId(id).boundingBox();
+        expect(box, id).not.toBeNull();
+        expect(box!.width, `${id} 너비`).toBeGreaterThanOrEqual(44);
+        expect(box!.height, `${id} 높이`).toBeGreaterThanOrEqual(44);
+        expect(box!.x + box!.width, `${id} 화면 안`).toBeLessThanOrEqual(width);
     }
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
     expect(overflow, '가로 넘침 없음').toBeLessThanOrEqual(0);
@@ -47,6 +50,35 @@ for (const size of SIZES) {
         test.beforeEach(async ({ page }) => {
             await page.setViewportSize({ width: size.width, height: size.height });
             await startE2ERun(page);
+        });
+
+        test('칸을 누르면 그 칸까지 걷고, 도착하면 목표가 지워진다 — 기록은 한 줄 소식 · 시트다', async ({ page }) => {
+            await seed(page, 'walk');
+            const map = page.getByTestId('field-map');
+            await expect(map).toBeVisible({ timeout: 8_000 });
+            await expect(page.getByTestId('field-map-tap-hint')).toBeVisible();
+            const state = await readState(page);
+            const layout = state.player.fieldLayout;
+            const pos: number = state.player.fieldMap.pos;
+            // 주인공 바로 위 칸 — 시드 지도의 입구에서 위로 한 칸은 언제나 밝혀진 길이다(입구는 아래 가장자리).
+            const target = pos - layout.width;
+            expect(layout.tiles[target], '위 칸은 걸을 수 있다').not.toBe('#');
+            const canvas = page.getByTestId('field-map-canvas');
+            const box = (await canvas.boundingBox())!;
+            const tile = await canvas.evaluate((node, cols) => Math.min(56, Math.max(38, Math.floor(node.clientWidth / cols))), 8);
+            await canvas.click({ position: { x: box.width / 2, y: box.height / 2 - tile } });
+            await expect(map).toHaveAttribute('data-field-pos', String(target), { timeout: 5_000 });
+            await expect(map).not.toHaveAttribute('data-field-target', /.+/);
+            await expect(page.getByTestId('field-map-tap-hint')).toHaveCount(0);
+
+            await expect(page.getByTestId('log-ticker')).toBeVisible();
+            await page.getByTestId('log-sheet-open').click();
+            const sheet = page.getByTestId('log-sheet');
+            await expect(sheet).toBeVisible();
+            await expect(sheet).toHaveAttribute('aria-modal', 'true');
+            await page.keyboard.press('Escape');
+            await expect(sheet).toHaveCount(0);
+            await expect(page.getByTestId('log-sheet-open')).toBeFocused();
         });
 
         test('걷기 → 조우는 탐험 1회 → 전투 뒤 지도로 돌아오고, 상자를 연다', async ({ page }) => {

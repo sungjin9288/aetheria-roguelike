@@ -154,11 +154,13 @@ for (const viewport of VIEWPORTS) {
             await expectReadableSurface(page, missionTracker);
             await expect(missionTracker.getByText('0/3', { exact: true })).toHaveCount(1);
             await expect(missionTracker.getByTestId('control-expedition-focus-list')).toHaveCount(0);
-            await expect(missionTracker.getByTestId('control-mission-context')).toContainText(/장소\s*고요한 숲/);
-            await expect(missionTracker.getByTestId('control-mission-context')).toContainText(/귀환\s*목표 지역/);
+            // 2026-11 화면 B안: 지도 위 임무 카드는 얇은 띠다 — 제목 · 다음 걸음 · 진행 수만. 장소는 상태 표시줄, 귀환은 지도 · 경로 판이 보인다.
+            await expect(missionTracker).toHaveAttribute('data-compact', 'true');
+            await expect(missionTracker.getByTestId('control-mission-context')).toHaveCount(0);
+            await expect(page.getByTestId('persistent-status-bar')).toContainText('고요한 숲');
             const missionBounds = await missionTracker.boundingBox();
             expect(missionBounds).not.toBeNull();
-            expect(missionBounds!.height).toBeLessThanOrEqual(180);
+            expect(missionBounds!.height).toBeLessThanOrEqual(96);
             if (viewport.width === 390) {
                 await page.screenshot({ path: 'playtest-artifacts/mobile-legibility/mission-tracker-390x844.png' });
             }

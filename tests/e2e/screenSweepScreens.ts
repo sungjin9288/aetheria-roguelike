@@ -1,5 +1,5 @@
 import { expect, type Page } from '@playwright/test';
-import { startE2ERun, waitForModeTransition } from './testHelpers';
+import { startE2ERun, stepField, waitForModeTransition } from './testHelpers';
 
 /**
  * 화면 전수 점검(screen-text-clipping · screen-english-words)이 같이 쓰는 2026-11 신규 화면 순회 —
@@ -41,7 +41,7 @@ export const visitNewScreens = async (page: Page, check: Check) => {
     await check('오버월드 지도 · 보스 문');
     const state = await readState(page);
     const { layout, pos } = { layout: state.player.fieldLayout, pos: state.player.fieldMap.pos };
-    await page.getByTestId(`field-pad-${directionToward(layout.width, pos, layout.door)}`).click();
+    await stepField(page, directionToward(layout.width, pos, layout.door));
     await expect(page.getByTestId('event-panel')).toBeVisible({ timeout: 8_000 });
     await check('구역 보스 도전 카드');
     await page.getByTestId('event-choice-0').click();

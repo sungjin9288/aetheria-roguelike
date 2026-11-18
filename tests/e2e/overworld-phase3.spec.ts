@@ -1,5 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
-import { exploreOnce, readFieldSnapshot, settleFieldInterruption, startE2ERun } from './testHelpers';
+import { exploreOnce, readFieldSnapshot, settleFieldInterruption, startE2ERun, stepField } from './testHelpers';
 
 /**
  * E2E: 오버월드 3단계(docs/OVERWORLD_WALK_DESIGN_2026-11.md §5 · §7 · §11, 소유자 결정 2026-11-16) — 화면 경로와 세 폭의 배치.
@@ -26,11 +26,12 @@ const seed = async (page: Page, kind: 'biome' | 'door' | 'walkChest') => {
     await expect(page.getByTestId('field-map')).toBeVisible({ timeout: 8_000 });
 };
 
-/** 방향 패드 · 지도 단추 44px, 마지막 줄이 홈 표시줄 위(D14), 가로 넘침 없음, 지도 위 글자 11px 이상 */
+/** 행동 막대 · 지도 단추 44px, 마지막 줄이 홈 표시줄 위(D14), 가로 넘침 없음, 지도 위 글자 11px 이상 */
 const expectFieldFits = async (page: Page, device: Device, step: string) => {
     const geometry = await page.evaluate(() => {
         const shell = document.querySelector<HTMLElement>('[data-app-shell]')!;
-        const controls = [...document.querySelectorAll<HTMLElement>('[data-testid^="field-pad-"], [data-testid^="field-auto-"], [data-testid^="field-walk-"]')]
+        // 2026-11 화면 B안: 휴대폰 방향 패드는 화면에서 빠진다(키보드 차례에만) — 누르는 단추는 행동 막대 · 자동 단추다.
+        const controls = [...document.querySelectorAll<HTMLElement>('[data-testid="control-field-actions"] > button, [data-testid^="field-auto-"], [data-testid^="field-walk-"]')]
             .filter((node) => node.tagName === 'BUTTON');
         const rects = controls.map((node) => node.getBoundingClientRect());
         const map = document.querySelector('[data-testid="field-map"]')!;
@@ -48,7 +49,7 @@ const expectFieldFits = async (page: Page, device: Device, step: string) => {
             pageOverflow: document.documentElement.scrollWidth - window.innerWidth,
         };
     });
-    expect(geometry.count, `${step}: 방향 패드 · 지도 단추`).toBeGreaterThanOrEqual(5);
+    expect(geometry.count, `${step}: 행동 막대 · 지도 단추`).toBeGreaterThanOrEqual(5);
     expect(geometry.minWidth, `${step}: 너비 44px`).toBeGreaterThanOrEqual(44);
     expect(geometry.minHeight, `${step}: 높이 44px`).toBeGreaterThanOrEqual(44);
     expect(geometry.lowest, `${step}: 마지막 줄이 홈 표시줄 위에 있다`).toBeLessThanOrEqual(device.height - device.bottom);
@@ -109,7 +110,7 @@ for (const device of DEVICES) {
             const { layout, pos } = { layout: state.player.fieldLayout, pos: state.player.fieldMap.pos };
             expect(layout.door, '문이 열려 있다').not.toBeNull();
             await expect(page.getByTestId('field-map')).toHaveAttribute('data-field-door', String(layout.door));
-            await page.getByTestId(`field-pad-${directionToward(layout.width, pos, layout.door)}`).click();
+            await stepField(page, directionToward(layout.width, pos, layout.door));
 
             await expect(page.getByTestId('event-panel')).toBeVisible({ timeout: 8_000 });
             const card = await readState(page);

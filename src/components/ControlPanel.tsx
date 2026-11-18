@@ -336,6 +336,7 @@ const ControlPanel = ({
       ) : questTracker ? (
         <MissionTrackerStrip
           tracker={questTracker}
+          compact={Boolean(walkingField)}
           canClaimReward={isSafeZone}
           onClaimReward={questTracker.kind === 'claimable' && actions?.completeQuest
             ? () => actions.completeQuest(questTracker.questId)

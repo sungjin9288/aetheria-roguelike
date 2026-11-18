@@ -11,11 +11,13 @@ interface MissionTrackerStripProps {
   tracker: QuestTracker;
   canClaimReward: boolean;
   onClaimReward?: () => void;
+  /** 2026-11 화면 B안: 지도 위에서는 한 장의 얇은 띠다 — 제목 · 다음 걸음 · 진행 수만(막대 · 장소 · 귀환 · 원정 목록은 임무 탭에 있다). */
+  compact?: boolean;
 }
 
-const MissionTrackerStrip = ({ tracker, canClaimReward, onClaimReward }: MissionTrackerStripProps) => {
+const MissionTrackerStrip = ({ tracker, canClaimReward, onClaimReward, compact = false }: MissionTrackerStripProps) => {
   const focusQuests = tracker.focusQuests || [];
-  const showFocusOverview = tracker.focusQuests?.length > 1;
+  const showFocusOverview = !compact && tracker.focusQuests?.length > 1;
   const isClaimable = tracker.kind === 'claimable';
   const progress = Math.max(0, Math.min(100, tracker.progressPercent || 0));
 
@@ -23,13 +25,14 @@ const MissionTrackerStrip = ({ tracker, canClaimReward, onClaimReward }: Mission
     <section
       data-testid="control-mission-tracker"
       data-tracker-kind={tracker.kind}
+      data-compact={compact ? 'true' : undefined}
       aria-label="현재 임무"
-      className="aether-mission-strip ae-mission-card px-3.5 py-3 font-readable"
+      className={`aether-mission-strip ae-mission-card font-readable ${compact ? 'px-3 py-2' : 'px-3.5 py-3'}`}
     >
-      <div className="flex items-start justify-between gap-3">
+      <div className={`flex justify-between gap-3 ${compact ? 'items-center' : 'items-start'}`}>
         <div className="min-w-0">
-          <div className="ae-eyebrow font-fira tabular-nums">이번 원정 · {tracker.focusCount}/{MAX_EXPEDITION_FOCUS_QUESTS}</div>
-          <div className="mt-1 aether-type-title font-extrabold text-ae-ink">
+          {!compact && <div className="ae-eyebrow font-fira tabular-nums">이번 원정 · {tracker.focusCount}/{MAX_EXPEDITION_FOCUS_QUESTS}</div>}
+          <div className={`${compact ? '' : 'mt-1 '}aether-type-title font-extrabold text-ae-ink`}>
             {tracker.title}
           </div>
           <div className="mt-0.5 aether-type-body text-ae-ink-2">
@@ -40,9 +43,11 @@ const MissionTrackerStrip = ({ tracker, canClaimReward, onClaimReward }: Mission
           {tracker.progressLabel}
         </div>
       </div>
-      <div aria-hidden="true" className="ae-gauge ae-gauge-ether ae-sunk ae-mission-gauge mt-3">
-        <div className="ae-gauge-fill" style={{ width: `${progress}%` }} />
-      </div>
+      {!compact && (
+        <div aria-hidden="true" className="ae-gauge ae-gauge-ether ae-sunk ae-mission-gauge mt-3">
+          <div className="ae-gauge-fill" style={{ width: `${progress}%` }} />
+        </div>
+      )}
       {showFocusOverview && (
         <div className="mt-2.5 grid grid-cols-2 gap-1.5 min-[401px]:grid-cols-3" data-testid="control-expedition-focus-list">
           {focusQuests.map((quest) => (
@@ -53,7 +58,7 @@ const MissionTrackerStrip = ({ tracker, canClaimReward, onClaimReward }: Mission
           ))}
         </div>
       )}
-      <div
+      {!compact && <div
         data-testid="control-mission-context"
         className="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1 aether-type-meta text-ae-ink"
       >
@@ -68,7 +73,7 @@ const MissionTrackerStrip = ({ tracker, canClaimReward, onClaimReward }: Mission
           <span className="sr-only">귀환</span>
           {tracker.returnLabel || '계속 진행'}
         </div>
-      </div>
+      </div>}
       {isClaimable && (
         <button
           type="button"
