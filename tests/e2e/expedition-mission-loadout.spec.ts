@@ -45,9 +45,12 @@ test('마을에서 고른 원정 임무 3개가 출정 snapshot, 필드 tracker,
         activeExpeditionFocusQuestIds: [80, 1, 3],
     });
 
+    // 2026-11 화면 B안: 지도 위 임무 카드는 얇은 띠다 — 지금 임무의 제목 · 다음 걸음 · 진행 수만(원정 목록은 임무 탭).
+    // 고른 세 임무가 원정에 실렸는지는 위의 상태 단언(`activeExpeditionFocusQuestIds`)이 잡는다.
     const tracker = page.getByTestId('control-mission-tracker');
-    await expect(tracker).toContainText('이번 원정 · 3/3');
-    await expect(tracker.getByTestId('control-expedition-focus-list')).toContainText('평원의 코볼트');
+    await expect(tracker).toHaveAttribute('data-compact', 'true');
+    await expect(tracker).toContainText('고요한 숲에서 슬라임 추적');
+    await expect(tracker.getByTestId('control-expedition-focus-list')).toHaveCount(0);
     await page.screenshot({ path: 'playtest-artifacts/expedition-mission-loadout/field-tracker.png' });
 
     await page.getByTestId('control-map-open').click();
