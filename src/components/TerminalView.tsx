@@ -504,7 +504,7 @@ const TerminalView = ({
                 className="ae-log-ticker relative flex min-w-0 flex-1 flex-col gap-1.5"
             >
                 <h2 id={TERMINAL_HEADING_ID} className="sr-only">{MSG.A11Y_LOG_HEADING}</h2>
-                <div className="flex min-h-11 min-w-0 items-center gap-2">
+                <div className="ae-log-ticker-row flex min-h-11 min-w-0 items-center gap-2">
                     <button
                         type="button"
                         data-testid="log-ticker"
@@ -539,7 +539,7 @@ const TerminalView = ({
                         type="button"
                         data-testid="log-sheet-open"
                         onClick={() => setSheetOpen(true)}
-                        className="ae-btn ae-btn-glass inline-flex min-h-11 shrink-0 items-center gap-1.5 px-3"
+                        className="ae-log-ticker-open ae-btn ae-btn-glass inline-flex min-h-11 shrink-0 items-center gap-1.5 px-3"
                     >
                         <ScrollText size={16} aria-hidden="true" />
                         <span>{MSG.LOG_SHEET_OPEN_LABEL}</span>
