@@ -330,12 +330,11 @@ for (const viewport of VIEWPORTS) {
             await page.getByTestId('post-combat-close').click();
             await expect(card).toBeHidden({ timeout: 8_000 });
 
-            // ④ 전투 기록 펼치기도 44px 높이다.
+            // ④ 전투 기록의 입구('지난 소식' — 2026-11 화면 B안, 무대 아래 기록은 한 줄 소식)도 44px 높이다.
             await page.evaluate(() => window.__AETHERIA_TEST_API__?.seedCombatFocusScenario?.(false));
-            const logToggle = page.getByTestId('combat-log-toggle');
-            await expect(logToggle).toBeVisible({ timeout: 8_000 });
-            const toggleBounds = await logToggle.boundingBox();
-            expect(toggleBounds!.height).toBeGreaterThanOrEqual(TOUCH_MIN);
+            await expect(page.getByTestId('combat-log-toggle')).toHaveCount(0);
+            await expectTouchTarget(page.getByTestId('log-sheet-open'));
+            await expectTouchTarget(page.getByTestId('log-ticker'));
         } finally {
             await context.close();
         }

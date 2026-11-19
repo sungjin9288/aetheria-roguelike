@@ -3266,7 +3266,8 @@
 
 /* 2026-11 화면 B안: 지도 아래 한 줄 소식 — 방금의 기록 한 줄(새 줄이 오면 또렷이, 몇 초 뒤 흐려진다)과 '지난 소식' 단추.
  *   전체 기록은 단추 뒤 시트다. 지도 위에는 덧씌운 소식이 없다(주인공 · 칸을 가리지 않는다). */
-.ae-field-log-strip.is-map:has(.ae-log-ticker) {
+.ae-field-log-strip:has(.ae-log-ticker),
+.ae-combat-log-strip:has(.ae-log-ticker) {
   flex: 0 0 auto;
 }
 
