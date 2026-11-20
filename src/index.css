@@ -3271,6 +3271,15 @@
   flex: 0 0 auto;
 }
 
+/* 낮은 화면: 무대 그림이 접히면(위 `ae-field-column` 185px 규칙) 소식 띠가 칸을 채운다 — 줄 상자가 남은 높이를 받고 '지난 소식' 단추는 가운데에 선다.
+ *   바로 위 규칙이 띠를 내용 높이로 묶은 뒤 그림이 접힌 자리가 비어 있었다(375×667 · 390×664 필드 무대에서 50 ~ 80px).
+ *   지도 띠(is-map)는 칸을 지도에게 남긴다. */
+@container ae-field-column (max-height: 185px) {
+  .ae-field-log-strip:not(.is-map):has(.ae-log-ticker) { flex: 1 1 auto; }
+  .ae-field-log-strip:not(.is-map) .ae-log-ticker-row { flex: 1 1 auto; align-items: stretch; }
+  .ae-field-log-strip:not(.is-map) .ae-log-ticker-open { align-self: center; }
+}
+
 .ae-log-ticker-line {
   background: rgb(var(--aether-s1-rgb) / 0.72);
   box-shadow: inset 0 0 0 1px var(--aether-rim);
