@@ -510,7 +510,7 @@ const TerminalView = ({
                         data-testid="log-ticker"
                         aria-label={MSG.LOG_SHEET_OPEN_ARIA}
                         onClick={() => setSheetOpen(true)}
-                        className="ae-log-ticker-line flex min-h-11 min-w-0 flex-1 flex-col justify-center gap-1 rounded-ae-md px-3 py-1.5 text-left"
+                        className="ae-log-ticker-line flex min-h-11 min-w-0 flex-1 flex-col gap-1 rounded-ae-md px-3 py-1.5 text-left"
                     >
                         {tickerLines.map((line) => {
                             const badgeKind = getLogBadgeKind(line);
