@@ -1927,7 +1927,8 @@ export const useGameTestApi = (
                     ['event', '숲의 기운이 짙어집니다.'],
                     ['warning', '정예 개체가 길을 막았습니다.'],
                     ['combat', `${isBoss ? '고대 호수의 수호신' : '정예 숲의 정령'} 등장!`],
-                    ['combat', '적의 움직임을 살핍니다.'],
+                    // 실제 기록처럼 감기는 줄 — 낮은 화면에서 세 줄 소식이 칸을 넘는지 재는 e2e(ticker-strip-fit)가 이 길이에 기댄다.
+                    ['combat', '적의 움직임을 살핍니다 — 가지를 휘감으며 숨을 고르는 정령의 발밑에서 젖은 흙이 천천히 솟아오릅니다.'],
                 ].forEach(([type, text], index) => {
                     er.dispatch({
                         type: AT.ADD_LOG,

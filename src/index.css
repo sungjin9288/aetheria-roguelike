@@ -3268,22 +3268,47 @@
  *   전체 기록은 단추 뒤 시트다. 지도 위에는 덧씌운 소식이 없다(주인공 · 칸을 가리지 않는다). */
 .ae-field-log-strip:has(.ae-log-ticker),
 .ae-combat-log-strip:has(.ae-log-ticker) {
-  flex: 0 0 auto;
+  flex: 0 1 auto;
 }
 
-/* 낮은 화면: 무대 그림이 접히면(위 `ae-field-column` 185px 규칙) 소식 띠가 칸을 채운다 — 줄 상자가 남은 높이를 받고 '지난 소식' 단추는 가운데에 선다.
- *   바로 위 규칙이 띠를 내용 높이로 묶은 뒤 그림이 접힌 자리가 비어 있었다(375×667 · 390×664 필드 무대에서 50 ~ 80px).
+/* 띠는 내용 높이이되 칸에 남은 높이를 넘지 않는다 — 넘치는 줄은 줄 상자 안에서 스크롤한다(줄 상자를 누르면 '지난 소식' 시트다).
+ *   띠가 줄지 않던 동안 375×568 전투에서 칸이 219px인데 세 줄 소식(142px)이 무대 최소(116px) 아래로 들어가
+ *   칸 밖 45px이 조작판 밑에 깔렸다(접는 기준 213px은 92px 띠를 전제로 한 값이다).
+ *   줄 상자는 줄 높이를 받고(stretch) '지난 소식' 단추는 가운데에 선다. */
+.ae-field-log-strip .ae-log-ticker,
+.ae-combat-log-strip .ae-log-ticker {
+  min-height: 0;
+}
+
+.ae-field-log-strip .ae-log-ticker-row,
+.ae-combat-log-strip .ae-log-ticker-row {
+  flex: 0 1 auto;
+  align-items: stretch;
+}
+
+.ae-field-log-strip .ae-log-ticker-open,
+.ae-combat-log-strip .ae-log-ticker-open {
+  align-self: center;
+}
+
+/* 낮은 화면: 무대 그림이 접히면(위 `ae-field-column` 185px 규칙) 소식 띠가 칸을 채운다.
+ *   띠를 내용 높이로 묶은 뒤 그림이 접힌 자리가 비어 있었다(375×667 · 390×664 필드 무대에서 50 ~ 80px).
  *   지도 띠(is-map)는 칸을 지도에게 남긴다. */
 @container ae-field-column (max-height: 185px) {
   .ae-field-log-strip:not(.is-map):has(.ae-log-ticker) { flex: 1 1 auto; }
-  .ae-field-log-strip:not(.is-map) .ae-log-ticker-row { flex: 1 1 auto; align-items: stretch; }
-  .ae-field-log-strip:not(.is-map) .ae-log-ticker-open { align-self: center; }
+  .ae-field-log-strip:not(.is-map) .ae-log-ticker-row { flex: 1 1 auto; }
 }
 
+/* 줄은 가운데에 서되 넘치면 첫 줄부터 보인다 — `justify-content: center`는 넘친 위쪽(전투 차례의 '내 행동')을 스크롤로도 닿지 못하게 자른다. */
 .ae-log-ticker-line {
+  overflow-y: auto;
+  overscroll-behavior: contain;
   background: rgb(var(--aether-s1-rgb) / 0.72);
   box-shadow: inset 0 0 0 1px var(--aether-rim);
 }
+
+.ae-log-ticker-line > .ae-log-ticker-text:first-child { margin-top: auto; }
+.ae-log-ticker-line > .ae-log-ticker-text:last-child { margin-bottom: auto; }
 
 .ae-log-ticker-text {
   animation: ae-log-ticker-settle 4s ease-out forwards;
