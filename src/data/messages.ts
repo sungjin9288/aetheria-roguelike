@@ -1572,6 +1572,9 @@ export const MSG = {
     BOSS_GAUGE_AVOID_SUPPRESSED: (explores: number) => (
         `이 지역을 ${explores}번 더 탐험하는 동안에는 보스를 피해 다닙니다. 그 뒤 다시 도전할 수 있습니다.`
     ),
+    /** 구역 보스 도전 카드의 미리보기 — 도전은 그 보스와의 전투, 회피는 위 `BOSS_GAUGE_AVOID_SUPPRESSED`와 같은 탐험 수(어긋남 점검 결함 6). */
+    BOSS_GAUGE_CHALLENGE_PREVIEW: (bossName: string | undefined) => `${bossName || '구역 보스'} 전투 시작`,
+    BOSS_GAUGE_AVOID_PREVIEW: (explores: number) => `이번에는 물러남 · 탐험 ${explores}번 동안 다시 묻지 않음`,
     /** C6: 들어온 강화가 지금 걸린 강화보다 약해(세기 = 증가량 × 남은 턴) 적용되지 않았을 때. */
     TEMP_BUFF_KEPT_STRONGER: (incoming: string, kept: { atk: number; def: number; counter: number; turns: number }) => {
         const parts = [

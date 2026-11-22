@@ -4,7 +4,9 @@ import { DB } from '../data/db';
 import { MSG } from '../data/messages';
 import { GS } from '../reducers/gameStates';
 import { getFieldDoor } from '../systems/fieldDoor';
-import { firstFieldStepToward, getFieldMapLayout, getFieldRevealed, isFieldMapRegion, planFieldAutoStep } from '../systems/fieldMapWalk';
+import { getFieldMapLayout, isFieldMapRegion, planFieldAutoStep } from '../systems/fieldMapWalk';
+import { canRepeatFieldStep, planFieldTapStep, type FieldTapStep } from '../systems/fieldTapWalk';
+import { isModalFocusScopeOpen } from '../platform/modalFocus';
 import { getAutoExploreStep, type AutoExploreState } from '../utils/autoExplore';
 import {
     getFieldAutoAvailability, getFieldAutoStopText, getFieldWalkStopText, isFieldAutoWalkUnlocked, planPlayerFieldAutoWalk,
@@ -53,6 +55,9 @@ export interface FieldMapControl {
     /** 지금 손으로 걸을 수 있다(대기 상태 · 처리할 일 없음 · 자동 탐험 꺼짐) */
     canWalk: boolean;
     walk: (direction: FieldDirection) => void;
+    /** 방향 패드를 누르고 있을 때 — 반복 간격(전투 속도 배율 포함)과, 그 방향으로 반복을 이어 가도 되는지(다음 칸이 열지 않은 상자면 아니다) */
+    repeatMs: number;
+    canRepeat: (direction: FieldDirection) => boolean;
     /** 칸을 눌러 걷기(2026-11 화면 B안) — 밝혀진 칸까지 한 걸음씩 걷는다. 같은 칸 · 걸을 수 없는 칸이면 멈춘다. */
     walkTo: (index: number) => void;
     /** 지금 걸어가는 목표 칸 — 없으면 null */
@@ -153,6 +158,11 @@ export function useFieldMap({ state, actions, addLog, blocked, paused, timeScale
                 halt(stopText(step.reason));
                 return;
             }
+            // GameRoot가 모르는 대화상자(지난 소식 시트 · 나가기 확인)도 판단을 기다리는 덮개다 — 그 뒤에서 걷지 않는다.
+            if (isModalFocusScopeOpen()) {
+                halt(stopText('mode'));
+                return;
+            }
             busyRef.current = true;
             const run = async () => {
                 try {
@@ -219,10 +229,17 @@ export function useFieldMap({ state, actions, addLog, blocked, paused, timeScale
     const walk = useCallback((direction: FieldDirection) => {
         actionsRef.current.fieldStep(direction, false);
     }, []);
+    const canRepeat = useCallback((direction: FieldDirection) => {
+        const latestPlayer = stateRef.current.player;
+        const current = latestPlayer?.fieldMap;
+        const currentMap = latestPlayer?.loc ? DB.MAPS[latestPlayer.loc] : null;
+        if (!current || !currentMap || current.loc !== latestPlayer?.loc) return false;
+        return canRepeatFieldStep(current, getFieldMapLayout(current, currentMap), direction);
+    }, []);
 
     // 칸을 눌러 걷기(2026-11 화면 B안) — 방향 패드 대신 지도 칸을 누르면 그 칸까지 한 걸음씩 걷는다. 걸음은 손으로 누른
     //   한 걸음과 같은 `fieldStep(…, false)`이고(판정은 리듀서), 길은 밝혀진 칸만 지난다(안개 너머의 모양을 새지 않는다).
-    //   조우 · 상자 · 출구로 걸을 수 없게 되면 그 자리에서 멈춘다. 출구 · 보스 문은 목표일 때만 밟는다.
+    //   조우 · 출구로 걸을 수 없게 되면 그 자리에서 멈춘다. 출구 · 보스 문 · 열지 않은 상자는 목표일 때만 밟는다.
     const [walkTarget, setWalkTarget] = useState<number | null>(null);
     const walkTo = useCallback((index: number) => {
         const current = stateRef.current.player?.fieldMap;
@@ -232,36 +249,35 @@ export function useFieldMap({ state, actions, addLog, blocked, paused, timeScale
         }
         setWalkTarget(index);
     }, []);
-    // 다음 한 걸음 — 밝혀진 칸만 지난다. 출구 · 보스 문은 목표일 때만 밟는다. 도착했거나 길이 없으면 null.
-    const walkStep = useMemo<FieldDirection | null>(() => {
-        if (walkTarget === null || !field || !layout || field.pos === walkTarget) return null;
-        const revealed = getFieldRevealed(layout, field.visited);
-        const blockedTiles = new Set<number>();
-        for (let index = 0; index < layout.tiles.length; index += 1) {
-            if (!revealed.has(index) && index !== walkTarget) blockedTiles.add(index);
-        }
-        for (const exit of layout.exits) if (exit.index !== walkTarget) blockedTiles.add(exit.index);
-        if (door !== null && door !== walkTarget) blockedTiles.add(door);
-        return firstFieldStepToward(layout, field.pos, blockedTiles, (index) => index === walkTarget);
-    }, [walkTarget, field, layout, door]);
-    // 도착 · 길 없음 · 조우 · 상자 · 자동 탐험 · 대기 상태가 아님이면 목표를 지운다(렌더 중 상태 조정 — 다시 걷지 않는다).
+    // 다음 한 걸음(`planFieldTapStep`) — 밝혀진 칸만 지나고, 출구 · 보스 문 · 열지 않은 상자는 목표일 때만 밟는다. 도착했거나 길이 없으면 null.
+    const walkStep = useMemo<FieldTapStep | null>(() => (
+        walkTarget === null || !field || !layout ? null : planFieldTapStep(field, layout, walkTarget, door)
+    ), [walkTarget, field, layout, door]);
+    // 도착 · 길 없음 · 조우 · 자동 탐험 · 대기 상태가 아님이면 목표를 지운다(렌더 중 상태 조정 — 다시 걷지 않는다).
     //   잠깐 막힌 것(`blocked` — 덮개 화면)은 지우지 않고 기다린다.
     const walkCleared = walkTarget !== null && (walkStep === null || Boolean(pending) || looping || !idle);
     if (walkCleared) setWalkTarget(null);
     // 걸음마다 다시 건다 — 다음 방향이 지난 방향과 같아도(위 → 위) 위치가 바뀌었으니 타이머를 새로 건다.
+    //   목표를 밟는 걸음을 보내면 목표를 지운다 — 리듀서가 그 걸음을 거부해도(들어갈 수 없는 출구) 다시 끌려가지 않는다.
+    //   대화상자(지난 소식 시트 · 나가기 확인)가 열리면 그 뒤에서 걷지 않고 멈춘다.
     const walkFrom = field?.pos ?? null;
     useEffect(() => {
         if (!walkStep || walkCleared || !canWalk || walkFrom === null) return undefined;
-        const timer = window.setTimeout(() => walk(walkStep), BALANCE.FIELD_WALK_REPEAT_MS * timeScale);
+        const timer = window.setTimeout(() => {
+            const covered = isModalFocusScopeOpen();
+            if (covered || walkStep.arrives) setWalkTarget(null);
+            if (!covered) walk(walkStep.direction);
+        }, BALANCE.FIELD_WALK_REPEAT_MS * timeScale);
         return () => window.clearTimeout(timer);
     }, [walkStep, walkCleared, canWalk, walk, timeScale, walkFrom]);
 
-    // 방향 키 — 입력 칸에 글을 쓰는 동안은 받지 않는다.
+    // 방향 키 — 입력 칸에 글을 쓰는 동안과 대화상자가 열린 동안은 받지 않는다(시트의 방향 키 스크롤을 막지 않는다).
     useEffect(() => {
         if (!canWalk || typeof window === 'undefined') return undefined;
         const onKey = (event: KeyboardEvent) => {
             const direction = KEY_DIRECTIONS[event.key];
             if (!direction || event.altKey || event.ctrlKey || event.metaKey || isTypingTarget(event.target)) return;
+            if (isModalFocusScopeOpen()) return;
             event.preventDefault();
             walk(direction);
         };
@@ -315,6 +331,8 @@ export function useFieldMap({ state, actions, addLog, blocked, paused, timeScale
         layout,
         canWalk,
         walk,
+        repeatMs: BALANCE.FIELD_WALK_REPEAT_MS * timeScale,
+        canRepeat,
         walkTo,
         walkTarget,
         auto: { ...availability, running, canStart },

@@ -88,7 +88,8 @@ test('known campfire, scout, and boss rules are explained before commitment', ()
 
     const boss = buildBossChallengeEvent('호수의 수호신');
     assert.deepEqual(getEventChoicePreview(boss, 0), { text: '호수의 수호신 전투 시작', tone: 'danger' });
-    assert.deepEqual(getEventChoicePreview(boss, 1), { text: '이번에는 물러남 · 다음 탐험에 다시 선택', tone: 'unknown' });
+    // 어긋남 점검 결함 6: 회피는 탐험 BOSS_GAUGE_EVADE_EXPLORES(5)번 동안 카드를 띄우지 않는다 — 미리보기가 그 수를 말한다.
+    assert.deepEqual(getEventChoicePreview(boss, 1), { text: '이번에는 물러남 · 탐험 5번 동안 다시 묻지 않음', tone: 'unknown' });
 });
 
 test('bounded events show their region-incident title and exact canonical trade-offs', () => {
