@@ -10,6 +10,7 @@ import {
     type AutoExploreStopReason,
 } from '../utils/autoExplore';
 import type { AddLog } from './actionDeps';
+import { isModalFocusScopeOpen } from '../platform/modalFocus';
 
 /**
  * 연속 탐험 토글(2026-11 H1, docs/EXECUTION_SKETCH_H1_2026-11.md §3.3) — 화면 상태다(세이브 봉투 밖, 리로드하면 꺼져 있다).
@@ -92,6 +93,11 @@ export function useAutoExplore({ state, actions, addLog, blocked, paused, timeSc
             const latest = getAutoExploreStep(stateRef.current);
             if (latest.kind === 'stop') {
                 halt(getAutoExploreStopText(latest.reason, stateRef.current));
+                return;
+            }
+            // GameRoot가 모르는 대화상자(지난 소식 시트 · 나가기 확인)도 판단을 기다리는 덮개다 — 그 아래에서 돌지 않는다.
+            if (isModalFocusScopeOpen()) {
+                halt(MSG.AUTO_EXPLORE_STOP.mode);
                 return;
             }
             if (latest.kind !== step.kind) {

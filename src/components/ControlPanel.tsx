@@ -384,7 +384,14 @@ const ControlPanel = ({
           scoutAvailability={scoutAvailability}
           onScout={actions?.scout ? () => actions.scout?.() : undefined}
           recommendedKey={recommendedButton}
-          fieldPad={walkingField ? <FieldPad canWalk={walkingField.canWalk} onWalk={walkingField.walk} /> : undefined}
+          fieldPad={walkingField ? (
+            <FieldPad
+              canWalk={walkingField.canWalk}
+              onWalk={walkingField.walk}
+              repeatMs={walkingField.repeatMs}
+              canRepeat={walkingField.canRepeat}
+            />
+          ) : undefined}
           autoExplore={walkingField ? <FieldAutoButton control={walkingField} />
             : autoExplore?.unlocked ? <AutoExploreToggle control={autoExplore} /> : null}
           auxiliary={auxiliaryButtons.length > 0 ? (

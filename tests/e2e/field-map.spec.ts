@@ -76,6 +76,11 @@ for (const size of SIZES) {
             const sheet = page.getByTestId('log-sheet');
             await expect(sheet).toBeVisible();
             await expect(sheet).toHaveAttribute('aria-modal', 'true');
+            // 시트가 열린 동안 방향 키는 시트의 것이다 — 그 뒤에서 주인공이 걷지 않는다(어긋남 점검 결함 3).
+            //   아래 칸은 방금 걸어온 칸이라 언제나 걸을 수 있다 — 막지 않으면 위치가 바뀐다(방향을 섞으면 서로 지워져 공허하다).
+            await page.keyboard.press('ArrowDown');
+            await page.waitForTimeout(400);
+            await expect(map).toHaveAttribute('data-field-pos', String(target));
             await page.keyboard.press('Escape');
             await expect(sheet).toHaveCount(0);
             await expect(page.getByTestId('log-sheet-open')).toBeFocused();

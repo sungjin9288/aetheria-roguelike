@@ -4,7 +4,7 @@ import { startE2ERun } from './testHelpers';
 /**
  * 한 줄 소식 띠는 칸에 남은 높이를 넘지 않는다 — 넘치는 줄은 줄 상자 안에서 스크롤한다.
  *   #238이 띠를 내용 높이(`flex: 0 0 auto`)로 묶은 뒤, 375×568 전투에서 칸이 219px인데 세 줄 소식(142px)이
- *   무대 최소(116px) 아래로 들어가 칸 밖 45px이 조작판 밑에 깔렸다. 띠를 접는 기준(칸 213px)은 92px 띠를 전제로 한 값이다.
+ *   무대 최소(116px) 아래로 들어가 칸 밖 45px이 조작판 밑에 깔렸다. 띠를 접는 기준은 칸 175px(무대 최소 + 소식 두 줄)이다.
  *   줄 상자가 줄어도 첫 줄('내 행동' · 묶음의 첫 줄)은 맨 위에서 보여야 한다 — 가운데 정렬이 넘친 위쪽을 자르면 스크롤로도 닿지 못한다.
  */
 
@@ -24,6 +24,8 @@ const expectStripFits = async (page: Page, columnSelector: string, stripSelector
     const strip = await box(page, stripSelector);
     expect(column).not.toBeNull();
     expect(strip).not.toBeNull();
+    // 칸이 소식 두 줄(무대 최소 116 + 간격 6 + 두 줄 53 = 175)을 담으면 띠를 접지 않는다 — 기준이 213이던 동안 375×568 전투(칸 195px)에서 접혔다.
+    if (column!.height >= 176) expect(strip!.display).not.toBe('none');
     if (strip!.display === 'none') return; // 칸이 띠를 담지 못해 접은 높이 — 접기 규칙이 맡는다.
 
     // 띠가 칸 밖(조작판 밑)으로 나가지 않는다.
