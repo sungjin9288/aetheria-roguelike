@@ -261,6 +261,22 @@ test('CL-09: 보스 카드는 행동 단추 · 기술 칸 아래다 — 보스 �
     assert.ok(at('combat-skill-tray') < at('combat-boss-counter'), '공략 요령 카드는 기술 칸 아래');
 });
 
+test('통합 수용 9차: 보스 카드를 접는 단추는 두 카드를 가리키고 처음에는 접힌 상태다(짧은 화면에서만 CSS가 보인다)', () => {
+    const html = renderPanel(paladin(), bossEnemy());
+    const toggle = html.match(/<button[^>]*data-testid="combat-boss-cards-toggle"[^>]*>/)?.[0] ?? '';
+    assert.ok(toggle, '접기 단추가 그려진다');
+    assert.match(toggle, /aria-expanded="false"/);
+    assert.match(toggle, /aria-controls="combat-boss-cards"/);
+    assert.match(html, /<div[^>]*class="ae-combat-boss-block"[^>]*data-open="false"/);
+    assert.match(html, /id="combat-boss-cards"/);
+    // 단추 줄은 두 카드의 이름을 말하고, 카드 본문은 DOM에 그대로 있다(넉넉한 화면 · 데스크톱은 언제나 펼친다).
+    assert.ok(html.includes(`${MSG.COMBAT_BOSS_SIGNATURE_LABEL} · ${MSG.COMBAT_BOSS_CLUE_LABEL}`));
+    assert.ok(html.includes(MSG.COMBAT_BOSS_CARDS_EXPAND));
+    assert.ok(html.indexOf('data-testid="combat-boss-cards-toggle"') < html.indexOf('data-testid="combat-boss-signature"'));
+    // 일반 적에게는 단추가 없다.
+    assert.ok(!renderPanel(paladin(), eliteEnemy()).includes('combat-boss-cards-toggle'));
+});
+
 // ── VD-02 · GF-05 내 생명 · 기력 막대 · 적 초상 ───────────────────────
 
 test('VD-02: 전투 조작판에 내 생명 · 기력 막대가 있고 실효 최대치를 그린다', () => {

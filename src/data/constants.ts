@@ -768,7 +768,7 @@ export const BALANCE = {
     FIELD_AUTO_EXTRA_CRYSTAL_COSTS: [10, 20, 40],
     FIELD_AUTO_STEP_MS: 200,           // 자동 탐험 걸음 박자(전투 속도 ×2면 절반) — 걷는 모습을 빠르게 보인다(설계 §7)
     FIELD_WALK_REPEAT_MS: 170,         // 방향 패드를 누르고 있을 때 다음 걸음까지
-    FIELD_TILE_PX: 38,                 // 지도 칸 크기(설계 §8 — 36 ~ 40px, 시제품에서 잰다)
+    FIELD_TILE_PX: 38,                 // 지도 칸 크기의 하한 — 실제 칸은 화면 폭 ÷ 8, 38 ~ 56px(`FieldMapView`, 설계 §8)
     // 2026-11 오버월드 3단계(소유자 결정 2026-11-16) — 자동 걷기(첫 전직 뒤, 하루 횟수 없음)의 걸음 박자. 자동 걷기는 상자를 열지
     //   않는다 — 열지 않은 상자 옆에 닿으면 멈추고, 지도를 다 밟으면 보스 문(없으면 출구) 옆에서 멈춘다(`systems/fieldAutoWalk.ts`).
     FIELD_AUTO_WALK_STEP_MS: 200,
