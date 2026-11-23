@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 
 import { DB } from '../src/data/db.ts';
 import { generateFieldMap } from '../src/systems/fieldMapGen.ts';
-import { getFieldNeighbor, isFieldMapRegion, resolveFieldStep } from '../src/systems/fieldMapWalk.ts';
+import { getFieldNeighbor, getFieldRevealed, isFieldMapRegion, resolveFieldStep } from '../src/systems/fieldMapWalk.ts';
 import { canRepeatFieldStep, planFieldTapStep } from '../src/systems/fieldTapWalk.ts';
 
 /**
@@ -159,4 +159,54 @@ test('계약 7: 방향 패드 반복은 열지 않은 상자 앞에서 멈추고
     assert.equal(canRepeatFieldStep({ ...field, openedChests: [3] }, layout, 'right'), true, '연 상자');
     assert.equal(canRepeatFieldStep(field, layout, 'up'), true, '벽 — 리듀서가 거부한다');
     assert.equal(canRepeatFieldStep({ pos: 7, openedChests: [] }, layout, 'right'), true, '빈 칸');
+});
+
+/** 입구에서 걸어서 닿는 칸을 가까운 순서로(벽만 막는다). */
+const bfsOrder = (layout, from) => {
+    const order = [from];
+    const seen = new Set(order);
+    for (let i = 0; i < order.length; i += 1) {
+        for (const direction of ['up', 'down', 'left', 'right']) {
+            const next = getFieldNeighbor(layout, order[i], direction);
+            if (next === null || seen.has(next) || layout.tiles[next] === '#') continue;
+            seen.add(next);
+            order.push(next);
+        }
+    }
+    return order;
+};
+
+test('통합 수용 9차: 길은 밝혀진 칸만 지난다 — 안개 속 칸을 모두 벽으로 바꾼 지도와 같은 걸음을 고른다(안개 너머의 모양을 새지 않는다)', () => {
+    // 다음 칸은 언제나 지금 칸의 이웃이라 늘 밝혀져 있다 — "밟는 칸이 밝혀졌나"는 공허하다. 안개가 새면 안개 속으로 난 지름길이
+    // 걸음 방향을 바꾸므로, 안개 칸(목표 제외)을 벽으로 바꾼 지도와 걸음이 같은지를 본다.
+    const fogWalled = (layout, visited, target) => {
+        const revealed = getFieldRevealed(layout, visited);
+        const tiles = [...layout.tiles].map((char, index) => (revealed.has(index) || index === target ? char : '#')).join('');
+        return { ...layout, tiles };
+    };
+    let steps = 0;
+    let walks = 0;
+    for (const loc of REGIONS) {
+        const layout = layoutOf(loc, SEEDS[3]);
+        // 입구에서 가까운 절반만 걸어 본 지도 — 밝혀진 칸 너머에 안개가 넉넉히 남는다
+        const near = bfsOrder(layout, layout.entrance);
+        const start = freshState(layout, near.slice(0, Math.ceil(near.length / 2)));
+        const revealedAtStart = getFieldRevealed(layout, start.visited);
+        const targets = floorTiles(layout).filter((index, order) => order % 3 === 0 && index !== start.pos);
+        for (const target of targets) {
+            walks += 1;
+            let field = start;
+            for (let guard = 0; guard < layout.tiles.length; guard += 1) {
+                const step = planFieldTapStep(field, layout, target, null);
+                const sealed = planFieldTapStep(field, fogWalled(layout, field.visited, target), target, null);
+                assert.deepEqual(step, sealed, `${loc}: ${target}으로 가는 걸음이 안개 너머 모양에 따라 바뀌었다`);
+                if (!step) break;
+                steps += 1;
+                if (step.arrives) break;
+                field = { ...resolveFieldStep(field, layout, step.direction, NO_ENCOUNTER, null).state, pending: null };
+            }
+        }
+        assert.ok(revealedAtStart.size < layout.tiles.length, `${loc}: 안개가 남아 있다`);
+    }
+    assert.ok(walks > REGIONS.length * 10 && steps > walks, `표본 ${walks}걸음열 · ${steps}걸음`);
 });

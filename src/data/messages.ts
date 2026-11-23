@@ -1539,6 +1539,9 @@ export const MSG = {
     //   그 칸은 2026-11 A4가 지웠다(소유자 결정 Q2 — 권하는 말은 화면에 없다).
     COMBAT_BOSS_SIGNATURE_LABEL: '보스 기믹',
     COMBAT_BOSS_CLUE_LABEL: '공략 요령',
+    // 통합 수용 9차(원장 §184): 짧은 휴대폰에서 두 카드를 접은 한 줄 단추.
+    COMBAT_BOSS_CARDS_EXPAND: '펼치기',
+    COMBAT_BOSS_CARDS_COLLAPSE: '접기',
     // 2026-10 감사 CL-03: 전투 기술 칸 — 가진 기술을 모두 펼쳐 누르면 바로 쓴다(이전에는 한 개 + 이름 없는 순환 단추).
     COMBAT_SKILL_TRAY_ARIA: '전투 기술',
     COMBAT_SKILL_READY_LABEL: '준비한 기술',

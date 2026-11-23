@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Sword, Zap, ArrowRight, Sparkles, Backpack, TriangleAlert, Skull, ChevronsDown, Flame, ScrollText } from 'lucide-react';
+import { Sword, Zap, ArrowRight, Sparkles, Backpack, TriangleAlert, Skull, ChevronsDown, ChevronDown, Flame, ScrollText } from 'lucide-react';
 import { motion as Motion } from 'framer-motion';
 import { buildCombatView, type CombatSignalTone } from '../../utils/combatView';
 import CombatSkillTray from '../combat/CombatSkillTray';
@@ -134,6 +134,10 @@ const getEnemyDebuffs = (enemy: Monster): string[] => {
  */
 const CombatPanel = ({ player, actions, enemy, stats, isAiThinking, mobile, damageFlash, healFlash, damageAmount = null }: CombatPanelProps) => {
   const [itemsOpen, setItemsOpen] = useState(false);
+  // 통합 수용 9차(원장 §184): 짧은 화면의 보스 카드 펼침은 그 적과의 전투 동안만이다 — 다음 적은 다시 접힌 채 시작한다.
+  const [bossCardsOpenFor, setBossCardsOpenFor] = useState<string | null>(null);
+  const bossCardsKey = enemy?.isBoss ? `${enemy.baseName ?? enemy.name}:${enemy.maxHp}` : null;
+  const bossCardsOpen = bossCardsKey !== null && bossCardsOpenFor === bossCardsKey;
   const selectedSkill = actions?.getSelectedSkill ? actions.getSelectedSkill() : null;
   const skillCooldown = selectedSkill ? player.skillLoadout?.cooldowns?.[selectedSkill.name ?? ''] || 0 : 0;
   // 전투 파생 데이터(전술 프로파일·텔레그래프·콤보·전투 예보) — 계산은 buildCombatView로 분리, 여기서는 렌더링만 한다.
@@ -315,8 +319,28 @@ const CombatPanel = ({ player, actions, enemy, stats, isAiThinking, mobile, dama
       {/* 2026-10 감사 검토: 보스 기믹 · 공략 요령 카드는 행동 단추 · 기술 칸 아래다 — 위에 두면 375 × 667 보스전에서 '도주'와
           기술 칸이 첫 화면 밖으로 밀렸다(행동은 매 차례, 카드는 처음 한 번 읽는다). 보스 위협 칩은 위의 신호 줄에 그대로 있다.
           cycle 269: tacticalProfile.signature(보스 mechanic) / counterHint(대응). */}
+      {/* 통합 수용 9차(원장 §184, 소유자 결정 "B + 빠른 칸 기준"): 짧은 휴대폰(높이 800px 이하)에서는 두 카드를 한 줄 단추로 접는다 —
+          펼쳐 두면 무대 칸이 접힘 기준 아래로 내려가 소식 띠 · 빠른 칸 · '지난 소식' 단추가 함께 사라졌다(375 × 667 · 390 × 664 보스전).
+          높이가 넉넉한 화면과 데스크톱은 단추 없이 언제나 펼친다(index.css `.ae-combat-boss-toggle`). */}
       {enemy?.isBoss && (tacticalProfile?.signature || tacticalProfile?.counterHint) && (
-        <div className="ae-combat-boss-cards grid grid-cols-2 gap-1.5">
+        <div className="ae-combat-boss-block" data-open={bossCardsOpen ? 'true' : 'false'}>
+        <button
+          type="button"
+          data-testid="combat-boss-cards-toggle"
+          aria-expanded={bossCardsOpen}
+          aria-controls="combat-boss-cards"
+          onClick={() => setBossCardsOpenFor(bossCardsOpen ? null : bossCardsKey)}
+          className="ae-combat-boss-toggle ae-well min-h-11 w-full items-center justify-between gap-2 rounded-ae-sm px-2.5 py-1.5 text-left font-readable"
+        >
+          <span className="aether-type-label min-w-0 font-bold text-ae-ink-2">
+            {[tacticalProfile?.signature && MSG.COMBAT_BOSS_SIGNATURE_LABEL, tacticalProfile?.counterHint && MSG.COMBAT_BOSS_CLUE_LABEL].filter(Boolean).join(' · ')}
+          </span>
+          <span className="aether-type-label inline-flex shrink-0 items-center gap-1 text-ae-ink-3">
+            {bossCardsOpen ? MSG.COMBAT_BOSS_CARDS_COLLAPSE : MSG.COMBAT_BOSS_CARDS_EXPAND}
+            <ChevronDown size={14} aria-hidden="true" className={bossCardsOpen ? 'rotate-180' : ''} />
+          </span>
+        </button>
+        <div id="combat-boss-cards" className="ae-combat-boss-cards grid grid-cols-2 gap-1.5">
           {tacticalProfile?.signature && (
             <div
               data-testid="combat-boss-signature"
@@ -340,6 +364,7 @@ const CombatPanel = ({ player, actions, enemy, stats, isAiThinking, mobile, dama
               </div>
             </div>
           )}
+        </div>
         </div>
       )}
     </Motion.div>

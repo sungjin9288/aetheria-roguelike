@@ -3,7 +3,7 @@ import { startE2ERun, stepField, waitForModeTransition } from './testHelpers';
 
 /**
  * 화면 전수 점검(screen-text-clipping · screen-english-words)이 같이 쓰는 2026-11 신규 화면 순회 —
- * 오버월드 지도 · 보스 문 도전 카드 · 자동 걷기 멈춤 · 강화 갈래 카드 · 장 보스 규칙 전투 · 충전 강타 예고.
+ * 오버월드 지도 · '지난 소식' 시트(지도 · 전투) · 보스 문 도전 카드 · 자동 걷기 멈춤 · 강화 갈래 카드 · 장 보스 규칙 전투 · 충전 강타 예고.
  * 각 화면에 도착할 때마다 `check(화면 이름)`을 부른다. 시드 · 경로는 오버월드 3단계 · H5 · H6 · B5 스펙과 같다.
  */
 type Direction = 'up' | 'down' | 'left' | 'right';
@@ -27,6 +27,19 @@ const directionToward = (width: number, from: number, to: number): Direction => 
     throw new Error(`이웃 칸이 아니다: ${from} → ${to}`);
 };
 
+/** 무대 아래 한 줄 소식의 '지난 소식' 단추로 전체 기록 시트를 열어 재고 닫는다(화면 B — 휴대폰 무대 화면에만 있다). */
+const checkLogSheet = async (page: Page, check: Check, screen: string) => {
+    const open = page.getByTestId('log-sheet-open');
+    await expect(open).toBeVisible();
+    await open.click();
+    const sheet = page.getByTestId('log-sheet');
+    await expect(sheet).toBeVisible();
+    await expect(sheet.locator('[data-log-id]').first()).toBeVisible();
+    await check(screen);
+    await page.keyboard.press('Escape');
+    await expect(sheet).toHaveCount(0);
+};
+
 export const visitNewScreens = async (page: Page, check: Check) => {
     await startE2ERun(page, { name: '용사' });
 
@@ -34,6 +47,7 @@ export const visitNewScreens = async (page: Page, check: Check) => {
     await seedField(page, 'biome');
     await check('오버월드 지도');
     if (await page.getByTestId('field-auto-start').count()) await check('오버월드 지도 · 자동 탐험 단추');
+    await checkLogSheet(page, check, '지난 소식 시트 · 지도');
 
     // 보스 문 → 구역 보스 도전 카드 → 전투.
     await seedField(page, 'door');
@@ -47,6 +61,7 @@ export const visitNewScreens = async (page: Page, check: Check) => {
     await page.getByTestId('event-choice-0').click();
     await expect(page.getByTestId('combat-action-attack')).toBeVisible({ timeout: 8_000 });
     await check('보스 문 전투');
+    await checkLogSheet(page, check, '지난 소식 시트 · 전투');
 
     // 자동 걷기가 열지 않은 상자 앞에서 멈춘 상태(멈춘 이유 줄은 기록에 남는다).
     await seedField(page, 'walkChest');

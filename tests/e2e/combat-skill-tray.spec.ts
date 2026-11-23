@@ -147,6 +147,25 @@ for (const viewport of VIEWPORTS) {
             await page.locator('[data-app-shell]').evaluate((shell) => { shell.scrollTop = 0; });
             const escape = await page.getByTestId('combat-action-escape').boundingBox();
             const railBox = await page.getByTestId('combat-skill-rail').boundingBox();
+            // 통합 수용 9차(원장 §184): 높이 800px 이하에서는 두 카드가 한 줄 단추로 접혀 있다가 누르면 펼친다(그 단추도 기술 칸 아래).
+            const toggle = page.getByTestId('combat-boss-cards-toggle');
+            const short = viewport.height <= 800;
+            if (short) {
+                await expect(page.getByTestId('combat-boss-signature')).toBeHidden();
+                await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+                const toggleBox = await toggle.boundingBox();
+                expect(toggleBox).not.toBeNull();
+                expect(toggleBox!.height).toBeGreaterThanOrEqual(44);
+                expect(toggleBox!.y).toBeGreaterThanOrEqual(railBox!.y + railBox!.height);
+                await toggle.click();
+                await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+                await expect(page.getByTestId('combat-boss-signature')).toBeVisible();
+            } else {
+                await expect(toggle).toBeHidden();
+            }
+            // 단추를 누르면 Playwright가 단추를 화면 안으로 스크롤한다 — 카드와 기술 칸의 순서는 펼친 뒤 같은 스크롤에서 다시 잰다.
+            await page.locator('[data-app-shell]').evaluate((shell) => { shell.scrollTop = 0; });
+            const railAfter = await page.getByTestId('combat-skill-rail').boundingBox();
             const bossCard = await page.getByTestId('combat-boss-signature').boundingBox();
             expect(escape).not.toBeNull();
             expect(railBox).not.toBeNull();
@@ -154,7 +173,8 @@ for (const viewport of VIEWPORTS) {
             expect(escape!.y + escape!.height).toBeLessThanOrEqual(viewport.height + 1);
             // 소유자 결정 D16(2026-10-26): 375 × 667 보스전에서도 기술 칸 전체가 첫 화면 안이다(전에는 약 9px 밀렸다).
             expect(railBox!.y + railBox!.height).toBeLessThanOrEqual(viewport.height + 1);
-            expect(bossCard!.y).toBeGreaterThanOrEqual(railBox!.y + railBox!.height);
+            expect(railAfter).not.toBeNull();
+            expect(bossCard!.y).toBeGreaterThanOrEqual(railAfter!.y + railAfter!.height);
             await page.screenshot({ path: `playtest-artifacts/mobile-combat-focus/skill-tray-boss-${viewport.width}.png` });
             await page.getByTestId('combat-focus-panel').screenshot({ path: `playtest-artifacts/mobile-combat-focus/skill-tray-boss-panel-${viewport.width}.png` });
         });
