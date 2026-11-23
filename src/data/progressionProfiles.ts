@@ -1,7 +1,6 @@
 import type {
     ProgressionAxis,
     ProgressionProfile,
-    ProgressionProfileRef,
 } from '../types/progression.js';
 
 const PROFILE_KEYS = ['eventMultiplier', 'expMultiplier', 'id', 'lootMultiplier', 'version'];
@@ -131,8 +130,3 @@ export const validateProgressionProfileTransition = (
         && ratio <= 1.2 + Number.EPSILON;
     return { ok, changedAxis: ok ? declaredAxis : null } as const;
 };
-
-export const progressionProfileRef = (profile: ProgressionProfile): ProgressionProfileRef => ({
-    id: profile.id,
-    version: profile.version,
-});

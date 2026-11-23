@@ -54,12 +54,6 @@ export const createSdkRewardedAdPort = ({
     }),
 });
 
-export const NOOP_REWARDED_AD_PORT: RewardedAdPort = {
-    isSupported: () => false,
-    load: () => () => undefined,
-    show: () => () => undefined,
-};
-
 export const resolveRewardedAdGroupId = (
     configured: unknown,
     runtime: string,

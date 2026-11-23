@@ -66,8 +66,6 @@ export const ACTIVE_EXPLORATION_RHYTHM: Readonly<ExplorationRhythmPolicy> = Obje
     minimumOrdinaryGap: getProgressionMinimumOrdinaryGap(EXPLORATION_RHYTHM_V3_PROFILE),
 });
 
-export const CANDIDATE_EXPLORATION_RHYTHM_V3 = ACTIVE_EXPLORATION_RHYTHM;
-
 export interface ExplorationRhythmAggregate {
     campfire: number;
     scout: number;
@@ -416,8 +414,6 @@ export const compareExplorationRhythmV3 = (
         blockers,
     });
 };
-
-export const compareRegisteredExplorationRhythm = compareExplorationRhythmV3;
 
 export const compareEventChanceBonusRhythm = (
     seeds: readonly number[],
