@@ -11405,6 +11405,6 @@ aware가 실제로 행동을 바꾸는 세 조합만 키웠다(셋째 박자 · 
 - e2e 7스펙 71건(`ticker-strip-fit` · `combat-skill-tray` · `combat-focus` · `screen-text-clipping` · `screen-english-words` · `mobile-legibility` · `field-dock-fit`): 처음 70건 통과. `combat-skill-tray` 375 × 667 보스전 1건은 테스트 문제였다 — 접기 단추를 누르면 Playwright가 단추를 화면 안으로 스크롤하는데 기술 칸 위치는 누르기 전 값을 썼다. 펼친 뒤 스크롤을 처음으로 돌려 다시 재도록 고쳐 그 스펙 16/16.
 
 ### 184.4 남긴 것
-- e2e 전체(55 스펙)는 로컬에서 돌리지 않았다 — #249 CI가 맡는다.
+- e2e 전체(55 스펙)는 로컬에서 돌리지 않았고 #249 CI가 맡았다 — 단위 · 증빙 · Firestore rules 에뮬레이터 · E2E(Playwright) · 성능 검사 · build 6건 통과(deploy-rules는 PR이라 건너뜀), 2026-11-23 squash 머지 `98fd3463`.
 - 표시만 바뀌어 자연 플레이 측정을 하지 않았다. 보스 카드를 접어 두면 처음 만나는 보스의 기믹을 읽지 않고 싸울 수 있다 — 단추 줄이 두 카드의 이름을 말하고, 위협 칩은 행동 위 신호 줄에 그대로 있다. 접힌 카드를 펼쳐 읽는지는 사람 플레이테스트 몫이다.
 - 공개 웹은 7957ecf9(배포 0227f7f2) 그대로다.
