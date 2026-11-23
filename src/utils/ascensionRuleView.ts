@@ -122,14 +122,6 @@ export const getAscensionRulePreview = (meta: Player['meta'] | null | undefined)
     return rule ? buildAscensionRulePreview(rule, Math.floor(Number(meta?.prestigeRank) || 0), getActiveAscensionTwists(meta)[1] ?? null) : null;
 };
 
-/** 2026-10 Wave 94: 계승 화면의 회차 규칙 카드(패 순서) — 리듀서가 같은 패로 고른 id를 검증한다. */
-export const getAscensionRuleOfferPreviews = (
-    player: { meta?: Player['meta']; stats?: Player['stats'] } | null | undefined,
-    nextRank: number,
-): AscensionRulePreview[] => getAscensionRuleOffer(player, nextRank).map((rule) => (
-    buildAscensionRulePreview(rule, nextRank, getAscensionRuleOfferSecond(player, nextRank, rule))
-));
-
 /** 계승 화면의 패와 처음 골라 둔 카드(리듀서의 기본값과 같은 — 패에서 가장 가벼운 카드). */
 export const getAscensionRuleOfferView = (
     player: { meta?: Player['meta']; stats?: Player['stats'] } | null | undefined,

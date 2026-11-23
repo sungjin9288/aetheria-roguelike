@@ -56,8 +56,6 @@ export const getChapterBand = (chapter: number): ChapterBand | null => (
     CHAPTER_BANDS.find((band) => band.chapter === chapter) ?? null
 );
 
-export const CHAPTER_COUNT = CHAPTER_BANDS.length;
-
 /** 장마다 속한 지역(장 표 골든 · 화면용). */
 export const getChapterRegions = (maps: Record<string, GameMap> = MAPS): Record<number, string[]> => {
     const result: Record<number, string[]> = {};

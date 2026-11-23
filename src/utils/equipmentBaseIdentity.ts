@@ -280,8 +280,6 @@ export const migrateEquipmentInstancePrice = <T extends Item | null | undefined>
     return { ...item, baseItemName: base.name, price } as T;
 };
 
-export const migrateEquipmentPrice = migrateEquipmentInstancePrice;
-
 /**
  * 이름만으로 표준 장비 이름을 찾는다 — 도감 키처럼 이름만 남은 기록용(2026-10 Wave 61). 접두어가 붙은 이름이면
  * 그 장비 종류에 맞는 접두어를 벗겨 바탕 이름을, 모르는 이름이면 null을 돌려준다.
