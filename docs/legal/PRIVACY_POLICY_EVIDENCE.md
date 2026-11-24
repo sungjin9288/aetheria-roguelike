@@ -50,6 +50,7 @@
     - 콘솔과 게임 설정에는 그 주소를 적는다.
     - **만들었다(2026-10-29):** `public/privacy/index.html`을 `node scripts/build-privacy-page.mjs`가 이 초안에서 만든다. 서비스 워커는 `/privacy` 탐색을 손대지 않는다 — 화면(index.html)으로 저장하면 오프라인 실행이 처리방침을 내고 빌드 산출물이 지워진다(`tests/service-worker-cache.test.js`). 〔 〕 칸이 남으면 `tests/privacy-page.test.js`가 붉어진다.
     - **공개했다(2026-10-29):** `https://aetheria-roguelike.pages.dev/privacy/`, Pages 첫 프로덕션 배포 `c3ca3023`(소스 `d023df7`). Pages 프로젝트는 GitHub와 연결돼 있지 않아 머지가 아니라 손으로 하는 배포가 공개다 — 처리방침을 고치면 다시 빌드해 올린다([런북](../qa/APPS_IN_TOSS_SANDBOX_RUNBOOK.md) §0-7).
+    - **변경을 예고했다(2026-11-24):** 순위표 항목 추가(회차 최고 레벨 · 혼돈의 심연 최고 기록 · 순위 점수, #252)를 2026-12-02 시행으로 `/privacy/`에 알렸다(배포 `798d6bc6`). 시행일에 이 초안(시행일 2026-12-02)과 게임을 함께 올린다.
 12. **출시 검수 게이트:** 저장소 검증기의 `review` 단계는 `privacy_policy` · `support_channel` 외부 게이트 영수증을 요구한다(`scripts/tossReleaseEvidence.mjs`). 공개 주소가 생기면 영수증을 남긴다. 절차는 [앱인토스 샌드박스 런북](../qa/APPS_IN_TOSS_SANDBOX_RUNBOOK.md)을 따른다.
 
 ## 3. 범위 밖 관찰 (처리방침 문구에는 영향 없음)
