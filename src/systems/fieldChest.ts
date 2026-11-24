@@ -10,7 +10,10 @@ import { getInventoryCapacity } from '../utils/inventoryCapacity';
 import { getSellPrice } from '../utils/equipmentUtils';
 import { getJobGearPool, getUsableGearTier } from '../utils/wanderingMerchant';
 import { formatLootStacks } from '../utils/lootSummary';
+import { isTrialPlayer } from '../utils/trialPlayer';
 import { isConsumableItem } from './consumableRules';
+import { getFieldTraitEffects } from './fieldTrait';
+import type { FieldMapTrait } from '../types/fieldMap';
 import type { GameMap } from '../types/map';
 import type { Item } from '../types/item';
 import type { Monster } from '../types/monster';
@@ -76,7 +79,8 @@ export const isFieldChestMimic = (loc: string, mapSeed: number, chestId: number)
 /**
  * 상자 보상 — `mimic`이면 미믹을 쓰러뜨렸을 때의 보상(골드 `FIELD_MIMIC_GOLD_MULT`배 · 지역 재료 확정 · 강화 재료
  * `FIELD_MIMIC_ENHANCE_MATERIALS`개 확정). 장비는 처치한 플레이어의 직업 · 레벨로 정하므로 `settleFieldMimicVictory`가 더한다.
- * 보통 상자의 추첨 순서는 그대로다(미믹 여부와 무관하게 같은 수를 뽑는다).
+ * 보통 상자의 추첨 순서는 그대로다(미믹 여부와 무관하게 같은 수를 뽑는다). 지도 성격(`trait`)은 보통 상자의 골드 배율과 재료
+ * 문턱만 바꾼다 — 미믹 보상은 성격과 무관하다.
  */
 export const getFieldChestReward = (
     loc: string,
@@ -84,17 +88,19 @@ export const getFieldChestReward = (
     mapSeed: number,
     chestId: number,
     mimic = false,
+    trait: FieldMapTrait = 'plain',
 ): FieldChestReward => {
     const rng = createDomainRandom(mapSeed, loc, chestId, 'chest');
+    const effects = getFieldTraitEffects(trait);
     const baseGold = Math.floor(getFieldRegionEnemyGold(mapData) * BALANCE.FIELD_CHEST_GOLD_MULT);
     const items: string[] = [];
     const consumable = pick(getRegionConsumables(mapData), rng);
     if (consumable) items.push(consumable);
     const materialRoll = rng();
     const material = pick(getFieldRegionMaterials(mapData), rng);
-    if (material && (mimic || materialRoll < BALANCE.FIELD_CHEST_MATERIAL_CHANCE)) items.push(material);
+    if (material && (mimic || materialRoll < BALANCE.FIELD_CHEST_MATERIAL_CHANCE + effects.chestMaterial)) items.push(material);
     rng(); // 예전 미믹 강화 재료 확률 추첨 — 보통 상자의 내용이 바뀌지 않도록 한 번 그대로 쓴다
-    if (!mimic) return { gold: baseGold, items };
+    if (!mimic) return { gold: Math.floor(baseGold * effects.chestGold), items };
     return {
         gold: baseGold * BALANCE.FIELD_MIMIC_GOLD_MULT,
         items,
@@ -193,7 +199,8 @@ export const grantFieldChestReward = (
     for (const name of reward.items) {
         const template = findItemByName(name);
         if (!template) continue;
-        if (isConsumableItem(template) && owned.has(name)) {
+        // 오늘의 시련에는 골드를 쓸 곳이 없다 — 소모품은 그대로 받는다.
+        if (isConsumableItem(template) && owned.has(name) && !isTrialPlayer(player)) {
             convertedGold += getSellPrice(template);
             converted.push(name);
             continue;

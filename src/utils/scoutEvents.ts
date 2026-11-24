@@ -40,11 +40,11 @@ export interface ScoutEvent {
 
 /**
  * 스카우팅 발동 여부. 안전지대(mapData.type === 'safe' 또는 mapData 부재)는 항상 미발동 —
- * 캠프파이어와 동일하게 던전류(dungeon/field/boss)에서만 확률 롤.
+ * 캠프파이어와 동일하게 던전류(dungeon/field/boss)에서만 확률 롤. `chanceMult`는 지도 성격(`fieldTrait.ts`)의 문턱 배율이다.
  */
-export const shouldTriggerScout = (mapData: GameMap | null | undefined, rng: ScoutRng): boolean => {
+export const shouldTriggerScout = (mapData: GameMap | null | undefined, rng: ScoutRng, chanceMult = 1): boolean => {
     if (!mapData || mapData.type === 'safe') return false;
-    return rng() < BALANCE.SCOUT_CHANCE;
+    return rng() < BALANCE.SCOUT_CHANCE * chanceMult;
 };
 
 /**

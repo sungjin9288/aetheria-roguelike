@@ -20,6 +20,7 @@ import { appendExpeditionBoss } from '../../utils/expeditionLedger';
 import { admitCombatLoot } from '../../systems/combatLootCapacity';
 import { getEffectiveMaxHp, getEffectiveMaxMpFull } from '../../systems/vitals';
 import { advanceHuntContractOnVictory } from '../../utils/huntContracts';
+import { isTrialPlayer } from '../../utils/trialPlayer';
 import { isClassChangeNewlyReady } from '../../utils/classChangeReadiness';
 import { getDailyExpeditionRewardMult } from '../../utils/dailyExpedition';
 import type { FullStats, Player } from '../../types';
@@ -187,7 +188,8 @@ export const handleVictoryOutcome = ({
     const codexDiscoverXp = newCodexCount > 0 ? SEASON_XP.codexDiscover * newCodexCount : 0;
 
     // milestone — 처치 방법과 무관하게 판정한다(Wave 61).
-    const milestoneRewards = checkMilestones(updatedPlayer.stats?.killRegistry || {}, baseName);
+    // 오늘의 시련은 처치 수 보상(골드 · 아이템 · 칭호)이 없다.
+    const milestoneRewards = isTrialPlayer(updatedPlayer) ? [] : checkMilestones(updatedPlayer.stats?.killRegistry || {}, baseName);
     if (milestoneRewards.length > 0) {
         // checkMilestones의 val은 type에 따라 number(gold) / string(item·title)이다 —
         //   반환 타입이 판별 유니온이 아니라 각 분기에서 해당 형으로 좁혀 쓴다.

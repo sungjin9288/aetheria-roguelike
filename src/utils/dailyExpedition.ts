@@ -17,6 +17,7 @@
  *   상시 경험 보너스가 되어 첫 1시간 속도(사람 측정 뒤 정하기로 한 것, 소유자 결정 D4)를 바꾼다.
  * - 놓쳐도 잃는 것이 없다 — 연속 기록 · 수령 · 세이브 상태가 없다.
  */
+import { isTrialPlayer } from './trialPlayer.js';
 import { BALANCE } from '../data/constants.js';
 import { DB } from '../data/db.js';
 import type { GameMap, Player } from '../types/index.js';
@@ -100,8 +101,8 @@ export const getDailyExpeditionRegion = (
 };
 
 /** 이 플레이어가 지금 위치에서 처치하면 받는 배율 — 오늘의 원정지면 `DAILY_EXPEDITION_REWARD_MULT`, 아니면 1. */
-export const getDailyExpeditionRewardMult = (player: Pick<Player, 'loc' | 'level'> | null | undefined, now: number): number => {
-    if (!player?.loc) return 1;
+export const getDailyExpeditionRewardMult = (player: Pick<Player, 'loc' | 'level' | 'trialRun'> | null | undefined, now: number): number => {
+    if (!player?.loc || isTrialPlayer(player)) return 1;
     return getDailyExpeditionRegion(player.level, now) === player.loc ? BALANCE.DAILY_EXPEDITION_REWARD_MULT : 1;
 };
 

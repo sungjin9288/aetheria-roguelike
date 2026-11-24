@@ -43,6 +43,7 @@ interface MobileGameLayoutProps {
     setMobileConsoleMode: (mode: string) => void;
     onOpenMirror: () => void;
     onOpenCrystalExchange: () => void;
+    onOpenDailyTrial: () => void;
     /** 싸우는 중이면 살아 있는 적, 처치 순간이면 쓰러진 적 — 있으면 기록 창 자리에 무대를 세운다(2026-11 A1). */
     combatStage?: CombatStageView;
     enemyHitCrit?: boolean;
@@ -60,6 +61,7 @@ const MobileGameLayout = ({
     setMobileConsoleMode,
     onOpenMirror,
     onOpenCrystalExchange,
+    onOpenDailyTrial,
     combatStage,
     enemyHitCrit = false,
     damageAmount = null,
@@ -216,6 +218,7 @@ const MobileGameLayout = ({
                         setGameState={engine.actions.setGameState}
                         onOpenMirror={onOpenMirror}
                         onOpenCrystalExchange={onOpenCrystalExchange}
+                        onOpenDailyTrial={onOpenDailyTrial}
                         shopItems={engine.shopItems}
                         grave={engine.grave}
                         isAiThinking={engine.isAiThinking}

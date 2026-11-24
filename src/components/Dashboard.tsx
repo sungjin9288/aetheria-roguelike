@@ -16,6 +16,7 @@ import {
     Trophy,
     X,
 } from 'lucide-react';
+import { isTrialPlayer } from '../utils/trialPlayer';
 import { DB } from '../data/db';
 import { MSG } from '../data/messages';
 import { getSignatureDiscoveryProgress } from '../utils/signatureDiscovery';
@@ -97,6 +98,10 @@ interface ArchiveRailScroll {
     offset: number;
 }
 
+// 2026-11 오늘의 시련: 시련의 기록은 장비 · 가방 · 기술 · 상태만 보인다 — 임무 · 시즌 · 묘비 · 설정은 본편의 몫이다.
+const TRIAL_TAB_IDS: ReadonlySet<string> = new Set(['equipment', 'inventory', 'skills', 'stats']);
+const TRIAL_DEFAULT_TAB = 'inventory';
+
 const ARCHIVE_RAIL_IDLE: ArchiveRailScroll = { overflows: false, atStart: true, atEnd: false, thumb: 100, offset: 0 };
 const ARCHIVE_RAIL_EDGE_PX = 1;
 const ARCHIVE_RAIL_FADE = '28px';
@@ -128,7 +133,7 @@ const getArchiveRailMask = ({ overflows, atStart, atEnd }: ArchiveRailScroll): s
 const Dashboard = ({
     player,
     grave,
-    sideTab,
+    sideTab: requestedTab,
     setSideTab,
     actions,
     stats,
@@ -139,6 +144,9 @@ const Dashboard = ({
     inventoryFilterRequest = null,
 }: DashboardProps) => {
     const isColumn = layout === 'column';
+    const inTrial = isTrialPlayer(player);
+    const tabItems = inTrial ? TAB_ITEMS.filter((tab) => TRIAL_TAB_IDS.has(tab.id)) : TAB_ITEMS;
+    const sideTab = inTrial && !TRIAL_TAB_IDS.has(String(requestedTab)) ? TRIAL_DEFAULT_TAB : requestedTab;
     const [confirmMenuReset, setConfirmMenuReset] = useState(false);
     const [railScroll, setRailScroll] = useState<ArchiveRailScroll>(ARCHIVE_RAIL_IDLE);
     const archiveRailRef = useRef<HTMLDivElement>(null);
@@ -306,7 +314,7 @@ const Dashboard = ({
         </div>
     );
 
-    const tabButtons = TAB_ITEMS.map((tab) => (
+    const tabButtons = tabItems.map((tab) => (
         <ArchiveTabButton
             key={tab.id}
             icon={tab.icon}

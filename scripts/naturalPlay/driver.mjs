@@ -56,6 +56,7 @@ import { areAllFieldChestsOpened, getFieldMapLayout, getFieldNeighbor, isFieldMa
 import { getFieldChestReward } from '../../src/systems/fieldChest.ts';
 import { getFieldAutoRunsUsed, isFieldAutoResumable, isFieldAutoWalkUnlocked, planPlayerFieldAutoWalk } from '../../src/utils/fieldAuto.ts';
 import { getFieldDoor, isFieldDoorOpen } from '../../src/systems/fieldDoor.ts';
+import { FIELD_OTHER_TRAITS, getFieldTraitOffer, isFieldTraitChoiceOpen } from '../../src/systems/fieldTrait.ts';
 import { getMapAccess } from '../../src/utils/mapAccess.ts';
 
 // v2 (Wave 119): 퇴마 · 회복 기술을 쓴다 — v1은 위력(`mult`) 있는 기술만 써서 성직자가 회복도 퇴마도 하지 않았다(원장 §126).
@@ -206,6 +207,10 @@ const installClock = (clock) => {
  *   사람이다: 자동 경로(`planFieldAutoStep`)로 걷고, 조우는 연속 탐험과 같은 판정(`getAutoExploreStep`)이 일반 공격 · 고른 기술을 내면
  *   그것을 쓴다. 멈추면 손으로 처리하고, 판정이 다시 탐험이면 같은 지도에서 이어 간다(횟수를 쓰지 않는다). `field`가 `off`면 쓸 수 없다.
  *   가짜 시계로 1회차가 하루 남짓이라 `on`은 회차당 몇 번뿐이다. `unlimited`는 측정 전용으로 하루 횟수를 지운다(횟수 결정 — 설계 §11-1).
+ * @param {string|null} [options.trialDay] 오늘의 시련(H8, 2026-11) — 날짜 키('YYYY-MM-DD')를 주면 본편 대신 그날의 시련 한 판을 걷는다:
+ *   첫 전직을 마친 새 플레이어가 안전지대에서 시작 전이(`AT.BEGIN_DAILY_TRIAL`)를 부르고, 결과 화면에 닿으면 끝난다. 싸우고 걷는 정책은 위와
+ *   같고(`field`는 `all`이어야 한다) 마을 일(임무 · 전직 · 거울 · 상점 · 이동)이 없다. 걷는 동안 생명이 절반 아래(마지막 지도는 80% 아래)면 생명
+ *   물약, 기력이 25% 아래면 기력 물약을 쓴다. 결과의 `trial`에 판의 기록이 남는다. 옵션이라 `DRIVER_VERSION`은 그대로다.
  * @param {(prev: object, action: object, next: object) => void} [options.onDispatch] 리듀서 전이마다 부르는 관찰 함수(Wave 130 —
  *   기록 · 이벤트 문장 감사). 상태를 바꾸지 않고 난수도 쓰지 않아 결과는 그대로다(정책이 아니므로 `DRIVER_VERSION` 그대로).
  */
@@ -253,6 +258,16 @@ export const FIELD_POLICIES = Object.freeze(['off', 'forest', 'all']);
 export const FIELD_AUTO_POLICIES = Object.freeze(['off', 'on', 'unlimited']);
 /** 자동 걷기 정책(오버월드 3단계) — `on`은 첫 전직 뒤 지도 지역에서 자동 걷기를 켜 둔 사람이다(기본 `off`). */
 export const FIELD_WALK_AUTO_POLICIES = Object.freeze(['off', 'on']);
+/** 지도 갈래 정책(2026-11) — 클리어한 지역의 새 지도에서 고르는 성격. `plain`(기본)은 고르지 않고 걷는 사람이다(v4 그대로). */
+export const MAP_TRAIT_POLICIES = Object.freeze(['plain', 'random', ...FIELD_OTHER_TRAITS]);
+/** 첫 여정의 첫 상자 유물(2026-11) — `off`는 이미 받은 계정으로 시작한다(그 기능의 영향만 재는 짝). */
+export const FIRST_CHEST_POLICIES = Object.freeze(['on', 'off']);
+
+/** 정책이 이 지도의 패에서 고르는 성격 — 패에 없으면 `plain`. `random`은 별도 시드 스트림이라 게임 난수를 쓰지 않는다. */
+export const pickMapTrait = (offer, mapTrait, pickSeed = 0) => {
+    if (mapTrait === 'random') return offer[Math.floor(createSeededRandom(pickSeed)() * offer.length)] ?? 'plain';
+    return offer.includes(mapTrait) ? mapTrait : 'plain';
+};
 /** `field: 'forest'` — 2단계 모양(지도는 고요한 숲 하나, 나머지 사냥 지역은 탐험 단추)을 재는 목록. */
 const FOREST_ONLY_FIELD_REGIONS = Object.freeze(['고요한 숲']);
 /** 3단계 전망(`field: 'all'`)이 지도 지역으로 켜는 곳 — 사냥 지역 전부(안전지대 · 층이 있는 혼돈의 심연은 판정이 다시 거른다). */
@@ -304,8 +319,16 @@ export const runNaturalPlay = async (options) => {
         field = 'off',
         fieldAuto = 'off',
         fieldWalkAuto = 'off',
+        mapTrait = 'plain',
+        firstChest = 'on',
+        trialDay = null,
         onDispatch,
     } = options;
+    if (!MAP_TRAIT_POLICIES.includes(mapTrait)) throw new Error(`unknown mapTrait ${mapTrait}`);
+    if (mapTrait !== 'plain' && field === 'off') throw new Error(`mapTrait ${mapTrait} needs field forest|all`);
+    if (!FIRST_CHEST_POLICIES.includes(firstChest)) throw new Error(`unknown firstChest ${firstChest}`);
+    const choosesTrait = mapTrait !== 'plain';
+    if (trialDay !== null && field !== 'all') throw new Error("trialDay needs field 'all'");
     if (!FIELD_POLICIES.includes(field)) throw new Error(`unknown field ${field}`);
     if (!FIELD_AUTO_POLICIES.includes(fieldAuto)) throw new Error(`unknown fieldAuto ${fieldAuto}`);
     if (fieldAuto !== 'off' && field === 'off') throw new Error(`fieldAuto ${fieldAuto} needs field forest|all`);
@@ -341,7 +364,16 @@ export const runNaturalPlay = async (options) => {
 
     const initial = structuredClone(INITIAL_STATE);
     initial.player.stats.currentRun.startedAt = firstRunStartedAt(seed);
+    if (firstChest === 'off') initial.player.stats.firstChestRelic = true;
     let state = { ...initial, bootStage: 'ready', logs: [] };
+    if (trialDay !== null) {
+        const [year, month, day] = trialDay.split('-').map(Number);
+        clock.now = new Date(year, month - 1, day, 12, 0, 0).getTime();
+        state = { ...state, player: { ...state.player, name: '용사', gender: 'male', job: jobPath[0], level: 10, loc: CONSTANTS.START_LOCATION } };
+        state = gameReducer(state, { type: AT.BEGIN_DAILY_TRIAL, payload: { now: clock.now } });
+        if (!state.dailyTrial) throw new Error(`trial did not start for ${trialDay}`);
+    }
+    const trialStartLevel = trialDay !== null ? Number(state.player.level) || 0 : 0;
     let logCounter = 0;
     const dispatch = (action) => {
         const prev = state;
@@ -396,6 +428,8 @@ export const runNaturalPlay = async (options) => {
         ...(useField ? { field } : {}),
         ...(useFieldAuto ? { fieldAuto } : {}),
         ...(useWalkAuto ? { fieldWalkAuto } : {}),
+        ...(choosesTrait ? { mapTrait } : {}),
+        ...(firstChest === 'off' ? { firstChest } : {}),
         stepSeconds,
         runs: [],
         deaths: [],
@@ -474,6 +508,8 @@ export const runNaturalPlay = async (options) => {
                     } : {}),
                     ...(useFieldAuto ? { autoRuns: 0, autoDone: 0, autoResumes: 0, autoStops: {} } : {}),
                     // 자동 걷기 — 켠 수 · 걸음(Lv21 이후 따로) · 그동안의 조우 · 자동 전투 입력 · 멈춤 이유
+                    // 지도 갈래 — 고를 수 있던 지도에서 고른 성격별 수(정책이 `plain`이 아닐 때만)
+                    ...(choosesTrait ? { traits: {} } : {}),
                     ...(useWalkAuto ? { walk: { starts: 0, steps: 0, lateSteps: 0, encounters: 0, combat: 0, stops: {} } } : {}),
                 },
             } : {}),
@@ -608,6 +644,8 @@ export const runNaturalPlay = async (options) => {
 
     try {
         while (step < maxSteps && result.runs.length < targetRuns) {
+            // 오늘의 시련 — 결과 화면에 닿으면 판이 끝났다.
+            if (state.dailyTrial?.result) break;
             step += 1;
             clock.now += stepSeconds * 1000;
             let A = buildActions();
@@ -762,6 +800,21 @@ export const runNaturalPlay = async (options) => {
     }
     if (run) closeRun();
     result.steps = step;
+    if (trialDay !== null) {
+        const before = lastCombatSnapshot;
+        result.trial = {
+            dayKey: trialDay,
+            job: state.player.job,
+            loc: state.player.loc,
+            startLevel: trialStartLevel,
+            result: state.dailyTrial?.result ?? null,
+            level: Number(state.player.level) || 0,
+            combats: result.runs[0]?.combats ?? 0,
+            // 쓰러진 판만 — 마지막으로 싸운 적
+            killer: state.dailyTrial?.result?.outcome === 'dead' && before ? { ...before.enemy, map: state.player.trialRun?.map ?? null } : null,
+            potionsLeft: (state.player.inv || []).filter((item) => item.type === 'hp').length,
+        };
+    }
     result.finalLevel = Number(state.player?.level) || 0;
     result.finalRank = Number(state.player?.meta?.prestigeRank) || 0;
     // 끝난 시점의 이야기 임무 — 계승하지 못한 판을 진단한다.
@@ -987,7 +1040,28 @@ export const runNaturalPlay = async (options) => {
         dispatch({ type: AT.SET_GAME_STATE, payload: GS.IDLE });
     }
 
+    /** 오늘의 시련의 대기 차례 — 나은 장비를 끼고, 물약을 마시고, 걷는다(마을 일이 없다). */
+    async function playTrialIdle() {
+        for (const type of GEAR_TYPES) {
+            const item = pickBestEquippable(state.player, type, { upgradesOnly: true });
+            if (item) buildActions().useItem(item);
+        }
+        const p = state.player;
+        const stats = getFullStats();
+        const owned = (pool) => pool.map((def) => (p.inv || []).find((item) => item.name === def.name)).find(Boolean);
+        const hpFloor = p.trialRun?.map >= BALANCE.DAILY_TRIAL_MAPS ? 0.8 : 0.5;
+        const potion = (p.hp / Math.max(1, stats.maxHp) < hpFloor && owned(HP_POTIONS))
+            || ((p.mp || 0) / Math.max(1, stats.maxMp) < 0.25 && owned(MP_POTIONS));
+        if (potion) {
+            const before = state.player;
+            buildActions().useItem(potion);
+            if (state.player !== before) return;
+        }
+        await walkField();
+    }
+
     async function playIdle() {
+        if (trialDay !== null) { await playTrialIdle(); return; }
         let A = buildActions();
         let p = state.player;
 
@@ -1171,6 +1245,10 @@ export const runNaturalPlay = async (options) => {
                 await buildActions().processFieldPending();
                 return;
             }
+            if (choosesTrait) {
+                chooseFieldTrait(current, mapData);
+                current = state.player.fieldMap;
+            }
             let layout = getFieldMapLayout(current, mapData);
             if (useFieldAuto && maybeRunFieldAuto(current, layout)) {
                 current = state.player.fieldMap;
@@ -1210,9 +1288,22 @@ export const runNaturalPlay = async (options) => {
                 record.chestGold += (Number(state.player.gold) || 0) - (Number(before.gold) || 0);
                 record.chestItems += Math.max(0, (state.player.inv || []).length - (before.inv || []).length);
             }
+            // 첫 여정의 첫 상자 — 유물 선택 화면이 열렸다. 다음 행동이 고른다(화면과 같은 순서).
+            if (state.pendingRelics) return;
         }
         record.fallbacks += 1;
         await buildActions().explore();
+    }
+
+    /** 지도 갈래 — 고를 수 있는 새 지도면 정책의 성격을 고른다(보통 지도는 고르지 않고 걷는 것과 같다). */
+    function chooseFieldTrait(current, mapData) {
+        if (!isFieldTraitChoiceOpen(state.player)) return;
+        const offer = getFieldTraitOffer(state.player, current, mapData);
+        const pickSeed = deriveSeed(seed, 'natural-play-map-trait', result.runs.length, run.deaths, current.loc, current.seq);
+        const trait = pickMapTrait(offer, mapTrait, pickSeed);
+        const counts = run.field.traits;
+        counts[trait] = (counts[trait] ?? 0) + 1;
+        if (trait !== 'plain') buildActions().fieldChooseTrait(current.seq, trait);
     }
 
     /** 자동 탐험을 켜거나 이어 간다. 새 지도로 바꿨으면 true. */
@@ -1275,7 +1366,8 @@ export const runNaturalPlay = async (options) => {
         const chests = layout.chests.filter((chest) => !current.openedChests.includes(chest.id)).map((chest) => chest.index);
         const level = Number(state.player.level) || 1;
         const seasonActive = Boolean(state.liveConfig?.seasonEvent?.active);
-        const exits = layout.exits.filter((exit) => !getMapAccess(DB.MAPS, current.loc, exit.to, level, seasonActive).reason).map((exit) => exit.index);
+        // 오늘의 시련의 출구는 다음 지도다 — 진입 레벨을 보지 않는다(리듀서와 같다).
+        const exits = layout.exits.filter((exit) => trialDay !== null || !getMapAccess(DB.MAPS, current.loc, exit.to, level, seasonActive).reason).map((exit) => exit.index);
         const targets = new Set(chests.length > 0 ? chests : door !== null ? [door] : exits);
         const blocked = new Set(layout.exits.map((exit) => exit.index).filter((index) => !targets.has(index)));
         if (door !== null && !targets.has(door)) blocked.add(door);

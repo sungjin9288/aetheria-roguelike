@@ -55,6 +55,7 @@ import { formatSynergyDrawback } from '../../utils/relicSynergyHint.js';
 import { calculateFullStats } from '../../utils/statsCalculator.js';
 import { applyTempBuffRule } from '../../systems/tempBuffMerge.js';
 import { spawnEnemy } from '../../utils/exploreUtils.js';
+import { isTrialPlayer } from '../../utils/trialPlayer.js';
 import { applyHuntChampion, getHuntChampionReadiness, getHuntChampionThreat } from '../../utils/huntContracts.js';
 import { getHuntContract } from '../../data/huntContracts.js';
 import {
@@ -141,7 +142,8 @@ export const rollExplorationEvent = (
     { dispatch, addLog, getFullStats, anomalyMult, rng = Math.random }: ExploreRollDeps,
 ) => {
     const discoveryOdds = getDiscoveryOdds(player, mapData);
-    const hasKey = (player.inv || []).some((i) => i.name === '잊혀진 열쇠');
+    // 오늘의 시련은 지역을 떠나지 않는다 — 보물고 열쇠가 쓰이지 않는다.
+    const hasKey = !isTrialPlayer(player) && (player.inv || []).some((i) => i.name === '잊혀진 열쇠');
     if (hasKey && (typeof mapData.level === 'number' && mapData.level >= 10) && rng() < discoveryOdds.keyEventChance) {
         dispatch({
             type: AT.SET_PLAYER,

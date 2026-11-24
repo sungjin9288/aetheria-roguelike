@@ -1,3 +1,4 @@
+import { isTrialPlayer } from './trialPlayer.js';
 import type { Dispatch } from 'react';
 import { ITEMS } from '../data/items.js';
 import type { CodexCategory, Item, Monster, Player, Quest, QuestProgressState } from "../types/index.js";
@@ -333,6 +334,8 @@ export { migrateData } from './dataMigration.js';
  * @returns {string[]} 새로 해금된 칭호 ID 목록
  */
 export const checkTitles = (player: Player): string[] => {
+    // 오늘의 시련은 칭호를 남기지 않는다.
+    if (isTrialPlayer(player)) return [];
     const existing = new Set(player.titles || []);
     return TITLES.filter((t) => {
         if (existing.has(t.id)) return false;

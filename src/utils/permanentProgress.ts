@@ -184,6 +184,10 @@ export const pickPermanentPlayerState = (
             abyssDailyDive: clone(stats.abyssDailyDive ?? null),
             // 2026-11 지역 지도: 그날 쓴 자동 탐험 횟수는 사망 · 계승으로 되돌아오지 않는다(설계 §7). 지도 · 클리어 기록은 넘기지 않는다.
             ...(stats.fieldAutoRuns ? { fieldAutoRuns: clone(stats.fieldAutoRuns) } : {}),
+            // 2026-11 첫 여정의 첫 상자: 유물 고르기는 계정당 한 번이다 — 받은 영수증을 넘긴다.
+            ...(stats.firstChestRelic ? { firstChestRelic: true } : {}),
+            // 2026-11 오늘의 시련: 기록 장부는 계정 단위라 사망 · 계승을 넘는다(쓰기가 아니라 운반).
+            ...(stats.dailyTrial ? { dailyTrial: clone(stats.dailyTrial) } : {}),
             lastSeenAt: stats.lastSeenAt ?? null,
         },
     };

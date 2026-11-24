@@ -23,6 +23,9 @@ export const GS = Object.freeze({
     // cycle 207: dead 'formation' state 제거 — 미구현 placeholder. cycle 120/124/195/206
     //   dead cleanup 패턴. 어떤 핸들러도 dispatch / 비교 안 함.
     TRUE_ENDING: 'true_ending',
+    // 2026-11 오늘의 시련 — 한 판이 끝난 결과 화면(완주 · 사망 · 나가기). 시련 슬롯(`GameState.dailyTrial`)에만 있고 본편
+    //   세이브에는 생기지 않는다(복원하면 언제나 idle로 접힌다).
+    TRIAL_RESULT: 'trial_result',
 } as const);
 
 // cycle 301: GameState type alias 제거 — 외부 import 0건 (모두 GS const만 사용).

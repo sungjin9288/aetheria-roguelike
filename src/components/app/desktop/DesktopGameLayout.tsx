@@ -38,6 +38,7 @@ interface DesktopGameLayoutProps {
     setMobileConsoleMode: (mode: string) => void;
     onOpenMirror: () => void;
     onOpenCrystalExchange: () => void;
+    onOpenDailyTrial: () => void;
     /** 가방을 이 분류로 열어 달라는 마지막 요청(결과 카드 · 원정 정리의 '회복 아이템 확인'). */
     inventoryFilterRequest?: InventoryFilterRequest | null;
 }
@@ -63,7 +64,7 @@ const DesktopGameLayout = ({
     damageFlash, healFlash, damageAmount = null,
     statusBar, banners,
     mobileConsoleMode, setMobileConsoleMode,
-    onOpenMirror, onOpenCrystalExchange,
+    onOpenMirror, onOpenCrystalExchange, onOpenDailyTrial,
     inventoryFilterRequest = null,
 }: DesktopGameLayoutProps) => {
     const isCombat = engine.gameState === GS.COMBAT;
@@ -160,6 +161,7 @@ const DesktopGameLayout = ({
                                 setGameState={engine.actions.setGameState}
                                 onOpenMirror={onOpenMirror}
                                 onOpenCrystalExchange={onOpenCrystalExchange}
+                                onOpenDailyTrial={onOpenDailyTrial}
                                 showArchiveShortcut={false}
                                 shopItems={engine.shopItems}
                                 grave={engine.grave}

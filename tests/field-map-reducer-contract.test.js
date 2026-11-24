@@ -58,6 +58,8 @@ const basePlayer = (overrides = {}) => {
         inv: [],
         ...overrides,
     };
+    // 첫 여정의 첫 상자(유물 고르기 · 미믹 아님)를 이미 받은 계정이다 — 그 계약은 first-chest-relic-contract가 맡는다.
+    player.stats = { ...player.stats, firstChestRelic: true };
     return { ...player, fieldMap: overrides.fieldMap === undefined ? createFieldMapState(player, LOC, MAP) : overrides.fieldMap };
 };
 

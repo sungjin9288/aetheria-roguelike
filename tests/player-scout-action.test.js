@@ -343,7 +343,7 @@ test('⑥ exploreActions.scout은 판정만 하고 정산은 AT.RESOLVE_SCOUT �
     assert.doesNotMatch(source, /buildScoutEvent\(player, mapData, rng\)/, '카드 생성도 리듀서 소유');
     // 병합(2026-09): Codex가 explore() 내부 RNG를 harness seed를 받을 수 있는 actionRng로
     //   바꿨다(exploreActionSeed). "랜덤 25% 발동이 유지된다"는 의도는 동일하다.
-    assert.match(source, /shouldTriggerScout\(mapData, actionRng\)/, '랜덤 25% 발동은 유지된다');
+    assert.match(source, /shouldTriggerScout\(mapData, actionRng, getActiveFieldTraitEffects\(player\)\.events\)/, '랜덤 25% 발동은 유지된다');
 });
 
 test('⑥ 리듀서 핸들러가 게이지·무료 횟수·카드 개방을 한 전이에 담는다', async () => {

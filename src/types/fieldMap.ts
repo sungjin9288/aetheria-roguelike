@@ -42,6 +42,12 @@ export type FieldPending =
     /** 3단계 보스 문 — 구역 보스 도전 카드(탐험의 카드와 같은 카드 · 같은 전투)를 연다 */
     | { kind: 'door' };
 
+/**
+ * 지도 갈래(2026-11 사람 테스트 전 묶음, docs/PRE_PLAYTEST_FEATURES_2026-11.md §1) — 이번 여정에서 클리어한 지역의 다음 지도 성격.
+ * 카드 · 배율은 `systems/fieldTrait.ts`가 소유한다. `plain`은 성격이 없는 지도와 같다.
+ */
+export type FieldMapTrait = 'plain' | 'elite' | 'chest' | 'event' | 'quiet';
+
 export interface FieldMapState {
     loc: string;
     /** 이 여정에서 만든 지도 순번 — 같은 탐험 수에서 다시 들어가도 새 지도가 나오게 한다 */
@@ -55,4 +61,8 @@ export interface FieldMapState {
     pending?: FieldPending | null;
     /** 이 지도에서 자동 탐험 횟수를 이미 썼다 — 멈춘 뒤 다시 켜도 횟수를 쓰지 않는다 */
     autoRun?: boolean;
+    /** 고른 지도 성격 — 없으면 `plain`(첫 지도 · 고르지 않은 지도 · 이전 세이브). 지도와 함께 사라진다(런 범위). */
+    trait?: FieldMapTrait;
+    /** 오늘의 시련 지도 — 출구와 크기를 지역 데이터 대신 이 값에서 읽는다(`systems/dailyTrial.ts`가 만든다). 본편 지도에는 없다. */
+    plan?: { exits: string[]; level: number };
 }

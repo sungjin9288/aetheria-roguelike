@@ -1,6 +1,8 @@
 import { BALANCE } from '../data/constants';
 import { deriveSeed } from '../utils/seededRandom';
 import { generateFieldMap, toCoord, toIndex } from './fieldMapGen';
+import { applyFieldTraitToLayout, getActiveFieldTraitEffects, readFieldTrait } from './fieldTrait';
+import { isTrialPlayer } from '../utils/trialPlayer';
 import type { FieldDirection, FieldMapLayout, FieldMapState } from '../types/fieldMap';
 import type { GameMap } from '../types/map';
 import type { Player } from '../types/player';
@@ -44,8 +46,11 @@ export const isFieldMapRegion = (loc: string | null | undefined, mapData: GameMa
     && mapData!.level !== 'infinite'
 );
 
-export const getFieldMapLayout = (state: Pick<FieldMapState, 'loc' | 'seed'>, mapData: GameMap): FieldMapLayout => (
-    generateFieldMap(state.loc, state.seed, mapData.level, mapData.exits ?? [])
+export const getFieldMapLayout = (state: Pick<FieldMapState, 'loc' | 'seed' | 'trait' | 'plan'>, mapData: GameMap): FieldMapLayout => (
+    applyFieldTraitToLayout(
+        generateFieldMap(state.loc, state.seed, state.plan?.level ?? mapData.level, state.plan?.exits ?? mapData.exits ?? []),
+        readFieldTrait(state),
+    )
 );
 
 const toCount = (value: unknown): number => Math.max(0, Math.trunc(Number(value) || 0));
@@ -97,10 +102,17 @@ export const getFieldMapOnArrival = (
     return player.fieldMap ? { ...player.fieldMap, pending: null } : player.fieldMap;
 };
 
-/** 조우 문턱 — 탐험 수 · 지역의 해시라 조우마다 바뀌고, 다시 불러와도 같다. */
-export const getFieldEncounterThreshold = (player: Pick<Player, 'stats'>, loc: string): number => {
-    const span = BALANCE.FIELD_ENCOUNTER_MAX - BALANCE.FIELD_ENCOUNTER_MIN + 1;
-    return BALANCE.FIELD_ENCOUNTER_MIN + (deriveSeed(explores(player), loc, 'encounter') % span);
+/** 조우 문턱 — 탐험 수 · 지역의 해시라 조우마다 바뀌고, 다시 불러와도 같다. 고른 지도 성격(`fieldTrait.ts`)이 배율을 건다. */
+export const getFieldEncounterThreshold = (
+    player: Pick<Player, 'stats' | 'trialRun'> & Partial<Pick<Player, 'loc' | 'fieldMap'>>,
+    loc: string,
+): number => {
+    // 오늘의 시련은 조우가 촘촘하다 — 세 장의 지도가 짧은 판 하나다.
+    const [min, max] = isTrialPlayer(player)
+        ? [BALANCE.DAILY_TRIAL_ENCOUNTER_MIN, BALANCE.DAILY_TRIAL_ENCOUNTER_MAX]
+        : [BALANCE.FIELD_ENCOUNTER_MIN, BALANCE.FIELD_ENCOUNTER_MAX];
+    const base = min + (deriveSeed(explores(player), loc, 'encounter') % (max - min + 1));
+    return Math.max(1, Math.round(base * getActiveFieldTraitEffects({ loc, fieldMap: player.fieldMap }).encounterSteps));
 };
 
 export const getFieldTileDanger = (char: string): number => {

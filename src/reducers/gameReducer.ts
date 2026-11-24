@@ -15,6 +15,7 @@ import { returnSupplyRewardActionMap } from './handlers/rewardedAdHandlers';
 import { boundedEncounterActionMap } from './handlers/boundedEncounterHandlers';
 import { chapterPickActionMap } from './handlers/chapterPickHandlers';
 import { fieldActionMap } from './handlers/fieldHandlers';
+import { makeDailyTrialActionMap, reduceDailyTrial, type DailyTrialSlot } from './dailyTrial';
 import { settleSignatureAcquisitions } from './handlers/signatureAcquisition';
 import type { ActionOf, ActionType, GameAction, RunSummary } from './actionTypes';
 import type { GameMode } from './gameStates';
@@ -75,6 +76,8 @@ export interface GameState {
     // 2026-10-26 소유자 결정 D33: 최근 전설 각인 획득(순번 · 아이템) — 획득 전이(`handlers/signatureAcquisition.ts`)가
     //   쓰고 전설 획득 화면(`useLegendaryDropDetector`)이 읽는다. 표시 대기열의 원천이라 세이브 봉투에 넣지 않는다.
     legendaryAcquisitions: LegendaryAcquisition[];
+    // 2026-11 오늘의 시련: 시련을 걷는 동안 보관한 본편 상태와 이번 판의 기록 — 본편에는 null이다(`reducers/dailyTrial.ts`).
+    dailyTrial: DailyTrialSlot | null;
     // cycle 305: publicGraves dead state 제거 — INITIAL_STATE [] 외 SET 0건,
     //   UI read 0건. INVADE_GRAVE 핸들러의 filter도 항상 [] 입력 → no-op.
 }
@@ -183,6 +186,7 @@ export const INITIAL_STATE: GameState = {
     combatReceipt: null,
     combatFeedback: null,
     legendaryAcquisitions: [],
+    dailyTrial: null,
 };
 
 // --- REDUCER ---
@@ -212,6 +216,7 @@ const ACTION_MAP = {
     ...boundedEncounterActionMap,
     ...chapterPickActionMap,
     ...fieldActionMap,
+    ...makeDailyTrialActionMap(INITIAL_STATE),
 } satisfies HandlerMap;
 
 const deliverReturnSupply = (nextState: GameState): GameState => {
@@ -230,7 +235,7 @@ const deliverReturnSupply = (nextState: GameState): GameState => {
     };
 };
 
-export const gameReducer = (state: GameState, action: GameAction): GameState => {
+const reduceGame = (state: GameState, action: GameAction): GameState => {
     // 맵을 유니온 키로 조회하면 handler의 파라미터도 유니온이 되어 TS가 "핸들러 K와 action K가
     // 같은 멤버"임을 스스로 세우지 못한다. 그 상관관계를 이 한 줄에서만 못 박고
     // (payload는 절대 넓히지 않는다 — action/handler 모두 동일한 `GameAction` 유니온),
@@ -241,6 +246,13 @@ export const gameReducer = (state: GameState, action: GameAction): GameState => 
     if (!handler) return state;
     const nextState = handler(state, action);
     if (nextState === state) return state;
+    // 2026-11 오늘의 시련: 시련의 획득은 시련 안에서만 남는다 — 귀환 보급 · 전설 각인 장부를 정산하지 않는다.
+    if (nextState.dailyTrial) return nextState;
     // 2026-10-26 소유자 결정 D33: 전설 각인 획득(도감 · 시즌 경험 · 기록 줄)은 모든 전이 뒤에 한 곳이 정산한다.
     return settleSignatureAcquisitions(state, deliverReturnSupply(nextState), action);
 };
+
+/** 시련을 걷는 동안에는 `reduceDailyTrial`이 본편을 격리한다 — 본편 전이는 그대로다. */
+export const gameReducer = (state: GameState, action: GameAction): GameState => (
+    state.dailyTrial ? reduceDailyTrial(state, state.dailyTrial, action, reduceGame) : reduceGame(state, action)
+);

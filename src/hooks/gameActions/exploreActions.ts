@@ -20,6 +20,7 @@ import { shouldTriggerScout, buildScoutEvent, getScoutAvailability } from '../..
 import { isAreaBossChallengeable, isBossGaugeFull, isBossGaugeCardSuppressed } from '../../utils/bossGauge';
 import { buildAreaBossChallengeCard } from '../../utils/bossChallengeCard';
 import { isFieldMapRegion } from '../../systems/fieldMapWalk';
+import { getActiveFieldTraitEffects } from '../../systems/fieldTrait';
 import { getProgressionEventMultiplier } from '../../data/progressionProfiles';
 import type { GameMap, Player } from '../../types';
 import type { GameActionDeps, GameActionDepsWithRng } from '../actionDeps';
@@ -30,6 +31,7 @@ import { buildBoundedEncounterContext, selectBoundedEncounter } from '../../util
 import { buildBoundedEncounterEvent } from '../../utils/boundedEncounterEvent';
 import { getAdditiveNumericRelicValue } from '../../utils/relicEffectValues';
 import { buildDimensionGraveEvent, markDimensionGraveMet, pickDimensionGrave, selectDimensionGraveCandidates } from '../../utils/dimensionGrave';
+import { isTrialPlayer } from '../../utils/trialPlayer';
 import { buildMerchantEvent, buildMerchantStock, shouldMeetMerchant, startMerchantVisit } from '../../utils/wanderingMerchant';
 
 const takeHarnessExploreSeed = (): number | undefined => {
@@ -87,7 +89,7 @@ const runExplorePostDecisionRoll = async (
 
     // AI 랜덤 이벤트 체크. 직전 선택 뒤 한 번의 일반 탐험이 없으면 optional roll을 소비하지 않는다.
     // 2026-11 H7(소유자 결정 "정찰 자리"): 지역 한정 조우는 이 자리가 아니라 정찰 자리에서 나온다(`pickScoutSlotEncounter`).
-    if (optionalDecisionAllowed && rng() < effectiveEventChance) {
+    if (optionalDecisionAllowed && !isTrialPlayer(player) && rng() < effectiveEventChance * getActiveFieldTraitEffects(player).events) {
         // 2026-09 Wave 19 K1: 준비 중은 `EVENT`가 아니라 `EVENT_PENDING`이다.
         //   예전에는 여기서 `SET_GAME_STATE EVENT` + `SET_AI_THINKING true`를 쏘고
         //   최대 9.5초를 기다렸다 — 그 창은 `{event, currentEvent: null}`이라
@@ -175,6 +177,8 @@ export const createExploreActions = (deps: GameActionDeps, shared: SharedHelpers
             if (gameState !== GS.IDLE) return addLog('error', MSG.EXPLORE_BLOCKED);
 
             const actionRng = resolveExploreActionRandom(rng, takeHarnessExploreSeed());
+            // 2026-11 오늘의 시련: 이야기 · 다른 차원의 묘비 · 행상인 · AI 이벤트가 없다(모닥불 · 정찰 · 유물 발견 · 전투는 그대로).
+            const trial = isTrialPlayer(player);
 
             const mapData = DB.MAPS[player.loc!];
             if (!mapData) return addLog('error', MSG.MAP_UNKNOWN);
@@ -182,7 +186,7 @@ export const createExploreActions = (deps: GameActionDeps, shared: SharedHelpers
             // 2026-11 소유자 결정 "확정이 아니라 확률": 사냥 지역의 이야기 단계는 탐험마다 확률로 나타난다(탐험 난수 미사용).
             const claimedQuestIds = player.stats?.claimedQuestIds;
             const chainTrigger = getChainEventForLoc(player.loc, player.eventChainProgress, player.deferredEventChainSteps, player.stats?.abyssFloor, claimedQuestIds);
-            if (chainTrigger && isChainStepEncountered(player, mapData.type, chainTrigger.chain.id, chainTrigger.step.step)) {
+            if (chainTrigger && !trial && isChainStepEncountered(player, mapData.type, chainTrigger.chain.id, chainTrigger.step.step)) {
                 commitExploreOutcome('narrative_event', null, mapData);
                 const { chain, step } = chainTrigger;
                 dispatch({ type: AT.SET_GAME_STATE, payload: GS.EVENT });
@@ -255,7 +259,7 @@ export const createExploreActions = (deps: GameActionDeps, shared: SharedHelpers
             //   다른 플레이어의 공개 묘비가 드물게 나타난다. 후보 판정은 난수를 쓰지 않고, 후보가 없으면(오프라인 · 다른
             //   플레이어 묘비 없음 · 오늘 한도 소진) 이 블록은 난수를 하나도 쓰지 않는다 — 그 동안의 탐험은 이 기능이 없던 때와 같다.
             const today = new Date().toDateString();
-            const dimensionCandidates = optionalDecisionAllowed && mapData.type !== 'safe'
+            const dimensionCandidates = optionalDecisionAllowed && !trial && mapData.type !== 'safe'
                 ? selectDimensionGraveCandidates(deps.getDimensionGraves?.(), player, deps.uid, today)
                 : [];
             if (dimensionCandidates.length > 0 && actionRng() < BALANCE.DIMENSION_GRAVE_EVENT_CHANCE) {
@@ -275,7 +279,7 @@ export const createExploreActions = (deps: GameActionDeps, shared: SharedHelpers
             // 떠돌이 행상인 (2026-10 Wave 75, 소유자 결정 "낮은 확률의 이벤트로 행상인 — 물품은 늘 바뀌고, 판매도 가능"):
             //   만남 · 재고는 탐험 난수(`actionRng`)를 쓰지 않고 탐험 수 · 지역의 해시로 정한다 — 만나지 않는 탐험의 난수열은
             //   기능 이전과 같다. 재고는 만남에 실려(`player.merchantVisit`) 구매 리듀서가 그 값으로 검증한다.
-            if (optionalDecisionAllowed && shouldMeetMerchant(player, mapData, player.loc!)) {
+            if (optionalDecisionAllowed && !trial && shouldMeetMerchant(player, mapData, player.loc!)) {
                 commitExploreOutcome('narrative_event', null, mapData);
                 const stock = buildMerchantStock(player, player.loc!);
                 dispatch({ type: AT.SET_PLAYER, payload: (p: Player) => startMerchantVisit(p, p.loc!, stock) });
@@ -289,7 +293,7 @@ export const createExploreActions = (deps: GameActionDeps, shared: SharedHelpers
             // 탐험 스카우팅 (2026-07 감사 (b)): "정보 없는 단일 버튼 탐험" 갭 대응 — 던전(비안전지대)
             //   탐험 시 낮은 확률로 사전 정찰 카드 2~3장을 제시한다. 체인 > 캠프파이어 > 보스 도전 선택 >
             //   스카우팅 > 나머지 롤(AI 이벤트/quiet/전투) 순 우선순위. 선택은 eventActions.ts가 같은 턴에 해소.
-            if (optionalDecisionAllowed && shouldTriggerScout(mapData, actionRng)) {
+            if (optionalDecisionAllowed && shouldTriggerScout(mapData, actionRng, getActiveFieldTraitEffects(player).events)) {
                 commitExploreOutcome('narrative_event', null, mapData);
                 // 카드를 먼저 만든다 — 한정 조우로 바뀌어도 이 탐험의 난수 소비는 정찰과 같다(바뀌는 것은 결과뿐이다).
                 const scoutEvent = buildScoutEvent(player, mapData, actionRng);

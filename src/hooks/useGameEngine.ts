@@ -21,6 +21,9 @@ import { acknowledgeMilestoneStoryBeat, type MilestoneStoryBeatId } from '../uti
 import { getQuestCompletionStory } from '../utils/storyJournal';
 
 import { useFirebaseSync } from './useFirebaseSync';
+import { useDailyTrial } from './useDailyTrial';
+import { gateDailyTrialActions } from './dailyTrialActions';
+import { getMainGameState } from '../reducers/dailyTrial';
 import { useDimensionGravePool } from './useDimensionGravePool';
 import { getDimensionGravePool } from '../platform/dimensionGravePool';
 import { useProductTelemetry } from './useProductTelemetry';
@@ -56,7 +59,10 @@ const storyLogSequence = { current: 0 };
 
 export const useGameEngine = () => {
     const [state, dispatch] = useReducer(gameReducer, INITIAL_STATE);
-    useProductTelemetry(state);
+    // 2026-11 오늘의 시련: 저장 · 업로드 · 텔레메트리는 언제나 본편을 읽는다(시련 중이면 보관한 본편).
+    const mainState = getMainGameState(state);
+    const inDailyTrial = state.dailyTrial !== null;
+    useProductTelemetry(mainState);
     // 시각효과 해제 타이머 핸들만 담는다 — 전투 턴 해석은 reducer 소유(CLAUDE.md §8-1).
     const combatPendingRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const combatItemLocksRef = useRef<Set<string>>(new Set());
@@ -109,12 +115,20 @@ export const useGameEngine = () => {
         combatReceipt,
         combatFeedback,
         legendaryAcquisitions,
+        dailyTrial,
     } = state;
 
     // --- Firebase Sync ---
-    const { flushLocalSave } = useFirebaseSync(state, dispatch);
+    const { flushLocalSave: flushMainSave } = useFirebaseSync(mainState, dispatch);
+    const { controls: dailyTrialControls, flushTrialSave } = useDailyTrial(state, dispatch, flushMainSave);
+    // 시련 중에는 시련 칸만 저장한다(백그라운드 · 앱 닫기).
+    const flushLocalSave = useCallback(async () => {
+        if (!inDailyTrial) return flushMainSave();
+        flushTrialSave();
+        return null;
+    }, [inDailyTrial, flushMainSave, flushTrialSave]);
     // Wave 70: 다른 차원의 묘비 — 온라인 세션만 최근 공개 묘비를 읽는다(탐험 액션이 getDimensionGraves로 읽는다).
-    useDimensionGravePool(uid);
+    useDimensionGravePool(inDailyTrial ? null : uid);
 
     useEffect(() => {
         combatItemLocksRef.current.clear();
@@ -138,6 +152,8 @@ export const useGameEngine = () => {
 
     const addStoryLog: AddStoryLog = useCallback(
         async (type: string, data: Record<string, unknown>) => {
+            // 오늘의 시련은 서사 호출(AI)이 없다.
+            if (inDailyTrial) return;
             dispatch({ type: AT.SET_AI_THINKING, payload: true });
             const tempId = allocateStoryLogId(storyLogSequence);
             dispatch({ type: AT.ADD_LOG, payload: { type: 'loading', text: '...', id: tempId } });
@@ -168,7 +184,7 @@ export const useGameEngine = () => {
                 dispatch({ type: AT.SET_AI_THINKING, payload: false });
             }
         },
-        [player, uid, getFullStats]
+        [player, uid, getFullStats, inDailyTrial]
     );
 
     const narratedQuestClaimRef = useRef<string | null>(null);
@@ -337,10 +353,16 @@ export const useGameEngine = () => {
         [player, gameState, enemy, isAiThinking, uid, liveConfig, grave, currentEvent, addLog, addStoryLog, getFullStats, leaderboard, economyReceipt, clearPendingCombat, schedulePendingCombat, claimCombatItem, claimCombatAction, combatTurn, stableActions]
     );
 
+    // 오늘의 시련: 마을 · 이동 · 임무 · 상점 · 장기 성장의 입력은 막힌다(표는 `dailyTrialActions`).
+    const playableActions = useMemo(
+        () => (inDailyTrial ? gateDailyTrialActions(actions, addLog) : actions),
+        [actions, addLog, inDailyTrial]
+    );
+
     const handleCommand = useCallback((text: string) => {
-        const result = parseCommand(text, gameState, player, actions);
+        const result = parseCommand(text, gameState, player, playableActions);
         if (typeof result === 'string') addLog('system', result);
-    }, [gameState, player, actions, addLog]);
+    }, [gameState, player, playableActions, addLog]);
 
     return {
         player,
@@ -350,7 +372,7 @@ export const useGameEngine = () => {
         // H5(a): 세션 uid는 state.uid에만 있다(player.uid는 어디에서도 쓰이지 않는다).
         //   공개 묘비 목록에서 "내 묘비 제외"를 실제로 판정하려면 화면까지 내려가야 한다.
         uid,
-        actions,
+        actions: playableActions,
         getFullStats,
         sideTab,
         grave,
@@ -378,5 +400,8 @@ export const useGameEngine = () => {
         dispatch,
         addLog,
         flushLocalSave,
+        // 2026-11 오늘의 시련: 지금 판(없으면 null)과 시작 · 포기 · 끝
+        dailyTrial,
+        dailyTrialControls,
     };
 };

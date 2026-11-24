@@ -1,3 +1,4 @@
+import { BALANCE } from '../data/constants';
 import { fieldDistances } from './fieldMapGen';
 import { isAreaBossChallengeable, isBossGaugeFull } from '../utils/bossGauge';
 import type { FieldMapLayout } from '../types/fieldMap';
@@ -46,7 +47,9 @@ export const getFieldDoorIndex = (layout: FieldMapLayout): number | null => {
 
 /** 문이 열렸는가 — 도전할 수 있는 구역 보스가 있고 그 지역의 게이지가 찼다(회피 기록은 보지 않는다 — 문은 남는다). */
 export const isFieldDoorOpen = (player: Player | null | undefined, loc: string, mapData: GameMap | null | undefined): boolean => (
-    Boolean(player && mapData) && isAreaBossChallengeable(mapData, player) && isBossGaugeFull(player, loc)
+    Boolean(player && mapData) && isAreaBossChallengeable(mapData, player)
+    // 오늘의 시련: 마지막 지도에서는 문이 처음부터 열려 있다(게이지를 보지 않는다 — 도망친 뒤에도 문은 남는다).
+    && (player?.trialRun ? player.trialRun.map >= BALANCE.DAILY_TRIAL_MAPS : isBossGaugeFull(player, loc))
 );
 
 /** 지금 보이는 문의 칸 — 닫혀 있으면 null */

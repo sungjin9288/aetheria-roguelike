@@ -13,8 +13,9 @@ import type { GameEvent, LeaderboardEntry, LiveConfig, LogEntry } from '../types
 import type { GraveEntry } from '../utils/graveUtils.js';
 import type { buildRunSummary } from '../utils/gameUtils.js';
 import type { DeathLoreView } from '../utils/deathLore.js';
+import type { DailyTrialSave } from './dailyTrial';
 import type { GameMode } from './gameStates';
-import type { FieldDirection, FieldPending } from '../types/fieldMap';
+import type { FieldDirection, FieldMapTrait, FieldPending } from '../types/fieldMap';
 
 export type UseCombatItemPayload = {
     itemId: string;
@@ -160,6 +161,8 @@ export const AT = Object.freeze({
     FIELD_STEP: 'FIELD_STEP',
     FIELD_CLEAR_PENDING: 'FIELD_CLEAR_PENDING',
     FIELD_AUTO_START: 'FIELD_AUTO_START',
+    // 2026-11 지도 갈래 — 클리어한 지역의 새 지도 성격 고르기(`systems/fieldTrait.ts`).
+    FIELD_CHOOSE_TRAIT: 'FIELD_CHOOSE_TRAIT',
 
     // v4.0 — Relic / Prestige / Title / Daily
     SET_PENDING_RELICS: 'SET_PENDING_RELICS',
@@ -202,6 +205,11 @@ export const AT = Object.freeze({
 
     // 2026-07 — 에테르 거울 (에센스 소비 영구 업그레이드 트리)
     PURCHASE_MIRROR_NODE: 'PURCHASE_MIRROR_NODE',
+
+    // 2026-11 오늘의 시련 — 본편을 통째로 보관하고 시작 · 나가기(결과 화면) · 끝(본편 복원). 격리 규칙은 `reducers/dailyTrial.ts`.
+    BEGIN_DAILY_TRIAL: 'BEGIN_DAILY_TRIAL',
+    ABANDON_DAILY_TRIAL: 'ABANDON_DAILY_TRIAL',
+    END_DAILY_TRIAL: 'END_DAILY_TRIAL',
 } as const);
 
 // cycle 301: ActionType type alias 제거 — 외부 import 0건. AT const literal types로 충분.
@@ -338,6 +346,12 @@ export interface PurchaseMirrorNodePayload {
     expectedLevel: number;
 }
 
+/** `BEGIN_DAILY_TRIAL` — 날짜는 `now`에서 나온다. `saved`는 시련 칸(`platform/dailyTrialStorage.ts`)에서 읽은 멈춘 판이다. */
+export interface BeginDailyTrialPayload {
+    now: number;
+    saved?: DailyTrialSave | null;
+}
+
 /** 퀘스트/업적 id는 카탈로그(숫자)와 런타임 생성(현상수배 문자열)이 섞인다. */
 export type QuestId = string | number;
 
@@ -414,6 +428,8 @@ export interface ActionPayloadMap {
     /** 화면 쪽 훅이 처리를 시작한 일 — 지금 남은 일과 종류가 같을 때만 지운다. */
     [AT.FIELD_CLEAR_PENDING]: { kind: FieldPending['kind'] };
     [AT.FIELD_AUTO_START]: { now: number };
+    /** `seq`는 화면이 본 지도 순번 — 그 사이 지도가 바뀌었으면 무시한다. 닫기는 `trait: 'plain'`. */
+    [AT.FIELD_CHOOSE_TRAIT]: { seq: number; trait: FieldMapTrait; now: number };
 
     // ── v4.0 — Relic / Prestige / Title / Daily ──────────────────────────
     [AT.SET_PENDING_RELICS]: Relic[] | null;
@@ -456,6 +472,11 @@ export interface ActionPayloadMap {
 
     // ── 2026-07 — 에테르 거울 ────────────────────────────────────────────
     [AT.PURCHASE_MIRROR_NODE]: PurchaseMirrorNodePayload;
+
+    // ── 2026-11 — 오늘의 시련 ────────────────────────────────────────────
+    [AT.BEGIN_DAILY_TRIAL]: BeginDailyTrialPayload;
+    [AT.ABANDON_DAILY_TRIAL]: undefined;
+    [AT.END_DAILY_TRIAL]: { now: number };
 }
 
 /** 모든 action type 리터럴의 유니온 — `AT`의 값 집합과 같다. */

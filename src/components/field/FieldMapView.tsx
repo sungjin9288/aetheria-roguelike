@@ -12,6 +12,7 @@ import { getChapterOf } from '../../utils/chapters';
 import { fieldColor, readFieldBiomePalette, readFieldMapPalette } from '../../utils/fieldMapPalette';
 import { getFieldBiome } from '../../systems/fieldBiome';
 import { getAreaBossName } from '../../utils/bossGauge';
+import { isTrialPlayer } from '../../utils/trialPlayer';
 import { DB } from '../../data/db';
 import { drawFieldDoor, drawFieldTile } from './fieldTileArt';
 import type { FieldMapLayout, FieldMapState } from '../../types/fieldMap';
@@ -210,8 +211,8 @@ const FieldMapView = ({ player, field, layout, door = null, onTileTap, walkTarge
     const signal = getFieldDangerSignal(field.danger, threshold);
     const opened = layout.chests.filter((chest) => field.openedChests.includes(chest.id)).length;
     const locationName = getVisibleLocationName(player, player.loc) ?? '';
-    // 2026-11 B1 P1: 지금 지역의 장 번호 — 필드 무대(FieldStage)와 같은 칩 · 같은 판정(길 잃은 여행이면 숨긴다).
-    const chapter = blind ? null : getChapterOf(player.loc);
+    // 2026-11 B1 P1: 지금 지역의 장 번호 — 필드 무대(FieldStage)와 같은 칩 · 같은 판정(길 잃은 여행 · 오늘의 시련이면 숨긴다).
+    const chapter = blind || isTrialPlayer(player) ? null : getChapterOf(player.loc);
     const doorBoss = door !== null ? getAreaBossName(mapData) : null;
 
     // 2026-11 화면 B안: 방금의 기록은 지도 아래 한 줄 소식(기록 띠)이 보인다 — 지도 위에는 처음 들어선 순간 걷는 법 한 줄만 둔다.

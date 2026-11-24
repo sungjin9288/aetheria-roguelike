@@ -8,7 +8,7 @@ import { isFieldMapRegion } from '../../systems/fieldMapWalk';
 import { buildAreaBossChallengeCard } from '../../utils/bossChallengeCard';
 import { getEnemyThreat } from '../../utils/enemyThreat';
 import { applyBattleStartRelics } from './exploreFlow';
-import type { FieldDirection } from '../../types/fieldMap';
+import type { FieldDirection, FieldMapTrait } from '../../types/fieldMap';
 import type { Player } from '../../types';
 import type { GameActionDeps } from '../actionDeps';
 
@@ -68,6 +68,11 @@ export const createFieldActions = (deps: GameActionDeps, links: FieldActionLinks
         fieldStep: (direction: FieldDirection, auto = false) => dispatch({
             type: AT.FIELD_STEP,
             payload: { direction, auto, now: Date.now() },
+        }),
+        /** 지도 갈래 — 이 지도의 성격을 고른다(닫기는 `plain`). 고를 수 있는지는 리듀서가 정한다. */
+        fieldChooseTrait: (seq: number, trait: FieldMapTrait) => dispatch({
+            type: AT.FIELD_CHOOSE_TRAIT,
+            payload: { seq, trait, now: Date.now() },
         }),
         fieldStartAuto: () => dispatch({ type: AT.FIELD_AUTO_START, payload: { now: Date.now() } }),
         /** 남은 처리할 일 하나를 넘긴다 — 대기 상태 · 지금 지역의 지도일 때만. 지운 뒤 넘기므로 두 번 처리되지 않는다. */

@@ -788,6 +788,31 @@ export const BALANCE = {
     // 2026-11 오버월드 3단계(소유자 결정 2026-11-16) — 자동 걷기(첫 전직 뒤, 하루 횟수 없음)의 걸음 박자. 자동 걷기는 상자를 열지
     //   않는다 — 열지 않은 상자 옆에 닿으면 멈추고, 지도를 다 밟으면 보스 문(없으면 출구) 옆에서 멈춘다(`systems/fieldAutoWalk.ts`).
     FIELD_AUTO_WALK_STEP_MS: 200,
+    // 2026-11 지도 갈래(docs/PRE_PLAYTEST_FEATURES_2026-11.md §1, `systems/fieldTrait.ts`) — 이번 여정에서 클리어한 지역의 다음 지도에서
+    //   보통 지도 1장 + 다른 성격 1 ~ 2장 중 하나를 고른다. 새 추첨 없이 이미 있는 문턱 · 지도 상자 수만 바꾼다.
+    //   encounterSteps 조우 문턱 배율(>1이면 뜸하다) · chests 상자 수 차이 · eliteChance 일반 조우의 정예 추첨 문턱에 더하는 값 ·
+    //   events 사건 · 정찰 문턱 배율 · chestGold 보통 상자 골드 배율 · chestMaterial 보통 상자 재료 문턱에 더하는 값.
+    FIELD_TRAIT_OTHERS_MIN: 1,
+    FIELD_TRAIT_OTHERS_MAX: 2,
+    FIELD_TRAIT_EFFECTS: {
+        plain: { encounterSteps: 1, chests: 0, eliteChance: 0, events: 1, chestGold: 1, chestMaterial: 0 },
+        elite: { encounterSteps: 1, chests: 0, eliteChance: 0.3, events: 1, chestGold: 1.25, chestMaterial: 0.25 },
+        chest: { encounterSteps: 0.8, chests: 2, eliteChance: 0, events: 1, chestGold: 1, chestMaterial: 0 },
+        event: { encounterSteps: 1, chests: -1, eliteChance: 0, events: 1.6, chestGold: 1, chestMaterial: 0 },
+        quiet: { encounterSteps: 1.5, chests: -1, eliteChance: 0, events: 1, chestGold: 1, chestMaterial: 0 },
+    },
+    // 2026-11 첫 여정의 첫 상자(같은 명세 §2, `systems/firstChestRelic.ts`) — 계정의 첫 여정에서 처음 여는 상자가 유물 고르기를 연다.
+    FIRST_CHEST_RELIC_CHOICES: 3,
+
+    // 2026-11 오늘의 시련(명세 docs/PRE_PLAYTEST_FEATURES_2026-11.md §3) — 시작 조건의 크기. 지역별 시작 레벨 · 강화 · 물약은
+    //   `data/dailyTrial.ts`의 표가 소유한다(몬스터 수치는 바꾸지 않는다 — 완주율은 시작 조건으로만 맞춘다).
+    DAILY_TRIAL_MAPS: 3,                // 한 판의 지도 수 — 마지막 지도에는 출구가 없고 보스 문이 처음부터 열려 있다
+    DAILY_TRIAL_MAP_LEVEL: 70,          // 지도 크기 · 상자 수를 정하는 레벨(`getFieldMapBand`) — 지역 레벨과 무관하게 가장 큰 지도
+    DAILY_TRIAL_ENCOUNTER_MIN: 3,       // 시련 지도의 조우 문턱(위험 걸음 수) — 본편 6 ~ 14보다 촘촘하다
+    DAILY_TRIAL_ENCOUNTER_MAX: 4,
+    DAILY_TRIAL_RELICS: 2,
+    DAILY_TRIAL_LEDGER_DAYS: 30,        // 장부에 남기는 날 수
+    DAILY_TRIAL_HISTORY_DAYS: 5,        // 입구 화면이 보여 주는 지난 기록 수
 
     // 리텐션 훅 — 복귀 브리핑 카드
     RETURN_BRIEFING_HOURS: 2,           // 마지막 플레이로부터 이 시간(h) 이상 경과 시 복귀 브리핑 표시 (2026-11 고도화 E1: 6 → 2, 사람 테스트로 다시 정한다)

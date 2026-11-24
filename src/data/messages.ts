@@ -1,6 +1,7 @@
 // cycle 321: unused DB import 제거 — messages.ts 어디에서도 DB 참조 0건.
 
 import type { StatusId } from '../types/index.js';
+import type { FieldMapTrait } from '../types/fieldMap';
 import { josa, repickJosa, withJosa } from './koreanParticles.js';
 
 /**
@@ -13,6 +14,18 @@ import { josa, repickJosa, withJosa } from './koreanParticles.js';
  * 리터럴 추론이 실제 함수 시그니처(파라미터/반환 타입)를 그대로 보존해
  * 소비처 33개 파일과의 호환성이 더 안전하다.
  */
+
+/** 지도 갈래 카드 문구가 읽는 수치 — `systems/fieldTrait.ts`의 `FieldTraitEffects`(메시지는 시스템을 import하지 않는다). */
+interface FieldTraitNumbers {
+    encounterSteps: number;
+    chests: number;
+    eliteChance: number;
+    events: number;
+    chestGold: number;
+    chestMaterial: number;
+}
+
+const toPercent = (ratio: number): number => Math.round(ratio * 100);
 
 /**
  * 2026-09 Wave 6 X2: 상태이상 라벨 단일 원천 — 7곳 이상 흩어져 있던 인라인
@@ -563,6 +576,8 @@ export const MSG = {
         mirror: '에테르 거울',
         // 소유자 결정 2026-10-26 D2(UX-04): 크리스탈 교환도 마을 시설이다 — 기록의 설정 탭에 묻혀 있었다.
         crystal: '에테르 교환소',
+        // 2026-11 오늘의 시련 — 첫 전직 뒤에 보인다.
+        trial: '오늘의 시련',
     },
     // 원정 조작판 — 이동은 하나, 탐험이 주 행동, 가방은 기록의 가방 탭을 연다(UX-03 · UX-07).
     FIELD_ACTION_BAG: '가방',
@@ -1440,6 +1455,7 @@ export const MSG = {
     CMD_BLOCKED_CRAFTING: '제작 화면이 열려 있습니다. 제작을 완료하거나 닫아 주세요.',
     CMD_BLOCKED_ASCENSION: '계승 여부를 먼저 결정해야 합니다.',
     CMD_BLOCKED_DEAD: '여정이 끝났습니다. 결과 화면에서 다시 시작하세요.',
+    CMD_BLOCKED_TRIAL_RESULT: '오늘의 시련이 끝났습니다. 결과 화면에서 여정을 이어 가세요.',
 
     // ── 명령 응답 ────────────────────────────────────────────────────────────
     CMD_SKILL_CYCLED: '기술 칸을 전환했습니다.',
@@ -2239,7 +2255,8 @@ export const MSG = {
     // === 2026-11 지역 지도 걷기 (docs/OVERWORLD_WALK_DESIGN_2026-11.md) ===
     // 같은 소모품이 이미 가방에 있으면 판매가 골드로 바꾼다(원장 §175) — 바꾼 것은 이름 뒤에 표시한다(골드는 합친 값).
     FIELD_CHEST_OPENED: (gold: number, items: string[], converted: string[] = []) => (
-        [`보물상자를 열었습니다 — 골드 ${gold}`, ...items, ...converted.map((name) => `${name}(골드로 바꿈)`)].join(' · ')
+        // 골드가 없는 상자(오늘의 시련)는 골드를 말하지 않는다.
+        [gold > 0 || items.length + converted.length === 0 ? `보물상자를 열었습니다 — 골드 ${gold}` : '보물상자를 열었습니다', ...items, ...converted.map((name) => `${name}(골드로 바꿈)`)].join(' · ')
     ),
     FIELD_CHEST_BAG_FULL: (items: string[]) => `가방이 가득 차 ${withJosa(items.join(' · '), '을/를')} 두고 왔습니다.`,
     FIELD_MIMIC_AWAKE: '보물상자가 이빨을 드러냈습니다 — 미믹이다!',
@@ -2250,6 +2267,39 @@ export const MSG = {
     // 미믹은 정예가 아니다(정예 칭호 · 정예 칩 없음) — 나타날 때의 줄도 자기 이름으로 말한다(2026-11-17 고위험 고보상). 권고는 붙이지 않는다(Wave 88).
     FIELD_MIMIC_THREAT: (hit: number, maxHp: number, pct: number, hits: number) => `🩸 미믹의 가장 센 한 방 예상 최대 ${hit} — 최대 생명 ${maxHp}의 ${pct}% (${hits}번에 쓰러짐)`,
     FIELD_CLEARED: (loc: string) => `${withJosa(loc, '을/를')} 모두 둘러봤습니다 — 이제 자동 탐험을 쓸 수 있습니다.`,
+    // 2026-11 첫 여정의 첫 상자(`systems/firstChestRelic.ts`) — 상자에서 나온 유물 고르기.
+    FIRST_CHEST_RELIC_FOUND: '상자 바닥에서 오래된 유물이 빛납니다 — 하나를 고를 수 있습니다.',
+    // 2026-11 지도 갈래(`systems/fieldTrait.ts`) — 수치는 BALANCE의 값을 그대로 말한다. 권하지 않는다(Wave 88).
+    FIELD_TRAIT_EYEBROW: '다시 들른 곳',
+    FIELD_TRAIT_TITLE: '어느 길로 들어갈까요?',
+    FIELD_TRAIT_BODY: '이 지도에서만 이어집니다. 고르지 않으면 보통 지도입니다.',
+    FIELD_TRAIT_ARIA: '지도 고르기',
+    FIELD_TRAIT_NAME: {
+        plain: '보통 지도',
+        elite: '정예가 모이는 길',
+        chest: '상자가 많은 길',
+        event: '발길 잦은 길',
+        quiet: '고요한 길',
+    } as Record<FieldMapTrait, string>,
+    FIELD_TRAIT_GAIN: {
+        plain: () => '늘 걷던 지도 그대로입니다.',
+        elite: (fx) => `상자 골드 ${fx.chestGold}배 · 상자에서 재료가 나올 확률 +${toPercent(fx.chestMaterial)}%`,
+        chest: (fx) => `보물상자가 ${fx.chests}개 더 있습니다.`,
+        event: (fx) => `사건과 정찰이 ${fx.events}배 자주 생깁니다.`,
+        quiet: (fx) => `적과 마주치기까지의 걸음이 ${toPercent(fx.encounterSteps - 1)}% 길어집니다.`,
+    } as Record<FieldMapTrait, (fx: FieldTraitNumbers) => string>,
+    FIELD_TRAIT_COST: {
+        plain: () => '없습니다.',
+        elite: (fx) => `정예가 나타날 확률 +${toPercent(fx.eliteChance)}%`,
+        chest: (fx) => `적과 마주치기까지의 걸음이 ${toPercent(1 - fx.encounterSteps)}% 짧아집니다.`,
+        event: (fx) => `보물상자가 ${-fx.chests}개 적습니다.`,
+        quiet: (fx) => `보물상자가 ${-fx.chests}개 적습니다.`,
+    } as Record<FieldMapTrait, (fx: FieldTraitNumbers) => string>,
+    FIELD_TRAIT_GAIN_LINE: (text: string) => `얻는 것 · ${text}`,
+    FIELD_TRAIT_COST_LINE: (text: string) => `치르는 것 · ${text}`,
+    FIELD_TRAIT_CONFIRM: '이 길로 들어가기',
+    FIELD_TRAIT_SKIP: '고르지 않기',
+    FIELD_TRAIT_CHOSEN: (name: string) => `${withJosa(name, '으로/로')} 들어섰습니다.`,
     FIELD_A11Y_MAP: '지역 지도',
     FIELD_A11Y_PAD: '걷기',
     FIELD_DIR_UP: '위로',
@@ -2308,4 +2358,58 @@ export const MSG = {
     },
     FIELD_WALK_STOPPED: (why: string) => `${why} 자동 걷기를 멈췄습니다.`,
     FIELD_WALK_STOPPED_MANUAL: '자동 걷기를 멈췄습니다.',
+
+    // === 2026-11 오늘의 시련 (docs/PRE_PLAYTEST_FEATURES_2026-11.md §3) — 하루에 하나, 누구나 같은 조건의 짧은 판. 보상은 없고 기록만 남는다 ===
+    DAILY_TRIAL_TITLE: '오늘의 시련',
+    DAILY_TRIAL_CLOSE_ARIA: '오늘의 시련 닫기',
+    DAILY_TRIAL_INTRO: '하루에 하나, 누구나 같은 조건으로 걷는 짧은 판입니다. 보상 없이 기록만 남고, 시련의 성장과 전리품은 시련 안에서만 이어집니다.',
+    DAILY_TRIAL_GOAL: (maps: number, bossName: string) => `지도 ${maps}장을 지나 ${withJosa(bossName, '을/를')} 쓰러뜨리면 완주입니다. 쓰러지면 끝입니다.`,
+    DAILY_TRIAL_COND_REGION: '지역',
+    DAILY_TRIAL_COND_JOB: '직업',
+    DAILY_TRIAL_COND_LEVEL: (level: number) => `레벨 ${level}`,
+    DAILY_TRIAL_COND_GEAR: '장비',
+    DAILY_TRIAL_COND_RELICS: '유물',
+    DAILY_TRIAL_COND_SUPPLIES: '소모품',
+    DAILY_TRIAL_GEAR_NAME: (name: string, enhance: number) => (enhance > 0 ? `${name} +${enhance}` : name),
+    DAILY_TRIAL_SUPPLY: (name: string, count: number) => `${name} ${count}개`,
+    DAILY_TRIAL_BEST_TITLE: '오늘의 최고 기록',
+    DAILY_TRIAL_BEST_NONE: '아직 기록이 없습니다.',
+    DAILY_TRIAL_TRIES: (count: number) => `도전 ${count}번`,
+    DAILY_TRIAL_HISTORY_TITLE: '지난 기록',
+    DAILY_TRIAL_HISTORY_NONE: '지난 기록이 없습니다.',
+    DAILY_TRIAL_RECORD: (record: { cleared: boolean; maps: number; actions: number }) => (
+        record.cleared ? `완주 · 행동 ${record.actions}번` : `지도 ${record.maps}장 · 행동 ${record.actions}번`
+    ),
+    DAILY_TRIAL_DAY: (dayKey: string) => `${Number(dayKey.slice(5, 7))}월 ${Number(dayKey.slice(8, 10))}일`,
+    DAILY_TRIAL_START: '시련 시작',
+    DAILY_TRIAL_RESUME: '시련 이어 하기',
+    DAILY_TRIAL_RESUME_NOTE: (map: number, maps: number, actions: number) => `멈춘 판이 있습니다 — 지도 ${map}/${maps} · 행동 ${actions}번`,
+    DAILY_TRIAL_STARTED: (region: string, bossName: string, maps: number) => (
+        `오늘의 시련을 시작합니다. ${region}의 지도 ${maps}장을 지나면 ${withJosa(bossName, '이/가')} 기다립니다.`
+    ),
+    DAILY_TRIAL_MAP_ENTERED: (map: number, maps: number) => (
+        map >= maps ? `마지막 지도에 들어섰습니다. 보스의 문이 열려 있습니다. (${map}/${maps})` : `다음 지도에 들어섰습니다. (${map}/${maps})`
+    ),
+    DAILY_TRIAL_HUD: (map: number, maps: number, actions: number) => `시련 · 지도 ${map}/${maps} · 행동 ${actions}번`,
+    DAILY_TRIAL_LEAVE: '시련 그만두기',
+    DAILY_TRIAL_LEAVE_TITLE: '시련을 그만둘까요?',
+    DAILY_TRIAL_LEAVE_BODY: '이 판은 여기서 끝나고 최고 기록에 들지 않습니다. 여정은 들어올 때 그대로 이어집니다.',
+    DAILY_TRIAL_LEAVE_CONFIRM: '그만두기',
+    DAILY_TRIAL_LEAVE_CANCEL: '계속 걷기',
+    DAILY_TRIAL_LEAVE_CLOSE_ARIA: '시련 그만두기 확인 닫기',
+    DAILY_TRIAL_RESULT_TITLE: { cleared: '시련 완주', dead: '시련에서 쓰러졌습니다', left: '시련을 그만두었습니다' },
+    DAILY_TRIAL_RESULT_MAPS: '깬 지도',
+    DAILY_TRIAL_RESULT_MAPS_VALUE: (maps: number, total: number) => `${maps}/${total}`,
+    DAILY_TRIAL_RESULT_ACTIONS: '행동',
+    DAILY_TRIAL_RESULT_ACTIONS_VALUE: (actions: number) => `${actions}번`,
+    DAILY_TRIAL_RESULT_NEW_BEST: '오늘의 최고 기록을 새로 썼습니다.',
+    DAILY_TRIAL_RESULT_LEFT_NOTE: '그만둔 판은 최고 기록에 들지 않습니다.',
+    DAILY_TRIAL_RESULT_MAIN_NOTE: '여정은 들어올 때 그대로입니다.',
+    DAILY_TRIAL_RETURN: '여정 이어 가기',
+    DAILY_TRIAL_RETURNED: (result: { outcome: 'cleared' | 'dead' | 'left'; cleared: boolean; maps: number; actions: number }) => (
+        result.outcome === 'left'
+            ? '오늘의 시련을 그만두었습니다.'
+            : `오늘의 시련 기록: ${result.cleared ? '완주' : `지도 ${result.maps}장`} · 행동 ${result.actions}번`
+    ),
+    DAILY_TRIAL_BLOCKED: '오늘의 시련에서는 할 수 없는 일입니다.',
 };

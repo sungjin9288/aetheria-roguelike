@@ -2,7 +2,10 @@ import { BALANCE } from '../../data/constants';
 import { DB } from '../../data/db';
 import { MSG } from '../../data/messages';
 import { getFieldChestReward, grantFieldChestReward, isFieldChestMimic } from '../../systems/fieldChest';
+import { advanceDailyTrialMap } from '../../systems/dailyTrial';
 import { getFieldDoor } from '../../systems/fieldDoor';
+import { getFieldTraitOffer, isFieldTraitChoiceOpen, readFieldTrait } from '../../systems/fieldTrait';
+import { getFirstChestRelicOffer, isFirstChestRelicOpen } from '../../systems/firstChestRelic';
 import {
     areAllFieldChestsOpened,
     createFieldMapState,
@@ -15,6 +18,7 @@ import { getMapAccess } from '../../utils/mapAccess';
 import { canPayFieldAutoCost, getFieldAutoRunCost, getFieldAutoRunsUsed, isFieldAutoResumable } from '../../utils/fieldAuto';
 import { getProtocolDayKey } from '../../utils/protocolCycle';
 import { createDomainRandom } from '../../utils/seededRandom';
+import { isTrialPlayer } from '../../utils/trialPlayer';
 import type { FieldMapState } from '../../types/fieldMap';
 import type { Player } from '../../types/player';
 import type { LogEntry } from '../../types/session.js';
@@ -76,6 +80,12 @@ const fieldStep = (state: GameState, action: ActionOf<typeof AT.FIELD_STEP>): Ga
     const { outcome } = result;
     if (outcome.kind === 'blocked') return state;
 
+    // 오늘의 시련: 출구는 다음 지도로 이어진다(지역을 떠나지 않는다).
+    if (outcome.kind === 'exit' && isTrialPlayer(state.player)) {
+        const player = advanceDailyTrialMap(state.player);
+        return withLogs(state, player, [{ type: 'system', text: MSG.DAILY_TRIAL_MAP_ENTERED(player.trialRun?.map ?? 1, BALANCE.DAILY_TRIAL_MAPS) }], now);
+    }
+
     if (outcome.kind === 'exit') {
         const access = getMapAccess(DB.MAPS, loc, outcome.to, state.player.level || 1, Boolean(state.liveConfig?.seasonEvent?.active));
         if (access.reason) {
@@ -99,11 +109,14 @@ const fieldStep = (state: GameState, action: ActionOf<typeof AT.FIELD_STEP>): Ga
 
     if (outcome.kind === 'chest') {
         // 자동 탐험에서는 미믹이 나오지 않는다(설계 §7) — 그 상자는 보통 상자로 열린다.
-        if (!auto && isFieldChestMimic(loc, field.seed, outcome.chestId)) {
+        //   오늘의 시련에서도 나오지 않는다 — 지도가 날짜마다 정해져 있어 그날 모두가 같은 상자에서 쓰러진다.
+        // 계정 첫 여정의 첫 상자도 미믹이 아니다(`systems/firstChestRelic.ts`).
+        const firstChest = isFirstChestRelicOpen(state.player);
+        if (!auto && !firstChest && !isTrialPlayer(state.player) && isFieldChestMimic(loc, field.seed, outcome.chestId)) {
             const player = { ...state.player, fieldMap: { ...result.state, pending: { kind: 'mimic' as const, chestId: outcome.chestId } } };
             return withLogs(state, player, [{ type: 'warning', text: MSG.FIELD_MIMIC_AWAKE }], now);
         }
-        const reward = getFieldChestReward(loc, mapData, field.seed, outcome.chestId);
+        const reward = getFieldChestReward(loc, mapData, field.seed, outcome.chestId, false, readFieldTrait(field));
         const grant = grantFieldChestReward(
             { ...state.player, fieldMap: result.state },
             reward,
@@ -112,7 +125,14 @@ const fieldStep = (state: GameState, action: ActionOf<typeof AT.FIELD_STEP>): Ga
         );
         const lines: LogLine[] = [{ type: 'success', text: MSG.FIELD_CHEST_OPENED(grant.gold, grant.admitted, grant.converted) }];
         if (grant.dropped.length > 0) lines.push({ type: 'warning', text: MSG.FIELD_CHEST_BAG_FULL(grant.dropped) });
-        return withLogs(state, grant.player, lines, now);
+        if (!firstChest) return withLogs(state, grant.player, lines, now);
+        // 유물 제안과 장부는 같은 전이가 남긴다 — 기존 유물 선택 화면 · 리로드 복원(`pendingRelics`)이 이어받는다.
+        const pendingRelics = getFirstChestRelicOffer(grant.player, { loc, seed: field.seed, chestId: outcome.chestId });
+        lines.push({ type: 'event', text: MSG.FIRST_CHEST_RELIC_FOUND });
+        return {
+            ...withLogs(state, { ...grant.player, stats: { ...grant.player.stats, firstChestRelic: true } }, lines, now),
+            pendingRelics,
+        };
     }
 
     return { ...state, player: { ...state.player, fieldMap: result.state }, syncStatus: 'syncing' };
@@ -122,6 +142,23 @@ const fieldClearPending = (state: GameState, action: ActionOf<typeof AT.FIELD_CL
     const field = state.player.fieldMap;
     if (!field?.pending || field.pending.kind !== action.payload?.kind) return state;
     return { ...state, player: { ...state.player, fieldMap: { ...field, pending: null } }, syncStatus: 'syncing' };
+};
+
+/**
+ * 지도 갈래 — 이 지도의 성격을 정한다(한 번). 화면이 본 지도(`seq`) · 이 지도의 패 안의 성격일 때만 받고, 고를 수 없는 때(클리어하지 않은
+ * 지역 · 이미 걸었거나 고름 · 자동 탐험의 지도)면 동일 참조다. 닫기는 `plain`이다.
+ */
+const fieldChooseTrait = (state: GameState, action: ActionOf<typeof AT.FIELD_CHOOSE_TRAIT>): GameState => {
+    if (!isWalkingAllowed(state)) return state;
+    const walkable = getWalkableField(state);
+    if (!walkable || walkable.field.seq !== action.payload?.seq || !isFieldTraitChoiceOpen(state.player)) return state;
+    const { field, loc } = walkable;
+    const trait = action.payload.trait;
+    if (!getFieldTraitOffer(state.player, field, DB.MAPS[loc]).includes(trait)) return state;
+    const player: Player = { ...state.player, fieldMap: { ...field, trait } };
+    if (trait === 'plain') return { ...state, player, syncStatus: 'syncing' };
+    const now = Number.isFinite(action.payload.now) ? action.payload.now : 0;
+    return withLogs(state, player, [{ type: 'system', text: MSG.FIELD_TRAIT_CHOSEN(MSG.FIELD_TRAIT_NAME[trait]) }], now);
 };
 
 const fieldAutoStart = (state: GameState, action: ActionOf<typeof AT.FIELD_AUTO_START>): GameState => {
@@ -159,4 +196,5 @@ export const fieldActionMap = {
     FIELD_STEP: fieldStep,
     FIELD_CLEAR_PENDING: fieldClearPending,
     FIELD_AUTO_START: fieldAutoStart,
+    FIELD_CHOOSE_TRAIT: fieldChooseTrait,
 } satisfies HandlerMap;

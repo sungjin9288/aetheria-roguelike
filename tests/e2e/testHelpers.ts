@@ -201,6 +201,9 @@ export const settleFieldInterruption = async (page: Page, timeout = 20_000) => {
             await tap('post-combat-primary-action');
         } else if (await visible('relic-choice-skip')) {
             await tap('relic-choice-skip');
+        } else if (await visible('field-trait-skip')) {
+            // 클리어한 지역의 새 지도 — 성격을 고르지 않고 보통 지도로 걷는다.
+            await tap('field-trait-skip');
         } else if (await visible('event-panel')) {
             await page.locator('[data-testid^="event-choice-"]').last().click({ timeout: 1_000 }).catch(() => undefined);
         } else if (await visible('mobile-console-return-log')) {
