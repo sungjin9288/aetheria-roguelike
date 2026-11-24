@@ -24,8 +24,12 @@ import { QUESTS } from '../src/data/quests.js';
  * - Lv1~4 전투 EXP 60% — 처치 보상과 퀘스트 보상의 중복 급성장 완화
  * - Lv1~10 퀘스트 EXP 상한 하향 — 단일 수령뿐 아니라 누적 동선도 제어
  *
- * 계약: 첫 이야기와 슬라임 임무 뒤 Lv1, 멧돼지 임무 뒤 Lv2, 거미 임무까지
+ * 계약(slice 52): 첫 이야기와 슬라임 임무 뒤 Lv1, 멧돼지 임무 뒤 Lv2, 거미 임무까지
  * 완료한 뒤 Lv3 초반에 머문다. 전직(Lv5)은 4~5개 지역을 익힌 뒤의 보상이다.
+ *
+ * 2026-11 E4가 임무 상한 부분을 되돌렸다(소유자 결정 2026-11-24 "첫 전직까지 절반으로 줄임"): 사냥 지역을
+ * 모두 걷는 지금 게임에서 첫 전직이 드라이버 중앙값 수백 행동이라, Lv1 · 2 임무 보상 경험만 올렸다
+ * (`tests/first-class-change-quest-exp-contract.test.js`). 시작 요구량 · 전투 경험 60% · 첫 방문 감속은 그대로다.
  */
 
 const EARLY_FIRST_VISIT_EXP_CAPS = {
@@ -80,26 +84,28 @@ test('slice 23: 초반 첫 방문 EXP 절반 — 골드는 유지', () => {
     assert.equal(forest.gold, 100, '첫 방문 골드 보상 유지');
 });
 
-test('slice 52: 초반 누적 성장 동선 — 멧돼지 후 Lv2, 거미 후 Lv3 초반', () => {
+// 2026-11 E4(소유자 결정 2026-11-24 "첫 전직까지 절반으로 줄임"): Lv1 · 2 임무 보상 경험을 올려(상한 1 · 2단 150 · 300)
+//   이 길이 "멧돼지 후 Lv2 · 거미 후 Lv3 초반"에서 아래로 바뀌었다. 전투 경험 60% · 첫 방문 감속 · 곡선은 그대로다(원장 §185).
+test('E4: 초반 누적 성장 동선 — 슬라임 임무 뒤 Lv2, 멧돼지 뒤 Lv4, 거미 뒤 Lv5 초반', () => {
     let player = freshVitals();
 
     player = applyExp(player, visitExp('고요한 숲'));   // 첫 방문 (감속 후)
     player = claimQuest(player, 80);                     // [이야기] 첫 번째 여정
     player = awardCombatExp(player, 60);                 // 슬라임 3킬 (20/킬)
     player = claimQuest(player, 1);                      // 슬라임 소탕
-    assert.equal(player.level, 1, '첫 이야기와 슬라임 임무 뒤 학습 구간 Lv1 유지');
+    assert.equal(player.level, 2, '첫 이야기와 슬라임 임무 뒤 Lv2');
 
     player = applyExp(player, visitExp('서쪽 평원'));    // 첫 방문 (감속 후)
     player = awardCombatExp(player, 200);                // 멧돼지 5킬 (40/킬)
     player = claimQuest(player, 2);                      // 멧돼지 사냥
-    assert.equal(player.level, 2, '멧돼지 임무 뒤 Lv3 조기 진입 금지');
+    assert.equal(player.level, 4, '멧돼지 임무 뒤 Lv4 — 한 수령에 한 레벨만(수령 완화)');
 
     player = awardCombatExp(player, 200);                // 거미떼 10킬 (20/킬)
     player = claimQuest(player, 110);                    // 거미떼 퇴치
 
-    assert.equal(player.level, 3, '거미 임무 뒤 Lv3 진입');
+    assert.equal(player.level, 5, '거미 임무 뒤 Lv5(첫 전직) 진입');
     assert.ok(player.exp <= Math.floor(player.nextExp * 0.4),
-        `거미 임무 뒤 Lv3 초반 40% 이내 (실제: ${player.exp}/${player.nextExp})`);
+        `거미 임무 뒤 Lv5 초반 40% 이내 (실제: ${player.exp}/${player.nextExp})`);
 });
 
 test('slice 52: Lv1~4 전투 EXP는 60%, Lv5부터 원래 보상', () => {

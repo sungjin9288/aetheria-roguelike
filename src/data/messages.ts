@@ -814,6 +814,9 @@ export const MSG = {
     MAP_BADGE_HIGH_EVENT: '이벤트↑',
     MAP_BADGE_SHOP: '상점',
     MAP_BADGE_GRAVE: '유해 회수↑',
+    // 2026-11 E6 오늘의 원정지 — 날짜로 고른 지역. 권하지 않고 사실만 말한다(Wave 88).
+    MAP_BADGE_DAILY_EXPEDITION: (pct: number) => `오늘의 원정지 +${pct}%`,
+    MAP_DAILY_EXPEDITION_NOTE: (pct: number, bandSize: number) => `오늘 이 지역에서 처치한 적의 골드 · 경험이 ${pct}% 늘어납니다. 날짜가 바뀌거나 레벨 구간(${bandSize}레벨)이 바뀌면 다른 지역으로 옮겨 갑니다.`,
 
     // --- 복귀 브리핑 카드 (리텐션 훅) ---
     RETURN_BRIEFING_TITLE: '복귀를 환영합니다',
@@ -1893,10 +1896,14 @@ export const MSG = {
     SYSTEM_TITLE_CLEARED: '칭호 적용을 해제했습니다.',
     SYSTEM_SECONDARY_TITLE: '기타',
     SYSTEM_SECONDARY_DESC: '순위, 의견, 저장과 기기 점검은 필요할 때 펼쳐 봅니다.',
-    SYSTEM_LEADERBOARD_DESC: '다른 모험가와 누적 처치 기록을 비교합니다.',
+    SYSTEM_LEADERBOARD_DESC: '계승 단계, 심연 최고 기록, 회차 최고 레벨 순서로 다른 모험가와 비교합니다.',
     SYSTEM_LEADERBOARD_EMPTY: '아직 순위 기록을 불러오지 못했습니다.',
     SYSTEM_LEADERBOARD_ME: '나',
     SYSTEM_LEADERBOARD_RANK: (rank: number) => `계승 ${rank}`,
+    // 2026-11 E7: 명예의 전당 기록 — 심연 최고 기록(돌파한 층) · 회차 최고 레벨, 사망 · 계승 화면의 내 순위 한 줄.
+    SYSTEM_LEADERBOARD_ABYSS: (floor: number) => `심연 ${floor.toLocaleString('ko-KR')}층`,
+    SYSTEM_LEADERBOARD_BEST_LEVEL: (level: number) => `최고 레벨 ${level}`,
+    LEADERBOARD_MY_RANK: (rank: number) => `명예의 전당 ${rank.toLocaleString('ko-KR')}위`,
     SYSTEM_FEEDBACK_DESC: '불편했던 점이나 이상한 동작을 개발팀에 알립니다.',
     SYSTEM_FEEDBACK_ARIA: '의견 내용',
     SYSTEM_FEEDBACK_PLACEHOLDER: '불편했던 점이나 이상한 동작을 적어 주세요.',

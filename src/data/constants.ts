@@ -56,6 +56,14 @@ export const CONSTANTS = {
     //   경계를 없애고, rules는 수동 배포라 효력 시점도 불확실하다(CLAUDE.md §8-6). 대신
     //   업로드 페이로드에서만(회수용 로컬 묘비는 그대로) 이 값으로 클램프한다.
     MAX_PUBLIC_GRAVE_GOLD: 9_999_999,
+    // 2026-11 E7 — 순위표 정렬 점수(`rankScore`)의 칸 상한. `firestore.rules` 리터럴과 같은 값이다(사본 — 바꾸면 rules · 계약을 함께).
+    //   점수 = 계승 단계 × 10⁸ + 심연 최고 기록 × 10³ + 회차 최고 레벨 — 칸마다 상한으로 자르므로 앞 칸이 언제나 이긴다.
+    //   최대 999,999,999,999 < 2⁵³(정수 그대로 Firestore 정수로 쓰인다). `utils/leaderboardScore.ts`가 소유한다.
+    LEADERBOARD_MAX_PRESTIGE_RANK: 9_999,
+    LEADERBOARD_MAX_ABYSS_RECORD: 99_999,
+    LEADERBOARD_MAX_LEVEL: 999,
+    // `firestore.rules`의 `totalKills <= 100000` 사본 — 평생 처치 수가 넘으면 순위표 쓰기가 통째로 거부되던 것을 막는다(보낼 때만 자른다).
+    LEADERBOARD_MAX_TOTAL_KILLS: 100_000,
     START_HP: 150,
     START_MP: 50,
     START_GOLD: 200,
@@ -677,6 +685,14 @@ export const BALANCE = {
     WANDERING_MERCHANT_RARE_MATERIAL_PRICE_PER_LEVEL: 40, // 희귀 재료(강화 재료)의 최저가 = 지역 레벨 × 이 값
     WANDERING_MERCHANT_CONSUMABLE_PRICE_FLOOR: 60,          // 소모품은 기본가가 max(이 값, 지역 레벨 × 아래 값) 이하인 것만 — Lv1에 영웅의 물약을 팔지 않는다
     WANDERING_MERCHANT_CONSUMABLE_PRICE_PER_LEVEL: 20,
+
+    // 오늘의 원정지(2026-11 E6, 소유자 결정 2026-11-24 "날짜로 자동 선정") — 그날의 지역 처치 골드 · 경험을 조금 올린다.
+    //   서버 · 운영 없이 날짜 키(오늘의 임무와 같은 기기 날짜)와 레벨 구간의 해시로 고른다 — 난수를 쓰지 않는다(`utils/dailyExpedition.ts`).
+    //   놓쳐도 잃는 것이 없다(연속 기록 · 수령 없음). 시계를 바꾸면 고른 지역만 바뀐다 — 받을 보상이 아니라 작은 배율이라 받아들인다.
+    DAILY_EXPEDITION_REWARD_MULT: 1.2,       // 그 지역에서 처치한 적의 골드 · 경험 배율(정수는 경험에서 나오는 만큼만 따라 오른다)
+    DAILY_EXPEDITION_BAND_LEVELS: 5,         // 레벨 구간 폭 — 구간 안에서는 하루 내내 같은 지역(레벨업마다 바뀌지 않는다)
+    DAILY_EXPEDITION_MIN_CANDIDATES: 2,      // 후보가 이보다 적은 구간(Lv1 ~ 5)은 원정지가 없다 — 늘 같은 지역이면 상시 보너스다
+    DAILY_EXPEDITION_GATE_WINDOW: 5,         // 후보 = 구간 첫 레벨이 들어갈 수 있는 사냥 지역 중 경로 게이트가 그 최고값 − 이 값 이상인 곳
 
     // 발견 체인 (Discovery Chains)
     DISCOVERY_CHAINS,

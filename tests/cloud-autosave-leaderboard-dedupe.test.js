@@ -64,9 +64,10 @@ test('순위표 값이 바뀌면 다시 쓰고, 페이로드 모양 · merge 방
     assert.equal(h.count(LEADERBOARD), 3);
     const last = h.calls.filter((call) => call.path === LEADERBOARD).at(-1);
     assert.deepEqual(Object.keys(last.data),
-        ['nickname', 'totalKills', 'prestigeRank', 'activeTitle', 'level', 'bossKills', 'job', 'uid', 'updatedAt']);
+        ['nickname', 'totalKills', 'prestigeRank', 'activeTitle', 'level', 'bossKills', 'job', 'abyssRecord', 'bestLevel', 'rankScore', 'uid', 'updatedAt']);
     assert.deepEqual(last.data, {
         nickname: '테스트용사', totalKills: 43, prestigeRank: 0, activeTitle: null, level: 13, bossKills: 1, job: '전사',
+        abyssRecord: 0, bestLevel: 13, rankScore: 13, // 2026-11 E7
         uid: 'uid-1', updatedAt: '<ts>',
     });
     assert.deepEqual(last.options, { merge: true });

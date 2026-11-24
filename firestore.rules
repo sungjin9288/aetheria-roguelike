@@ -24,6 +24,21 @@ service cloud.firestore {
       return val is string && val.size() > 0 && val.size() <= maxLen;
     }
 
+    // 키가 있으면 정수이고 [lo, hi] 안이다 — 없으면 통과(이전 클라이언트 호환)
+    function optionalIntIn(data, key, lo, hi) {
+      return !(key in data) || (data[key] is int && data[key] >= lo && data[key] <= hi);
+    }
+
+    // 순위표 점수 = 계승 단계 × 10⁸ + 심연 최고 기록 × 10³ + 회차 최고 레벨(`utils/leaderboardScore.ts`).
+    //   새 키가 이번 쓰기에서 바뀌지 않았으면(이전 클라이언트의 쓰기) 검사하지 않는다 — 위 리더보드 주석.
+    function leaderboardScoreConsistent(next, prev) {
+      return !next.keys().hasAny(['rankScore', 'abyssRecord', 'bestLevel'])
+        || (prev != null
+            && !next.diff(prev.data).affectedKeys().hasAny(['rankScore', 'abyssRecord', 'bestLevel']))
+        || (next.keys().hasAll(['rankScore', 'prestigeRank', 'abyssRecord', 'bestLevel'])
+            && next.rankScore == next.prestigeRank * 100000000 + next.abyssRecord * 1000 + next.bestLevel);
+    }
+
     // 앱 ID를 리터럴로 고정 — 와일드카드 대신 'aetheria-rpg' 전용
     match /artifacts/aetheria-rpg {
 
@@ -130,6 +145,15 @@ service cloud.firestore {
         allow read: if true;
 
         // 본인 entry만 쓰기 + 필드 유효성 검사
+        //
+        // 2026-11 E7 — 정렬 키가 평생 처치 수에서 `rankScore`(계승 단계 → 심연 최고 기록 → 회차 최고 레벨)로 바뀌었다.
+        //   필수 키 4개는 그대로다: 이미 설치된 이전 클라이언트는 새 필드를 모르고 영원히 이전 모양만 쓴다 — 새 필드를
+        //   필수로 만들면 그 설치본의 순위표 쓰기가 전부 거부되고 자동 저장이 '오프라인'으로 보인다. 새 필드는 **있으면**
+        //   정수 · 범위를 검사한다(상한은 constants.ts `LEADERBOARD_MAX_*` 사본). 계승 단계도 정렬 칸이라 같은 검사를 건다.
+        //   이 문서는 merge 쓰기라 `request.resource.data`는 합쳐진 결과다. 새 키(`rankScore` · `abyssRecord` · `bestLevel`)
+        //   중 하나라도 이번 쓰기에서 바뀌면 점수가 세 값의 합성과 같아야 한다 — 이전 클라이언트가 새 클라이언트의 문서 위에
+        //   계승 단계만 바꿔 쓰는 경우(두 기기 · 두 판)는 새 키를 건드리지 않으므로 거부하지 않는다(점수는 다음 새 쓰기에 맞춰진다).
+        //   이 검사는 위조 방지가 아니라 표시 값과 정렬 값의 일치다 — 위조 경계는 범위 상한이다.
         allow write: if isSelf(uid)
           && request.resource.data.keys().hasAll(['nickname', 'totalKills', 'uid', 'updatedAt'])
           && request.resource.data.uid == uid
@@ -137,7 +161,12 @@ service cloud.firestore {
           && request.resource.data.totalKills is number
           && request.resource.data.totalKills >= 0
           && request.resource.data.totalKills <= 100000  // 비정상적 수치 차단
-          && request.resource.data.updatedAt is timestamp;
+          && request.resource.data.updatedAt is timestamp
+          && optionalIntIn(request.resource.data, 'prestigeRank', 0, 9999)
+          && optionalIntIn(request.resource.data, 'abyssRecord', 0, 99999)
+          && optionalIntIn(request.resource.data, 'bestLevel', 1, 999)
+          && optionalIntIn(request.resource.data, 'rankScore', 0, 999999999999)
+          && leaderboardScoreConsistent(request.resource.data, resource);
       }
 
       // ── 공개 묘비 (PvP) ───────────────────────────────────────

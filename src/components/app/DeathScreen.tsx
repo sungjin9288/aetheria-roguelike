@@ -7,6 +7,7 @@ import type { RunSummary } from '../../reducers/actionTypes';
 import type { Player } from '../../types';
 import type { MilestoneStoryBeat } from '../../utils/milestoneStory';
 import { getUnrecordedClassBranches } from '../../utils/classJourney';
+import { useMyLeaderboardRank } from '../../hooks/useMyLeaderboardRank';
 import { MOMENT_DUR_PANEL, MOMENT_EASE } from '../moments/momentMotion';
 
 const loadRunSummaryCard = () => import('../RunSummaryCard');
@@ -76,6 +77,7 @@ const DeathScreen = ({
     onRestart,
 }: DeathScreenProps) => {
     const reduceMotion = useReducedMotion() === true;
+    const leaderboardRank = useMyLeaderboardRank(player);
     const [beatDone, setBeatDone] = useState(false);
     const finishBeat = useCallback(() => setBeatDone(true), []);
     const showBeat = !beatDone && !reduceMotion;
@@ -96,6 +98,7 @@ const DeathScreen = ({
                     onOpenMirror={onOpenMirror}
                     onRestart={onRestart}
                     unrecordedBranches={getUnrecordedClassBranches(player.classJourney, runSummary.job)}
+                    leaderboardRank={leaderboardRank}
                 />
             </Suspense>
             {mirrorOpen && (

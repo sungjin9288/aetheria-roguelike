@@ -27,7 +27,7 @@ test('마을의 완료 임무 트래커에서 보상을 바로 수령한다', as
             seasonXp: parsed.player?.seasonXp,
             completionLogs: parsed.logTail?.filter((log: { text: string }) => log.text === '임무 완료: 슬라임 소탕').length,
         };
-    })).toEqual({ exp: 40, gold: 300, questCount: 0, seasonXp: 30, completionLogs: 1 });
+    })).toEqual({ exp: 150, gold: 300, questCount: 0, seasonXp: 30, completionLogs: 1 });
 });
 
 test('첫 이야기 다음에는 짧은 일반 토벌을 먼저 추천한다', async ({ page }) => {

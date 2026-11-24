@@ -166,6 +166,15 @@ for (const viewport of [{ width: 375, height: 667 }, { width: 390, height: 844 }
             await expect(page.getByTestId(`archive-tab-${tab}`)).toHaveAttribute('data-active', 'true');
             await expectNoClipping(page, `후반 기록 탭 ${tab}`);
         }
+        // 2026-11 E6 오늘의 원정지 — 전체 경로 행의 배지와 그 지역을 고른 선택 카드의 한 줄(레벨 44 구간은 날짜와 상관없이 언제나 하나다).
+        await page.getByTestId('archive-tab-map').click();
+        await page.getByTestId('map-world-list-toggle').click();
+        const featuredRow = page.getByTestId('map-row').filter({ hasText: '오늘의 원정지' });
+        await expect(featuredRow).toHaveCount(1);
+        await expectNoClipping(page, '후반 지도 · 전체 경로');
+        await featuredRow.click();
+        await expect(page.getByTestId('map-daily-expedition-note')).toBeVisible();
+        await expectNoClipping(page, '후반 지도 · 오늘의 원정지');
         await page.getByTestId('archive-tab-codex').click();
         await page.getByTestId('codex-tab-legend').click();
         const collection = page.getByTestId('legendary-codex-collection');

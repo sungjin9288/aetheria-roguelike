@@ -21,6 +21,7 @@ import { admitCombatLoot } from '../../systems/combatLootCapacity';
 import { getEffectiveMaxHp, getEffectiveMaxMpFull } from '../../systems/vitals';
 import { advanceHuntContractOnVictory } from '../../utils/huntContracts';
 import { isClassChangeNewlyReady } from '../../utils/classChangeReadiness';
+import { getDailyExpeditionRewardMult } from '../../utils/dailyExpedition';
 import type { FullStats, Player } from '../../types';
 import type { LootSettlementReceipt } from '../../reducers/gameReducer';
 import type { AddLog, AddStoryLog, EmitUnlockedTitles, GameActionDeps } from '../actionDeps';
@@ -71,7 +72,11 @@ export const handleVictoryOutcome = ({
     const random = typeof rng === 'function' ? rng : Math.random;
     const currentTime = typeof now === 'function' ? now : Date.now;
     // 탐험 스카우팅 "전투의 기척" 카드 — 해당 전투 한정 처치 보상(EXP/골드) 배율 보너스.
-    const passiveBonus = buildPassiveBonusWithScout(stats, deadEnemy);
+    // 2026-11 E6: 오늘의 원정지 배율 — 처치 위치 · 정산 시각(reducer action의 now)으로 판정한다(난수 없음).
+    const passiveBonus = {
+        ...buildPassiveBonusWithScout(stats, deadEnemy),
+        dailyExpeditionMult: getDailyExpeditionRewardMult(playerAfterCombat, currentTime()),
+    };
     const victoryResult = CombatEngine.handleVictory(playerAfterCombat, deadEnemy, passiveBonus, liveConfig);
     let updatedPlayer = victoryResult.updatedPlayer;
     victoryResult.logs.forEach((log: { type: string; text: string }) => addLog(log.type, log.text));

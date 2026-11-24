@@ -634,7 +634,7 @@ const SystemTab = ({ player, actions, stats, runtime }: SystemTabProps) => {
                 <SectionHead title={MSG.SYSTEM_SECONDARY_TITLE} desc={MSG.SYSTEM_SECONDARY_DESC} />
                 <div className="ab-rows mt-2">
                     <SettingsDisclosure testId="system-online-records" icon={Trophy} tone="gold" title="명예의 전당" summary={MSG.SYSTEM_LEADERBOARD_DESC}>
-                        <SystemLeaderboard entries={leaderboard} playerName={player.name} />
+                        <SystemLeaderboard entries={leaderboard} playerName={player.name} uid={actions?.getUid?.()} />
                     </SettingsDisclosure>
 
                     <SettingsDisclosure testId="system-feedback" icon={MessageSquare} tone="ether" title="의견 보내기" summary={MSG.SYSTEM_FEEDBACK_DESC}>

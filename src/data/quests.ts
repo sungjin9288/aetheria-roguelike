@@ -1,6 +1,11 @@
+// 초반 임무 보상 경험의 상한(받을 수 있는 레벨별) — 큰 임무 하나가 여러 레벨을 한 번에 올리지 않게 한다(slice 17 · 52).
+// 2026-11 E4(소유자 결정 2026-11-24 "첫 전직까지 절반으로 줄임"): 1 · 2단(40 · 60)을 150 · 300으로 올렸고 그 단의 임무는
+//   모두 상한값을 준다(80 · 1 · 110 = 150, 2 · 8 · 14 = 300). 첫 전직의 레버는 이 두 단 하나다 — 적 경험 · 경험 곡선 ·
+//   초반 전투 경험 60% · 수령 완화(`getPacedQuestClaimExp`)는 그대로(Wave 53 · 60). 사망하면 임무를 다시 받아 다시 오르기도
+//   같이 빨라진다(소유자 수용). 3단부터는 그대로다. 측정은 원장 §185, 계약은 `tests/first-class-change-quest-exp-contract.test.js`.
 const EARLY_QUEST_EXP_CAP_BY_MIN_LEVEL: Record<number, number> = Object.freeze({
-    1: 40,
-    2: 60,
+    1: 150,
+    2: 300,
     3: 80,
     4: 105,
     5: 140,
@@ -41,17 +46,17 @@ export const FIRST_STORY_QUEST_ID = 80;
 //   갈려 있어 소문자 'level'로 통일했다 — 데이터와 모든 소비처를 같은 커밋에서 맞춘다.
 const RAW_QUESTS: Quest[] = [
     // ── 초반 퀘스트 (Lv 1-10) ────────────────────────────────────────────────
-    { id: 1,  title: '슬라임 소탕',      desc: '슬라임 3마리 처치',       target: '슬라임',      goal: 3,  reward: { exp: 50,   gold: 100 },           minLv: 1 },
-    { id: 2,  title: '멧돼지 사냥',      desc: '멧돼지 5마리 처치',       target: '멧돼지',      goal: 5,  reward: { exp: 80,   gold: 150 },           minLv: 2 },
+    { id: 1,  title: '슬라임 소탕',      desc: '슬라임 3마리 처치',       target: '슬라임',      goal: 3,  reward: { exp: 150,  gold: 100 },           minLv: 1 },
+    { id: 2,  title: '멧돼지 사냥',      desc: '멧돼지 5마리 처치',       target: '멧돼지',      goal: 5,  reward: { exp: 300,  gold: 150 },           minLv: 2 },
     { id: 3,  title: '평원의 코볼트',    desc: '코볼트 5마리 처치',       target: '코볼트',      goal: 5,  reward: { exp: 300,  gold: 500,  item: '강철 롱소드' }, minLv: 3 },
     { id: 4,  title: '숲의 해충',        desc: '거미떼 8마리 처치',       target: '거미떼',      goal: 8,  reward: { exp: 200,  gold: 250,  item: '해독제' },      minLv: 3 },
     { id: 5,  title: '호수의 수호자',    desc: '물의 정령 5마리 처치',    target: '물의 정령',   goal: 5,  reward: { exp: 350,  gold: 400,  item: '마나 결정' },   minLv: 5 },
     { id: 6,  title: '폐허 탐험',        desc: '해골 병사 10마리 처치',   target: '해골 병사',   goal: 10, reward: { exp: 500,  gold: 600 },           minLv: 5 },
     { id: 7,  title: '광산 정화',        desc: '광석골렘 5마리 처치',     target: '광석골렘',    goal: 5,  reward: { exp: 600,  gold: 700,  item: '미스릴 원석' }, minLv: 8 },
-    { id: 8,  title: '늑대 무리 토벌',   desc: '늑대 8마리 처치',         target: '늑대',        goal: 8,  reward: { exp: 150,  gold: 200 },           minLv: 2 },
+    { id: 8,  title: '늑대 무리 토벌',   desc: '늑대 8마리 처치',         target: '늑대',        goal: 8,  reward: { exp: 300,  gold: 200 },           minLv: 2 },
     { id: 9,  title: '들개 퇴치',        desc: '들개 6마리 처치',         target: '들개',        goal: 6,  reward: { exp: 120,  gold: 180 },           minLv: 3 },
     { id: 10, title: '전직의 자격 (1차)',desc: '레벨 5 달성',             target: 'level',       goal: 5,  reward: { exp: 0,    gold: 1000 },          minLv: 4 },
-    { id: 14, title: '독버섯 제거',      desc: '독버섯 10마리 처치',      target: '독버섯',      goal: 10, reward: { exp: 180,  gold: 220,  item: '해독제' },      minLv: 2 },
+    { id: 14, title: '독버섯 제거',      desc: '독버섯 10마리 처치',      target: '독버섯',      goal: 10, reward: { exp: 300,  gold: 220,  item: '해독제' },      minLv: 2 },
     { id: 15, title: '거대 벌레 퇴치',   desc: '거대 사슴벌레 5마리',     target: '거대 사슴벌레', goal: 5, reward: { exp: 200, gold: 280 },            minLv: 3 },
     { id: 16, title: '숲 요정의 위협',   desc: '숲 요정 8마리 처치',      target: '숲 요정',     goal: 8,  reward: { exp: 280,  gold: 350,  item: '요정의 날개' }, minLv: 4 },
     { id: 17, title: '평원 정화',        desc: '평원 도적 5마리 처치',    target: '평원 도적',   goal: 5,  reward: { exp: 250,  gold: 320 },           minLv: 4 },
@@ -181,7 +186,7 @@ const RAW_QUESTS: Quest[] = [
     //   그 구간의 보스로 끝난다: 용의 둥지 → 저주받은 묘지 → 기계 폐도 → 빙하 심연 → 용암 지대 → 폭풍의 고원 →
     //   천공 정원 → 암흑 성 → 마왕성. 구역 보스(여정당 한 번)를 노리는 장은 임무를 받기 전에 그 보스를 잡았어도
     //   다시 도전할 수 있다(`isAreaBossChallengeable`) — 그렇지 않으면 본편 사슬이 그 여정 안에서 막힌다.
-    { id: FIRST_STORY_QUEST_ID, title: '[이야기] 첫 번째 여정', desc: '고요한 숲을 처음 탐험한다', type: 'explore_count', target: 'explores', location: '고요한 숲', goal: 1, reward: { exp: 100, gold: 200 }, minLv: 1 },
+    { id: FIRST_STORY_QUEST_ID, title: '[이야기] 첫 번째 여정', desc: '고요한 숲을 처음 탐험한다', type: 'explore_count', target: 'explores', location: '고요한 숲', goal: 1, reward: { exp: 150, gold: 200 }, minLv: 1 },
     { id: 81, title: '[이야기] 폐허의 진실',  desc: '잊혀진 폐허에서 10번 탐험',      type: 'explore_count', target: 'explores', location: '잊혀진 폐허', goal: 10, reward: { exp: 2000, gold: 2000 },           minLv: 5,  prerequisiteQuestId: 80 },
     { id: 82, title: '[이야기] 불꽃의 시험',  desc: '화염의 협곡에서 화염 정령 5마리를 처치한다', target: '화염 정령', location: '화염의 협곡', goal: 5, reward: { exp: 3000, gold: 3000, item: '화염의 결정' }, minLv: 15, prerequisiteQuestId: 81 },
     { id: 207, title: '[이야기] 용족의 경고',  desc: '용의 둥지에서 화염의 군주를 쓰러뜨려 용족 문자가 경고한 것을 확인한다', target: '화염의 군주', location: '용의 둥지', goal: 1, reward: { exp: 4000, gold: 4000 }, minLv: 26, prerequisiteQuestId: 82 },
