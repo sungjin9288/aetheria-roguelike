@@ -97,7 +97,8 @@ test('early route pacing keeps first visits and beginner quests below runaway le
         def: 5,
     });
 
-    // slice 52: 첫 방문 감속 + 전투 EXP 60% + 퀘스트 상한 하향을 함께 반영한다.
+    // slice 52: 첫 방문 감속 + 전투 EXP 60% + 퀘스트 상한을 함께 반영한다.
+    // 2026-11 E4: Lv1 · 2 임무 상한을 150 · 300으로 올려 첫 전직이 빨라졌다 — 수령 한 번에 한 레벨은 그대로다(원장 §185).
     player = applyExp(player, 25); // 고요한 숲 first-visit discovery.
     player = claimQuest(player, 80); // [이야기] 첫 번째 여정.
     player = applyExp(player, getPacedCombatExp(player, 60)); // 슬라임 3회 처치.
@@ -105,13 +106,13 @@ test('early route pacing keeps first visits and beginner quests below runaway le
     player = applyExp(player, 30); // 서쪽 평원 first-visit discovery.
     player = applyExp(player, getPacedCombatExp(player, 200)); // 멧돼지 5회 처치.
     player = claimQuest(player, 2); // 멧돼지 사냥.
-    assert.equal(player.level, 2);
+    assert.equal(player.level, 4);
     player = applyExp(player, getPacedCombatExp(player, 200)); // 거미떼 10회 처치.
     player = claimQuest(player, 110); // 거미떼 퇴치.
 
-    assert.equal(player.level, 3);
-    assert.equal(player.exp, 82);
-    assert.equal(player.nextExp, 263);
+    assert.equal(player.level, 5);
+    assert.equal(player.exp, 87);
+    assert.equal(player.nextExp, 347);
 });
 
 test('late regional rewards rise with the actual route and encounter commitment', () => {

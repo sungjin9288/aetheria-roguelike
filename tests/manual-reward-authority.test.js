@@ -143,7 +143,9 @@ test('임무의 아이템·칭호·레벨업 결과를 reducer 이동 뒤에도 
         payload: { questId: levelQuest.id },
     });
     assert.equal(levelClaimed.player.level, 2);
-    assert.equal(levelClaimed.player.exp, 30);
+    // 임무 1의 경험(2026-11 E4 — 150) 중 레벨업에 쓴 10을 뺀 나머지가 남는다.
+    assert.equal(levelClaimed.player.exp, 190 + levelQuest.reward.exp - 200);
+    assert.equal(levelClaimed.player.exp, 140);
     assert.equal(levelClaimed.visualEffect, 'levelUp');
     assert.equal(levelClaimed.logs.filter((log) => log.text.includes('레벨 2')).length, 1);
 });
