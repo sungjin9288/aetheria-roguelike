@@ -48,13 +48,28 @@ export const getFieldMapLayout = (state: Pick<FieldMapState, 'loc' | 'seed'>, ma
     generateFieldMap(state.loc, state.seed, mapData.level, mapData.exits ?? [])
 );
 
-const explores = (player: Pick<Player, 'stats'>) => Math.max(0, Math.trunc(Number(player.stats?.explores) || 0));
+const toCount = (value: unknown): number => Math.max(0, Math.trunc(Number(value) || 0));
+const explores = (player: Pick<Player, 'stats'>) => toCount(player.stats?.explores);
+
+/**
+ * 지도 씨앗 — 평생 탐험 수 · 지역 · 순번에 여정(계정 장부의 사망 수 · 계승 단계)을 더한다(2026-11-24 소유자 결정
+ * "사망하면 새 지도"). 순번은 사망 · 계승에서 1로 돌아가고 평생 탐험 수는 탐험 없이 상자로 걸어가 죽으면 그대로라,
+ * 여정을 넣지 않던 동안 다음 여정이 같은 지도 · 같은 미믹 상자를 받았다(원장 §185.1 · §189). 둘 다 0인 첫 여정은
+ * 이전 씨앗 그대로다 — 첫 여정의 지도 · 시험 고정값이 움직이지 않는다. 저장된 값만 읽으므로 다시 불러와도 같은 지도다.
+ */
+const getFieldMapSeed = (player: Pick<Player, 'stats' | 'meta'>, loc: string, seq: number): number => {
+    const deaths = toCount(player.stats?.deaths);
+    const rank = toCount(player.meta?.prestigeRank);
+    return deaths === 0 && rank === 0
+        ? deriveSeed(explores(player), loc, 'field-map', seq)
+        : deriveSeed(explores(player), loc, 'field-map', seq, 'journey', deaths, rank);
+};
 
 /** 새 지도 — 방문마다 새로 만들고(순번), 위험은 이전 지도에서 이어진다(드나들며 위험을 지우지 못한다). */
-export const createFieldMapState = (player: Pick<Player, 'stats' | 'fieldMap'>, loc: string, mapData: GameMap): FieldMapState => {
+export const createFieldMapState = (player: Pick<Player, 'stats' | 'meta' | 'fieldMap'>, loc: string, mapData: GameMap): FieldMapState => {
     const previous = player.fieldMap;
-    const seq = Math.max(0, Math.trunc(Number(previous?.seq) || 0)) + 1;
-    const seed = deriveSeed(explores(player), loc, 'field-map', seq);
+    const seq = toCount(previous?.seq) + 1;
+    const seed = getFieldMapSeed(player, loc, seq);
     const layout = generateFieldMap(loc, seed, mapData.level, mapData.exits ?? []);
     return {
         loc,
@@ -74,7 +89,7 @@ export const createFieldMapState = (player: Pick<Player, 'stats' | 'fieldMap'>, 
  * (위험이 다음 지도로 이어진다 — 마을을 드나들며 위험을 지우지 못한다).
  */
 export const getFieldMapOnArrival = (
-    player: Pick<Player, 'stats' | 'fieldMap'>,
+    player: Pick<Player, 'stats' | 'meta' | 'fieldMap'>,
     loc: string,
     mapData: GameMap | null | undefined,
 ): FieldMapState | null | undefined => {
