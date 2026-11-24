@@ -56,6 +56,14 @@ export const CONSTANTS = {
     //   경계를 없애고, rules는 수동 배포라 효력 시점도 불확실하다(CLAUDE.md §8-6). 대신
     //   업로드 페이로드에서만(회수용 로컬 묘비는 그대로) 이 값으로 클램프한다.
     MAX_PUBLIC_GRAVE_GOLD: 9_999_999,
+    // 2026-11 E7 — 순위표 정렬 점수(`rankScore`)의 칸 상한. `firestore.rules` 리터럴과 같은 값이다(사본 — 바꾸면 rules · 계약을 함께).
+    //   점수 = 계승 단계 × 10⁸ + 심연 최고 기록 × 10³ + 회차 최고 레벨 — 칸마다 상한으로 자르므로 앞 칸이 언제나 이긴다.
+    //   최대 999,999,999,999 < 2⁵³(정수 그대로 Firestore 정수로 쓰인다). `utils/leaderboardScore.ts`가 소유한다.
+    LEADERBOARD_MAX_PRESTIGE_RANK: 9_999,
+    LEADERBOARD_MAX_ABYSS_RECORD: 99_999,
+    LEADERBOARD_MAX_LEVEL: 999,
+    // `firestore.rules`의 `totalKills <= 100000` 사본 — 평생 처치 수가 넘으면 순위표 쓰기가 통째로 거부되던 것을 막는다(보낼 때만 자른다).
+    LEADERBOARD_MAX_TOTAL_KILLS: 100_000,
     START_HP: 150,
     START_MP: 50,
     START_GOLD: 200,

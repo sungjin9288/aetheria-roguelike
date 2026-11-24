@@ -124,6 +124,10 @@ export interface LeaderboardEntry {
     level?: number;
     bossKills?: number;
     job?: string;
+    /** 2026-11 E7: 혼돈의 심연 최고 기록(돌파한 층) · 회차 최고 레벨 · 정렬 점수 — 이전 클라이언트의 문서에는 없다. */
+    abyssRecord?: number;
+    bestLevel?: number;
+    rankScore?: number;
     uid?: string;
     /** Firestore `serverTimestamp()` — 표시에 쓰이지 않는다. */
     updatedAt?: unknown;

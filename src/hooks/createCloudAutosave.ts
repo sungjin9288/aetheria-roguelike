@@ -3,6 +3,7 @@ import { AT } from '../reducers/actionTypes';
 import { buildCloudPlayerSnapshot } from '../platform/cloudPlayerSnapshot';
 import { type GameSaveRecord } from '../platform/gameStorage';
 import type { Player } from '../types';
+import { encodeLeaderboardScore, getLeaderboardRecord, isLeaderboardEligible } from '../utils/leaderboardScore';
 import type { GameAction, GameState } from '../reducers/gameReducer';
 import type { Firestore, doc as firestoreDoc, serverTimestamp as firestoreServerTimestamp, setDoc as firestoreSetDoc } from 'firebase/firestore';
 
@@ -27,17 +28,27 @@ export interface CloudAutosaveRefs {
     lastLeaderboardEntryKey?: MutableRef<string | null>;
 }
 
-/** 순위표 문서(`public/data/leaderboard/{uid}`)에 쓰는 값 — 서버 시각(`updatedAt`)을 뺀 필드. */
-export const buildLeaderboardEntry = (player: Player, uid: string) => ({
-    nickname:     player.name,
-    totalKills:   player.stats?.kills || 0,
-    prestigeRank: player.meta?.prestigeRank || 0,
-    activeTitle:  player.activeTitle || null,
-    level:        player.level || 1,
-    bossKills:    player.stats?.bossKills || 0,
-    job:          player.job || CONSTANTS.DEFAULT_JOB,
-    uid,
-});
+/**
+ * 순위표 문서(`public/data/leaderboard/{uid}`)에 쓰는 값 — 서버 시각(`updatedAt`)을 뺀 필드.
+ * 2026-11 E7: 정렬은 `rankScore`(계승 단계 → 심연 최고 기록 → 회차 최고 레벨, `utils/leaderboardScore.ts`)이고
+ * 세 원래 값은 표시용으로 함께 싣는다. `totalKills`는 rules의 필수 키라 남기되 rules 상한으로 자른다.
+ */
+export const buildLeaderboardEntry = (player: Player, uid: string) => {
+    const record = getLeaderboardRecord(player);
+    return {
+        nickname:     player.name,
+        totalKills:   Math.min(CONSTANTS.LEADERBOARD_MAX_TOTAL_KILLS, Math.max(0, Math.floor(player.stats?.kills || 0))),
+        prestigeRank: record.prestigeRank,
+        activeTitle:  player.activeTitle || null,
+        level:        player.level || 1,
+        bossKills:    player.stats?.bossKills || 0,
+        job:          player.job || CONSTANTS.DEFAULT_JOB,
+        abyssRecord:  record.abyssRecord,
+        bestLevel:    record.bestLevel,
+        rankScore:    encodeLeaderboardScore(record),
+        uid,
+    };
+};
 
 /** 순위표 값의 비교 키 — 필드 순서가 고정된 직렬화라 같은 값이면 같은 키다. */
 export const getLeaderboardEntryKey = (entry: ReturnType<typeof buildLeaderboardEntry>): string => JSON.stringify(entry);
@@ -150,7 +161,7 @@ export const createCloudAutosave = ({
         //   마지막으로 보낸 값과 같으면 순위표 쓰기만 건너뛴다(세이브 문서 교체 쓰기 · 순위표 merge 방식은 그대로).
         //   보내기 전에 키를 적어 두므로 겹친 두 저장도 서버에 들어가는 순서대로 비교하고, 쓰기가 실패하면 키를 지워
         //   다음 저장이 다시 쓴다.
-        if (player.name && (player.stats?.kills || 0) > 0) {
+        if (isLeaderboardEligible(player)) {
             const entry = buildLeaderboardEntry(player, uid);
             const entryKey = getLeaderboardEntryKey(entry);
             const lastKey = refs.lastLeaderboardEntryKey;

@@ -231,6 +231,10 @@ test('자동저장: 리더보드 entry 는 kills > 0 일 때만 기록된다', a
         level: 12,
         bossKills: 1,
         job: 'mage',
+        // 2026-11 E7: 정렬 점수와 그 두 원래 값 — 회차 최고 레벨은 지금 여정 레벨(끝낸 여정 기록 없음).
+        abyssRecord: 0,
+        bestLevel: 12,
+        rankScore: 2 * 100_000_000 + 12,
         uid: 'uid-1',
         updatedAt: SERVER_TIMESTAMP,
     });
@@ -266,7 +270,9 @@ test('리더보드/live-config 구독은 useFirebaseSync 가 아니라 전용 �
     assert.doesNotMatch(hookSource, /SET_LEADERBOARD|SET_LIVE_CONFIG/);
 
     assert.match(splitSource, /if \(bootStage !== 'config'\) return;/);
-    assert.match(splitSource, /orderBy\('totalKills', 'desc'\)/);
+    // 2026-11 E7: 상위 목록 읽기는 platform/leaderboardFirestore.ts(`rankScore` 정렬)가 소유한다.
+    assert.match(splitSource, /readLeaderboardTop\(firestore\)/);
+    assert.doesNotMatch(splitSource, /orderBy\('totalKills'/);
     assert.match(splitSource, /AT\.SET_LIVE_CONFIG/);
     assert.match(splitSource, /AT\.SET_LEADERBOARD/);
     assert.match(splitSource, /AT\.SET_BOOT_STAGE, payload: 'data'/);

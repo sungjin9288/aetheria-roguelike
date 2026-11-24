@@ -36,7 +36,9 @@ import {
 import { APP_ID, CONSTANTS } from '../src/data/constants.js';
 import { FeedbackValidator } from '../src/systems/FeedbackValidator.ts';
 import { TokenQuotaManager } from '../src/systems/TokenQuotaManager.ts';
-import { createCloudAutosave } from '../src/hooks/createCloudAutosave.ts';
+import { buildLeaderboardEntry, createCloudAutosave } from '../src/hooks/createCloudAutosave.ts';
+import { countLeaderboardAbove, readLeaderboardTop } from '../src/platform/leaderboardFirestore.ts';
+import { LEADERBOARD_MAX_SCORE } from '../src/utils/leaderboardScore.ts';
 import { buildCloudPlayerSnapshot } from '../src/platform/cloudPlayerSnapshot.ts';
 import { DB } from '../src/data/db.ts';
 import { buildPublicGraveDoc } from '../src/utils/publicGraveDoc.ts';
@@ -283,6 +285,127 @@ suite('site 2 — 리더보드는 본인 entry만, 닉네임 20자 상한이 실
         entry(),
         { merge: true },
     ));
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 2026-11 E7 — 순위표 정렬 키 `rankScore`(계승 단계 → 심연 최고 기록 → 회차 최고 레벨).
+//   새 페이로드는 프로덕션 함수(`createCloudAutosave` → `buildLeaderboardEntry`)로 쓰고, 읽기도 프로덕션 함수
+//   (`readLeaderboardTop` · `countLeaderboardAbove`)로 한다. 이전 클라이언트의 페이로드(위 `entry()`와 같은 모양 —
+//   2026-11 전 `buildLeaderboardEntry`)는 새 rules에서도 통과해야 한다: 설치본은 새 필드를 모른다.
+// ─────────────────────────────────────────────────────────────────────────────
+
+const OLD_CLIENT_ENTRY = (uid, overrides = {}) => ({
+    nickname: '이전용사',
+    totalKills: 500,
+    prestigeRank: 1,
+    activeTitle: null,
+    level: 30,
+    bossKills: 3,
+    job: CONSTANTS.DEFAULT_JOB,
+    uid,
+    updatedAt: serverTimestamp(),
+    ...overrides,
+});
+
+const lbRef = (db, uid) => doc(db, 'artifacts', APP_ID, 'public', 'data', 'leaderboard', uid);
+
+suite('E7 — 새 순위표 페이로드가 통과하고, rankScore로 줄 세워 읽히며, 내 순위를 집계로 센다', async () => {
+    const env = await getEnv();
+    await env.clearFirestore();
+
+    const base = makePlayerFixture();
+    const strong = makePlayerFixture({
+        name: '심연용사',
+        level: 12,
+        meta: { ...base.meta, prestigeRank: 2, cycleBestLevel: { rank: 2, level: 47 } },
+        stats: { ...base.stats, kills: 120, abyssRecord: 35 },
+    });
+    const weak = makePlayerFixture({
+        name: '새내기',
+        level: 9,
+        stats: { ...base.stats, kills: 2_000_000 }, // 평생 처치 수가 rules 상한을 넘어도 쓰기가 거부되지 않는다(보낼 때 자른다)
+    });
+    assert.equal((await runCloudAutosave({ db: await asPlayer(PLAYER_UID), player: strong, uid: PLAYER_UID })).result, 'synced');
+    assert.equal((await runCloudAutosave({ db: await asPlayer(OTHER_UID), player: weak, uid: OTHER_UID })).result, 'synced');
+    // 이전 클라이언트 문서 — 정렬 키가 없으므로 새 쿼리에 나오지 않는다.
+    const legacyDb = await asPlayer('legacy-player');
+    await assertSucceeds(setDoc(lbRef(legacyDb, 'legacy-player'), OLD_CLIENT_ENTRY('legacy-player'), { merge: true }));
+
+    const reader = await asAnonymous();
+    const top = await readLeaderboardTop(reader);
+    assert.deepEqual(top.map((row) => row.nickname), ['심연용사', '새내기'], 'rankScore 내림차순 · 정렬 키 없는 이전 문서는 빠진다');
+    assert.deepEqual(
+        { prestigeRank: top[0].prestigeRank, abyssRecord: top[0].abyssRecord, bestLevel: top[0].bestLevel, rankScore: top[0].rankScore },
+        { prestigeRank: 2, abyssRecord: 35, bestLevel: 47, rankScore: 2 * 100_000_000 + 35 * 1000 + 47 },
+    );
+    assert.equal(top[1].totalKills, CONSTANTS.LEADERBOARD_MAX_TOTAL_KILLS);
+
+    assert.equal(await countLeaderboardAbove(reader, top[0].rankScore), 0, '1위 위에는 아무도 없다');
+    assert.equal(await countLeaderboardAbove(reader, top[1].rankScore), 1, '2위 위에는 한 명');
+});
+
+suite('E7 — 이전 클라이언트 페이로드는 새 rules에서도 통과한다(빈 문서 · 새 클라이언트 문서 위 모두)', async () => {
+    const env = await getEnv();
+    await env.clearFirestore();
+    const db = await asPlayer();
+
+    await assertSucceeds(setDoc(lbRef(db, PLAYER_UID), OLD_CLIENT_ENTRY(PLAYER_UID), { merge: true }));
+
+    // 새 클라이언트가 쓴 문서 위에 이전 클라이언트(다른 기기)가 계승 단계를 바꿔 쓴다 — 새 키를 건드리지 않으므로 통과.
+    const base = makePlayerFixture();
+    const player = makePlayerFixture({
+        name: '테스트용사',
+        level: 20,
+        meta: { ...base.meta, prestigeRank: 1 },
+        stats: { ...base.stats, kills: 40, abyssRecord: 3 },
+    });
+    assert.equal((await runCloudAutosave({ db, player })).result, 'synced');
+    await assertSucceeds(setDoc(lbRef(db, PLAYER_UID), OLD_CLIENT_ENTRY(PLAYER_UID, { prestigeRank: 2, level: 1 }), { merge: true }));
+});
+
+suite('E7 — 새 필드의 범위 · 정수 · 합성 위반은 거부된다', async () => {
+    const env = await getEnv();
+    await env.clearFirestore();
+    const db = await asPlayer();
+    const base = makePlayerFixture();
+    const player = makePlayerFixture({
+        name: '테스트용사',
+        level: 20,
+        meta: { ...base.meta, prestigeRank: 1 },
+        stats: { ...base.stats, kills: 40, abyssRecord: 3 },
+    });
+    const valid = { ...buildLeaderboardEntry(player, PLAYER_UID), updatedAt: serverTimestamp() };
+    const score = (prestigeRank, abyssRecord, bestLevel) => prestigeRank * 100_000_000 + abyssRecord * 1000 + bestLevel;
+
+    const rejected = [
+        ['계승 단계 상한 초과', { prestigeRank: 10_000, rankScore: score(10_000, 3, 20) }],
+        ['심연 기록 음수', { abyssRecord: -1, rankScore: score(1, 0, 20) - 1000 }],
+        ['심연 기록 상한 초과', { abyssRecord: 100_000, rankScore: score(1, 100_000, 20) }],
+        ['최고 레벨 0', { bestLevel: 0, rankScore: score(1, 3, 0) }],
+        ['최고 레벨 상한 초과', { bestLevel: 1000, rankScore: score(1, 3, 1000) }],
+        ['점수 상한 초과', { rankScore: LEADERBOARD_MAX_SCORE + 1 }],
+        ['정수가 아닌 점수', { rankScore: valid.rankScore + 0.5 }],
+        ['세 값과 맞지 않는 점수', { rankScore: valid.rankScore + 1 }],
+    ];
+    for (const [label, overrides] of rejected) {
+        await env.clearFirestore();
+        await assertFails(setDoc(lbRef(db, PLAYER_UID), { ...valid, ...overrides }, { merge: true }), label);
+    }
+    // 이전 모양에도 계승 단계 검사는 걸린다(정렬 칸이다) — 정수가 아니거나 상한을 넘으면 거부.
+    await env.clearFirestore();
+    await assertFails(setDoc(lbRef(db, PLAYER_UID), OLD_CLIENT_ENTRY(PLAYER_UID, { prestigeRank: 1.5 }), { merge: true }));
+    await assertFails(setDoc(lbRef(db, PLAYER_UID), OLD_CLIENT_ENTRY(PLAYER_UID, { prestigeRank: 10_000 }), { merge: true }));
+    await env.clearFirestore();
+    await assertSucceeds(setDoc(lbRef(db, PLAYER_UID), valid, { merge: true }));
+    assert.equal(valid.rankScore, score(1, 3, 20));
+    // 상한 그대로는 통과한다 — 상한은 rules와 CONSTANTS의 같은 값이다.
+    await assertSucceeds(setDoc(lbRef(db, PLAYER_UID), {
+        ...valid,
+        prestigeRank: CONSTANTS.LEADERBOARD_MAX_PRESTIGE_RANK,
+        abyssRecord: CONSTANTS.LEADERBOARD_MAX_ABYSS_RECORD,
+        bestLevel: CONSTANTS.LEADERBOARD_MAX_LEVEL,
+        rankScore: LEADERBOARD_MAX_SCORE,
+    }, { merge: true }));
 });
 
 // ─────────────────────────────────────────────────────────────────────────────

@@ -30,6 +30,7 @@ import { useOverlayDialog } from '../hooks/useOverlayDialog';
 import ActionButton from './ui/ActionButton';
 import Chip from './ui/Chip';
 import MomentRegionArt from './moments/MomentRegionArt';
+import LeaderboardRankLine from './LeaderboardRankLine';
 import { MOMENT_DUR_PANEL, MOMENT_EASE } from './moments/momentMotion';
 
 interface RunSummaryCardProps {
@@ -42,11 +43,13 @@ interface RunSummaryCardProps {
     onOpenMirror?: () => void;
     /** 직업 여정에 기록이 없는 첫 전직 갈래(2026-11 고도화 E3) — 비었으면 줄을 그리지 않는다. */
     unrecordedBranches?: string[];
+    /** 명예의 전당 내 순위(2026-11 E7) — 없으면(오프라인 · 읽기 전) 줄을 그리지 않는다. */
+    leaderboardRank?: number | null;
 }
 
 const toCount = (value: unknown): number | null => (Number.isFinite(value) ? Math.max(0, Math.floor(Number(value))) : null);
 
-const RunSummaryCard = ({ runSummary: s, storyBeat, onRestart, essence = null, onOpenMirror, unrecordedBranches = [] }: RunSummaryCardProps) => {
+const RunSummaryCard = ({ runSummary: s, storyBeat, onRestart, essence = null, onOpenMirror, unrecordedBranches = [], leaderboardRank = null }: RunSummaryCardProps) => {
     const [copied, setCopied] = useState(false);
     const dialog = useOverlayDialog({ label: MSG.RUN_SUMMARY_EYEBROW });
     const analysis = getRunSummaryAnalysis(s);
@@ -122,6 +125,7 @@ const RunSummaryCard = ({ runSummary: s, storyBeat, onRestart, essence = null, o
                                     <span className="min-w-0 break-keep">{bestLevelLine}</span>
                                 </div>
                             )}
+                            <LeaderboardRankLine rank={leaderboardRank} testId="run-summary-leaderboard-rank" className="mt-1" />
                         </div>
                     </header>
 
