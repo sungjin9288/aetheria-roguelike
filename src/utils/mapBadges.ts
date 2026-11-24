@@ -20,6 +20,7 @@ import { MSG } from '../data/messages.js';
 import type { GameMap, Player } from '../types/index.js';
 import { getBossGaugeValue, isAreaBossChallengeable } from './bossGauge.js';
 import { canBossAppearInMap } from './bossPresence.js';
+import { getDailyExpeditionBonusPct } from './dailyExpedition.js';
 import { getNarrativeEventChance } from './explorationPacing.js';
 
 export interface Badge {
@@ -50,15 +51,21 @@ export const getHighEventChanceThreshold = (): number => (
  * @param map - DB.MAPS[exitName] 형태의 지역 데이터.
  * @param player - 보스 출현(숨은 보스 해금 · 구역 보스 처치 · 심연 층)과 게이지를 읽는 플레이어.
  * @param mapName - 지역 이름(DB.MAPS의 데이터에는 `name`이 없다). 생략하면 `map.name`.
+ * @param dailyExpeditionRegion - 오늘의 원정지 이름(`getDailyExpeditionRegion`, 2026-11 E6). 이 지역이면 맨 앞에 배지를 붙인다.
  */
 export function getExitBadges(
     map: GameMap | null | undefined,
     player: Player | null | undefined,
     mapName: string | null | undefined = map?.name,
+    dailyExpeditionRegion: string | null = null,
 ): Badge[] {
     if (!map) return [];
 
     const badges: Badge[] = [];
+
+    if (dailyExpeditionRegion && mapName === dailyExpeditionRegion) {
+        badges.push({ id: 'dailyExpedition', label: MSG.MAP_BADGE_DAILY_EXPEDITION(getDailyExpeditionBonusPct()) });
+    }
 
     if (canBossAppearInMap(mapName, map, player)) {
         badges.push({ id: 'boss', label: MSG.MAP_BADGE_BOSS });

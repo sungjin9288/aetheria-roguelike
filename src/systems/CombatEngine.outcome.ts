@@ -123,13 +123,19 @@ export const outcomeMethods: OutcomeMixin & ThisType<OutcomeMixinContext> = {
             ? liveConfig.seasonEvent?.xpMultiplier ?? 1
             : 1;
 
+        // 2026-11 E6 오늘의 원정지 — 날짜로 고른 지역에서 처치하면 골드 · 경험에 곱한다(판정은 `utils/dailyExpedition.ts`,
+        //   승리 후처리가 지금 위치 · 정산 시각으로 넘긴다). 정수는 경험에서 나오는 만큼만 따라 오른다.
+        const dailyExpeditionMult = typeof passiveBonus.dailyExpeditionMult === 'number' && passiveBonus.dailyExpeditionMult > 0
+            ? passiveBonus.dailyExpeditionMult
+            : 1;
+
         // 유물 + 패시브 스킬: EXP/골드 배율 (cycle 265: liveConfig 곱셈 합류)
         // 2026-09 W4: gold_mult/drop_rate/dot_mult 과 같은 "최강값 1개" 정책 — 이전엔 relics.find 로
         //   유물 보유 순서에 따라 EXP 배율이 달라졌다(같은 유물 조합인데 획득 순서가 결과를 바꿈).
         const expMult = (1 + getStrongestNumericRelicValue(relics, 'exp_mult') + (passiveBonus.expMult || 0))
-            * eventMult * seasonXpMult;
+            * eventMult * seasonXpMult * dailyExpeditionMult;
         const goldMult = (1 + getStrongestNumericRelicValue(relics, 'gold_mult') + (passiveBonus.goldMult || 0))
-            * seasonGoldMult;
+            * seasonGoldMult * dailyExpeditionMult;
         // 도전 규칙 보상 — 2026-10 Wave 62 (원장 §61.4 C1): 규칙 1 · 2 · 3 · 4개 = ×1.2 · ×1.5 · ×2.0 · ×2.5(선택 화면의 "+N%"와 같은 표).
         //   이전에는 1 ~ 2개 보상 없음 · 3개 ×1.5 · 4개 ×2.0이었다.
         const challengeRewardMult = getChallengeRewardMult((p.challengeModifiers || []).length);
@@ -318,12 +324,14 @@ interface ExpGainResult {
 
 /**
  * `handleVictory`의 3번째 인자 — 생산자는 `combatVictory.ts`의 `buildPassiveBonusWithScout`
- * (goldMult/expMult만 채움)와 시너지 테스트 픽스처(+activeSynergies) 둘뿐이다.
+ * (goldMult/expMult + 오늘의 원정지 배율)와 시너지 테스트 픽스처(+activeSynergies) 둘뿐이다.
  */
 interface VictoryPassiveBonus {
     expMult?: number;
     goldMult?: number;
     activeSynergies?: RelicSynergy[];
+    /** 2026-11 E6 오늘의 원정지 배율(`getDailyExpeditionRewardMult`) — 없거나 1이면 보너스 없음. */
+    dailyExpeditionMult?: number;
 }
 
 interface BossClearBonus {

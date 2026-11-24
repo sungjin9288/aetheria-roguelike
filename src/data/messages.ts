@@ -814,6 +814,9 @@ export const MSG = {
     MAP_BADGE_HIGH_EVENT: '이벤트↑',
     MAP_BADGE_SHOP: '상점',
     MAP_BADGE_GRAVE: '유해 회수↑',
+    // 2026-11 E6 오늘의 원정지 — 날짜로 고른 지역. 권하지 않고 사실만 말한다(Wave 88).
+    MAP_BADGE_DAILY_EXPEDITION: (pct: number) => `오늘의 원정지 +${pct}%`,
+    MAP_DAILY_EXPEDITION_NOTE: (pct: number, bandSize: number) => `오늘 이 지역에서 처치한 적의 골드 · 경험이 ${pct}% 늘어납니다. 날짜가 바뀌거나 레벨 구간(${bandSize}레벨)이 바뀌면 다른 지역으로 옮겨 갑니다.`,
 
     // --- 복귀 브리핑 카드 (리텐션 훅) ---
     RETURN_BRIEFING_TITLE: '복귀를 환영합니다',

@@ -678,6 +678,14 @@ export const BALANCE = {
     WANDERING_MERCHANT_CONSUMABLE_PRICE_FLOOR: 60,          // 소모품은 기본가가 max(이 값, 지역 레벨 × 아래 값) 이하인 것만 — Lv1에 영웅의 물약을 팔지 않는다
     WANDERING_MERCHANT_CONSUMABLE_PRICE_PER_LEVEL: 20,
 
+    // 오늘의 원정지(2026-11 E6, 소유자 결정 2026-11-24 "날짜로 자동 선정") — 그날의 지역 처치 골드 · 경험을 조금 올린다.
+    //   서버 · 운영 없이 날짜 키(오늘의 임무와 같은 기기 날짜)와 레벨 구간의 해시로 고른다 — 난수를 쓰지 않는다(`utils/dailyExpedition.ts`).
+    //   놓쳐도 잃는 것이 없다(연속 기록 · 수령 없음). 시계를 바꾸면 고른 지역만 바뀐다 — 받을 보상이 아니라 작은 배율이라 받아들인다.
+    DAILY_EXPEDITION_REWARD_MULT: 1.2,       // 그 지역에서 처치한 적의 골드 · 경험 배율(정수는 경험에서 나오는 만큼만 따라 오른다)
+    DAILY_EXPEDITION_BAND_LEVELS: 5,         // 레벨 구간 폭 — 구간 안에서는 하루 내내 같은 지역(레벨업마다 바뀌지 않는다)
+    DAILY_EXPEDITION_MIN_CANDIDATES: 2,      // 후보가 이보다 적은 구간(Lv1 ~ 5)은 원정지가 없다 — 늘 같은 지역이면 상시 보너스다
+    DAILY_EXPEDITION_GATE_WINDOW: 5,         // 후보 = 구간 첫 레벨이 들어갈 수 있는 사냥 지역 중 경로 게이트가 그 최고값 − 이 값 이상인 곳
+
     // 발견 체인 (Discovery Chains)
     DISCOVERY_CHAINS,
 
