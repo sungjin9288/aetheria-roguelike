@@ -15,6 +15,8 @@ import { BALANCE } from '../data/constants';
 import type { Player } from '../types/index.js';
 import { getAscensionOutcome, isNewAscensionTitle } from '../utils/ascensionPreview';
 import AscensionCycleSummary from './AscensionCycleSummary';
+import LeaderboardRankLine from './LeaderboardRankLine';
+import { useMyLeaderboardRank } from '../hooks/useMyLeaderboardRank';
 import EndgameJourney from './EndgameJourney';
 import PendingQuestRewardList from './PendingQuestRewardList';
 import { getClaimableQuestEntries } from '../utils/questProgress';
@@ -36,6 +38,7 @@ interface AscensionScreenProps {
 
 const AscensionScreen = ({ player, actions, onOpenMirror }: AscensionScreenProps) => {
     const dialog = useOverlayDialog({ label: MSG.A11Y_DIALOG_ASCENSION });
+    const leaderboardRank = useMyLeaderboardRank(player);
     const claimableQuests = getClaimableQuestEntries(player);
     const hasPendingQuestRewards = claimableQuests.length > 0;
     const outcome = getAscensionOutcome(player.meta);
@@ -75,6 +78,7 @@ const AscensionScreen = ({ player, actions, onOpenMirror }: AscensionScreenProps
                             <p className="aether-type-meta mt-1 font-readable leading-relaxed text-ae-ink-2">
                                 이번 여정을 마치고 더 강한 세계에서 다시 시작합니다.
                             </p>
+                            <LeaderboardRankLine rank={leaderboardRank} testId="ascension-leaderboard-rank" className="mt-1" />
                         </div>
                         <div className="ae-well shrink-0 px-3 py-2 text-center">
                             <div className="aether-type-label font-readable text-ae-ink-3">계승 단계</div>

@@ -1,21 +1,12 @@
 import { useEffect } from 'react';
-import {
-    onSnapshot,
-    doc,
-    collection,
-    query,
-    orderBy,
-    limit,
-    getDocs,
-} from 'firebase/firestore';
+import { onSnapshot, doc } from 'firebase/firestore';
 
 import { db } from '../firebase';
 import { APP_ID } from '../data/constants';
 import { AT } from '../reducers/actionTypes';
+import { readLeaderboardTop } from '../platform/leaderboardFirestore';
 import type { Dispatch } from 'react';
 import type { GameAction, GameState } from '../reducers/gameReducer';
-
-const LEADERBOARD_PAGE_SIZE = 50;
 
 interface UseLiveConfigAndLeaderboardOptions {
     bootStage: GameState['bootStage'];
@@ -28,7 +19,7 @@ interface UseLiveConfigAndLeaderboardOptions {
  *
  * `bootStage === 'config'` 구간에서만 동작한다:
  *  1. `artifacts/{APP_ID}/public/data` 의 live config 실시간 구독
- *  2. 리더보드 상위 50건 1회 fetch
+ *  2. 리더보드 상위 50건 1회 fetch(`readLeaderboardTop` — 정렬은 `rankScore`, 2026-11 E7)
  *  3. 두 작업을 시작한 뒤 boot stage 를 'data' 로 전진 (유저 데이터 리스너 차례)
  *
  * useFirebaseSync 에서 분리됐다. 클라우드 세이브 경로와 공유하는 ref/상태가 없어
@@ -57,11 +48,7 @@ export const useLiveConfigAndLeaderboard = ({
 
         const fetchLeaderboard = async () => {
             try {
-                const lbRef = collection(firestore, 'artifacts', APP_ID, 'public', 'data', 'leaderboard');
-                const q = query(lbRef, orderBy('totalKills', 'desc'), limit(LEADERBOARD_PAGE_SIZE));
-                const snap = await getDocs(q);
-                const data = snap.docs.map((d) => d.data());
-                dispatch({ type: AT.SET_LEADERBOARD, payload: data });
+                dispatch({ type: AT.SET_LEADERBOARD, payload: await readLeaderboardTop(firestore) });
             } catch (e) {
                 console.warn('Leaderboard fetch failed', e);
             }
