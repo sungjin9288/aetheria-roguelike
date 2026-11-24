@@ -7,6 +7,8 @@ import { getMoveRecommendations, type MoveRecommendation } from '../utils/advent
 import { getGravesAtLoc, type GraveEntry } from '../utils/graveUtils';
 import { canBossAppearInMap } from '../utils/bossPresence';
 import { getExitBadges } from '../utils/mapBadges';
+import { getDailyExpeditionBonusPct, getDailyExpeditionRegion } from '../utils/dailyExpedition';
+import { BALANCE } from '../data/constants';
 import { getMapProgressState } from '../utils/mapProgress';
 import { getMapRouteGate, type MapRouteGate } from '../utils/mapRouteGate';
 import { getMapDiscoveredSignatureDrops } from '../utils/mapSignatureHints';
@@ -39,6 +41,8 @@ interface MapNavigatorProps {
     grave: GameState['grave'] | undefined;
     stats: FullStats | null | undefined;
     actions?: Pick<GameActions, 'move'>;
+    /** 오늘의 원정지를 고르는 시각(테스트 주입) — 없으면 지금. */
+    now?: number;
 }
 
 const MAP_ORDER = Object.entries(DB.MAPS)
@@ -133,6 +137,7 @@ const BADGE_TONE: Record<string, string> = {
     boss: 'danger',
     bossGauge: 'warning',
     shop: 'upgrade',
+    dailyExpedition: 'spotlight',
     highEvent: 'recommended',
     grave: 'recommended',
 };
@@ -234,7 +239,7 @@ const WorldRouteList = ({
     </details>
 );
 
-const MapNavigator = ({ player, grave, stats, actions }: MapNavigatorProps) => {
+const MapNavigator = ({ player, grave, stats, actions, now }: MapNavigatorProps) => {
     const playerLoc = player.loc ?? '';
     const [selection, setSelection] = useState<{ origin: string; name: string | null }>({
         origin: playerLoc,
@@ -253,6 +258,9 @@ const MapNavigator = ({ player, grave, stats, actions }: MapNavigatorProps) => {
         .map((target) => getNextMapTowardTarget(DB.MAPS, playerLoc, target))
         .filter(Boolean));
 
+    // 2026-11 E6: 오늘의 원정지 — 날짜 · 레벨 구간의 해시(`utils/dailyExpedition.ts`). 길 잃은 여행에서는 지도 정보와 함께 가려진다.
+    const dailyExpeditionRegion = getDailyExpeditionRegion(playerLevel, now ?? new Date());
+
     const mapEntries = useMemo<MapEntry[]>(() => MAP_ORDER.map((map) => {
         const progress = getMapProgressState(map.name, player, DB.MAPS);
         return {
@@ -260,11 +268,11 @@ const MapNavigator = ({ player, grave, stats, actions }: MapNavigatorProps) => {
             ...progress,
             graves: getGravesAtLoc(grave, map.name),
             signatureDrops: getMapDiscoveredSignatureDrops(map.name, player),
-            badges: getExitBadges(map, player, map.name),
+            badges: getExitBadges(map, player, map.name, dailyExpeditionRegion),
             routeGate: getMapRouteGate(DB.MAPS, map.name),
             bossCanAppear: canBossAppearInMap(map.name, map, player),
         } as MapEntry;
-    }), [grave, player]);
+    }), [grave, player, dailyExpeditionRegion]);
 
     const entriesByName = useMemo(
         () => new Map(mapEntries.map((entry) => [entry.name, entry])),
@@ -438,6 +446,12 @@ const MapNavigator = ({ player, grave, stats, actions }: MapNavigatorProps) => {
                                 </SignalChip>
                             ))}
                         </div>
+                    )}
+
+                    {!blindMap && selectedEntry.name === dailyExpeditionRegion && (
+                        <p data-testid="map-daily-expedition-note" className="aether-type-meta mt-2 font-readable text-ae-gold-text">
+                            {MSG.MAP_DAILY_EXPEDITION_NOTE(getDailyExpeditionBonusPct(), BALANCE.DAILY_EXPEDITION_BAND_LEVELS)}
+                        </p>
                     )}
 
                     {!blindMap && selectedEntry.signatureDrops.length > 0 && (
