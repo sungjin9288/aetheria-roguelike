@@ -15,6 +15,7 @@ import { getDailyMissionSummary } from '../../utils/protocolCycle';
 import { getExpeditionReturnAction } from '../../utils/expeditionReturnFlow';
 import { getPendingMilestoneStoryBeat, type MilestoneStoryBeat } from '../../utils/milestoneStory';
 import { getNextChapterPick } from '../../utils/chapterPick';
+import { isFieldTraitChoiceOpen } from '../../systems/fieldTrait';
 import { DB } from '../../data/db';
 import { AT } from '../../reducers/actionTypes';
 import { MSG } from '../../data/messages';
@@ -45,6 +46,8 @@ import { useAutoExplore } from '../../hooks/useAutoExplore';
 import { AutoExploreContext } from '../control/autoExploreContext';
 import { useFieldMap } from '../../hooks/useFieldMap';
 import { FieldMapContext } from '../field/fieldMapContext';
+import DailyTrialHud from '../trial/DailyTrialHud';
+import DailyTrialLeaveDialog from '../trial/DailyTrialLeaveDialog';
 import type { InventoryFilterId, InventoryFilterRequest } from '../../utils/inventoryFilters';
 
 const RelicChoicePanel = lazy(() => import('../RelicChoicePanel'));
@@ -56,6 +59,9 @@ const MirrorPanel      = lazy(() => import('../MirrorPanel'));
 const ReturnBriefingCard = lazy(() => import('../ReturnBriefingCard'));
 const MilestoneStoryCard = lazy(() => import('../MilestoneStoryCard'));
 const ChapterPickPanel = lazy(() => import('../ChapterPickPanel'));
+const FieldTraitPanel = lazy(() => import('../field/FieldTraitPanel'));
+const DailyTrialSheet = lazy(() => import('../trial/DailyTrialSheet'));
+const DailyTrialResult = lazy(() => import('../trial/DailyTrialResult'));
 
 /**
  * liveConfig.seasonEvent.endsAt(`types/session.ts`)는 Firestore Timestamp | 문자열 | 숫자가
@@ -142,6 +148,13 @@ const GameRoot = ({
             ? 'archive'
             : 'log',
     );
+    // 2026-11 오늘의 시련: 입구 시트와 나가기 확인은 화면 상태다. 시련을 걷는 동안 본편의 화면(이야기 · 장 선택 …)은 뜨지 않는다.
+    const { dailyTrial, dailyTrialControls } = engine;
+    const [dailyTrialSheetOpen, setDailyTrialSheetOpen] = useState(false);
+    const [dailyTrialLeaveOpen, setDailyTrialLeaveOpen] = useState(false);
+    const trialWalking = Boolean(dailyTrial && !dailyTrial.result);
+    const showDailyTrialSheet = dailyTrialSheetOpen && !dailyTrial && engine.gameState === GS.IDLE;
+    const showDailyTrialLeave = dailyTrialLeaveOpen && trialWalking;
     const expeditionSummary = engine.player?.lastExpeditionSummary || null;
     const expeditionJob = resolveExpeditionJob(engine.player, expeditionSummary);
     const showExpeditionDebrief = Boolean(
@@ -165,6 +178,7 @@ const GameRoot = ({
         : null;
     const showStandaloneStory = Boolean(
         standaloneStoryBeat
+        && !dailyTrial
         && engine.gameState === GS.IDLE
         && !engine.pendingRelics
         && !engine.postCombatResult,
@@ -173,12 +187,26 @@ const GameRoot = ({
     //   (리듀서도 대기 상태 · 열린 유물 제안이 없을 때만 받는다 — 같은 조건).
     const showChapterPick = Boolean(
         engine.bootStage === 'ready'
+        && !dailyTrial
         && engine.gameState === GS.IDLE
         && !engine.pendingRelics
         && !engine.postCombatResult
         && !showExpeditionDebrief
         && !showStandaloneStory
         && getNextChapterPick(engine.player) != null,
+    );
+    // 2026-11 지도 갈래: 클리어한 지역의 새 지도 입구에서 뜬다. 원정 정리 · 이야기 카드 · 장의 선물 · 유물 제안 · 전투 결과가 먼저다
+    //   (리듀서도 걸을 수 있는 상태에서만 받는다).
+    const showFieldTrait = Boolean(
+        engine.bootStage === 'ready'
+        && engine.gameState === GS.IDLE
+        && !engine.pendingRelics
+        && !engine.postCombatResult
+        && !engine.currentEvent
+        && !showExpeditionDebrief
+        && !showStandaloneStory
+        && !showChapterPick
+        && isFieldTraitChoiceOpen(engine.player),
     );
     const readabilityMode = engine.player?.settings?.readabilityMode === 'high' ? 'high' : 'standard';
     // slice 21: 지역별 ambient 팔레트 — 위치 기반 accent/wash CSS 변수.
@@ -323,7 +351,8 @@ const GameRoot = ({
 
     // 2026-11 H1 연속 탐험: 판단을 기다리는 화면(원정 정리 · 이야기 카드 · 장 선택 · 거울 · 교환소 · 휴대폰 기록 창)이 덮으면 멈춘다.
     //   처치 박자(결과 카드를 띄우기 전) 동안은 다음 걸음을 미룬다. 토글은 화면 상태다 — 세이브 봉투 밖.
-    const autoExploreBlocked = showExpeditionDebrief || showStandaloneStory || showChapterPick || mirrorPanelOpen || premiumShopOpen
+    const autoExploreBlocked = showExpeditionDebrief || showStandaloneStory || showChapterPick || showFieldTrait || mirrorPanelOpen || premiumShopOpen
+        || showDailyTrialSheet || showDailyTrialLeave
         || (mobileConsoleMode === 'archive' && !isDesktopLayout);
     // 2026-11 지역 지도 걷기(docs/OVERWORLD_WALK_DESIGN_2026-11.md): 지도 지역의 조우는 걷기에서 나온다 — 처리할 일(조우 · 출구 · 미믹)과
     //   지도 자동 탐험을 이 훅이 넘긴다. 연속 탐험(H1)은 지도 지역에서 쉰다(걷지 않고 탐험하면 지도를 건너뛴다).
@@ -455,6 +484,14 @@ const GameRoot = ({
         </>
     );
 
+    const dailyTrialHud = trialWalking && dailyTrial && (
+        <DailyTrialHud
+            map={engine.player.trialRun?.map ?? 1}
+            actions={dailyTrial.actions}
+            onLeave={() => setDailyTrialLeaveOpen(true)}
+        />
+    );
+
     const premiumShop = premiumShopOpen && (
         <Suspense fallback={null}>
             <PremiumShop
@@ -487,11 +524,12 @@ const GameRoot = ({
                             damageFlash={damageFlash}
                             healFlash={healFlash}
                             statusBar={statusBar}
-                            banners={liveBanners}
+                            banners={<>{liveBanners}{dailyTrialHud}</>}
                             mobileConsoleMode={mobileConsoleMode}
                             setMobileConsoleMode={setMobileConsoleMode}
                             onOpenMirror={() => setMirrorPanelOpen(true)}
                             onOpenCrystalExchange={() => setPremiumShopOpen(true)}
+                            onOpenDailyTrial={() => setDailyTrialSheetOpen(true)}
                             inventoryFilterRequest={inventoryFilterRequest}
                         />
                         {premiumShop}
@@ -500,6 +538,7 @@ const GameRoot = ({
                     <>
                         {statusBar}
                         {liveBanners}
+                        {dailyTrialHud}
                         {premiumShop}
                         <MobileGameLayout
                             engine={engine}
@@ -516,6 +555,7 @@ const GameRoot = ({
                             setMobileConsoleMode={setMobileConsoleMode}
                             onOpenMirror={() => setMirrorPanelOpen(true)}
                             onOpenCrystalExchange={() => setPremiumShopOpen(true)}
+                            onOpenDailyTrial={() => setDailyTrialSheetOpen(true)}
                             inventoryFilterRequest={inventoryFilterRequest}
                         />
                     </>
@@ -602,7 +642,13 @@ const GameRoot = ({
                 </Suspense>
             )}
 
-            {engine.bootStage === 'ready' && engine.player && !showExpeditionDebrief && !showStandaloneStory && !showChapterPick && (
+            {showFieldTrait && !combatStage.holdResultCards && (
+                <Suspense fallback={null}>
+                    <FieldTraitPanel player={engine.player} onChoose={engine.actions.fieldChooseTrait} />
+                </Suspense>
+            )}
+
+            {engine.bootStage === 'ready' && engine.player && !showExpeditionDebrief && !showStandaloneStory && !showChapterPick && !showFieldTrait && (
                 <ReturnBriefingGate
                     player={engine.player}
                     maxHp={fullStats?.maxHp}
@@ -626,6 +672,28 @@ const GameRoot = ({
                         player={engine.player}
                         actions={engine.actions}
                     />
+                </Suspense>
+            )}
+
+            {showDailyTrialSheet && (
+                <Suspense fallback={null}>
+                    <DailyTrialSheet player={engine.player} controls={dailyTrialControls} onClose={() => setDailyTrialSheetOpen(false)} />
+                </Suspense>
+            )}
+
+            {showDailyTrialLeave && (
+                <DailyTrialLeaveDialog
+                    onStay={() => setDailyTrialLeaveOpen(false)}
+                    onLeave={() => {
+                        setDailyTrialLeaveOpen(false);
+                        dailyTrialControls.abandon();
+                    }}
+                />
+            )}
+
+            {dailyTrial?.result && engine.gameState === GS.TRIAL_RESULT && (
+                <Suspense fallback={null}>
+                    <DailyTrialResult slot={dailyTrial} onReturn={dailyTrialControls.end} />
                 </Suspense>
             )}
 

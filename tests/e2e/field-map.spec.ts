@@ -150,6 +150,8 @@ for (const size of SIZES) {
             await page.getByTestId('control-move').click();
             await page.getByTestId('control-route-option-고요한 숲').click();
             await expect(page.getByTestId('field-map')).toBeVisible({ timeout: 8_000 });
+            // 클리어한 지역의 새 지도라 지도 갈래를 먼저 고른다(2026-11) — 고르지 않으면 보통 지도다.
+            await page.getByTestId('field-trait-skip').click();
             await expect(auto).toBeEnabled({ timeout: 8_000 });
             await expect(auto).toContainText('5/5');
             await auto.click();

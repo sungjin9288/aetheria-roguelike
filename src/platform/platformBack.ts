@@ -42,6 +42,7 @@ const MODE_BACK_ACTION: Record<GameMode, PlatformBackAction> = {
     [GS.DEAD]: 'close-app',
     [GS.ASCENSION]: 'close-app',
     [GS.TRUE_ENDING]: 'close-app',
+    [GS.TRIAL_RESULT]: 'close-app',
 };
 
 export const resolvePlatformBackAction = (state: PlatformBackState): PlatformBackAction => {

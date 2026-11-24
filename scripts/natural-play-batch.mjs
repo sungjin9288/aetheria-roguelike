@@ -2,7 +2,7 @@
 //   [--runs 7] [--jobs 2] [--rule-decline none|all|stacked|rank:N] [--rule-pick default|fixed|random] [--economy none|basic|materials]
 //   [--chapter-pick none|skip|relic|prefix|enhance|random] [--enhance-branch first|alt|random] [--boss-response none|basic|full]
 //   [--relic-pick recommend|first] [--relic-play none|observe|aware] [--auto-explore off|on] [--bag-room off|on|tidy] [--field off|forest|all]
-//   [--field-auto off|on|unlimited] [--field-walk-auto off|on] [--max-steps N]
+//   [--field-auto off|on|unlimited] [--field-walk-auto off|on] [--map-trait plain|random|elite|chest|event|quiet] [--first-chest on|off] [--max-steps N]
 // 결과는 DIR/<path>/seed-<n>.json — 이미 있는 파일은 건너뛴다(중단 뒤 이어 돌리기). 2026-10 Wave 117.
 import { spawn } from 'node:child_process';
 import fs from 'node:fs';
@@ -24,7 +24,7 @@ if (!out) throw new Error('--out DIR is required');
 const seeds = parseRange(flag('--seeds', '1-24'));
 const paths = flag('--paths', 'knight,berserker,archmage,cleric,assassin').split(',');
 const jobs = Number(flag('--jobs', '2'));
-const passThrough = ['--runs', '--rule-decline', '--rule-pick', '--max-steps', '--economy', '--chapter-pick', '--enhance-branch', '--boss-response', '--relic-pick', '--relic-play', '--auto-explore', '--bag-room', '--field', '--field-auto', '--field-walk-auto'].flatMap((name) => (args.includes(name) ? [name, flag(name)] : []));
+const passThrough = ['--runs', '--rule-decline', '--rule-pick', '--max-steps', '--economy', '--chapter-pick', '--enhance-branch', '--boss-response', '--relic-pick', '--relic-play', '--auto-explore', '--bag-room', '--field', '--field-auto', '--field-walk-auto', '--map-trait', '--first-chest'].flatMap((name) => (args.includes(name) ? [name, flag(name)] : []));
 const cli = path.join(path.dirname(fileURLToPath(import.meta.url)), 'natural-play.mjs');
 
 const queue = [];

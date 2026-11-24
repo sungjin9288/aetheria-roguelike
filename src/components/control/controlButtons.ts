@@ -3,6 +3,7 @@ import {
   Gem,
   GraduationCap,
   Hammer,
+  Hourglass,
   Map as MapIcon,
   Moon,
   Route,
@@ -23,6 +24,8 @@ export interface ControlButtonDeps {
   onOpenMirror?: () => void;
   /** 에테르 교환소 열기 — 마을 시설의 교환소 단추가 쓴다(GameRoot가 교환소 화면을 소유한다, D2). */
   onOpenCrystalExchange?: () => void;
+  /** 오늘의 시련 입구 열기 — 마을 시설의 시련 단추가 쓴다(GameRoot가 입구 화면을 소유한다). */
+  onOpenDailyTrial?: () => void;
   onOpenArchiveConsole?: (tab?: string) => void;
   showGraveRecovery: boolean;
 }
@@ -75,7 +78,7 @@ const buildFieldButtons = ({ actions, setGameState, onOpenArchiveConsole }: Cont
 });
 
 const buildTownButtons = (deps: ControlButtonDeps, openQuestBoard: () => void): ControlButton[] => {
-  const { actions, setGameState, onOpenMirror, onOpenCrystalExchange } = deps;
+  const { actions, setGameState, onOpenMirror, onOpenCrystalExchange, onOpenDailyTrial } = deps;
   return [
     { key: 'rest', testId: 'control-rest', icon: Moon, label: '휴식', mobileLabel: '휴식', onClick: () => actions?.rest?.() },
     { key: 'quests', testId: 'control-quests', icon: ScrollText, label: '임무', mobileLabel: '임무', onClick: openQuestBoard },
@@ -110,6 +113,14 @@ const buildTownButtons = (deps: ControlButtonDeps, openQuestBoard: () => void): 
       label: MSG.TOWN_FACILITY_LABELS.crystal,
       onClick: () => onOpenCrystalExchange?.(),
       disabled: !onOpenCrystalExchange,
+    },
+    {
+      key: 'trial',
+      testId: 'control-daily-trial',
+      icon: Hourglass,
+      label: MSG.TOWN_FACILITY_LABELS.trial,
+      onClick: () => onOpenDailyTrial?.(),
+      disabled: !onOpenDailyTrial,
     },
   ];
 };

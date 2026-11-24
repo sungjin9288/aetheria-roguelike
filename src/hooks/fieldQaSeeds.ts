@@ -2,13 +2,16 @@ import { BALANCE } from '../data/constants';
 import { DB } from '../data/db';
 import { getFieldBiome } from '../systems/fieldBiome';
 import { getFieldDoorIndex } from '../systems/fieldDoor';
-import { getFieldNeighbor, getFieldTileDanger } from '../systems/fieldMapWalk';
+import { createFieldMapState, getFieldNeighbor, getFieldTileDanger } from '../systems/fieldMapWalk';
+import { getFieldTraitOffer } from '../systems/fieldTrait';
 import { getAreaBossName } from '../utils/bossGauge';
 import type { FieldDirection, FieldMapLayout, FieldMapState } from '../types/fieldMap';
+import type { Player } from '../types/player';
 
 /**
  * 2026-11 오버월드 3단계 — QA 시드(`seedFieldMapScenario`)의 지도 모양. 프로덕션 번들에서는 테스트 API와 함께 빠진다.
  *   biome: 숲이 아닌 바이옴의 지도 지역(구역 보스가 있는 첫 지역) · door: 그 지역에서 열린 보스 문 바로 옆
+ *   trait: 지도 갈래 카드가 셋이고 정예가 많은 지도가 있는 지역 · firstChest: 열지 않은 상자 바로 옆(처리할 일 없음)
  *   walkChest: 첫 지도 지역에서 위험한 칸이 하나 남았고 그 칸이 열지 않은 상자 옆 — 자동 걷기가 한 걸음 뒤 상자 앞에서 멈춘다.
  */
 
@@ -59,6 +62,24 @@ export const buildFieldQaWalkChestMap = (field: FieldMapState, layout: FieldMapL
             const dangerous = [...layout.tiles].flatMap((char, index) => (getFieldTileDanger(char) > 0 && index !== target ? [index] : []));
             return { ...field, pos: start, danger: 0, visited: withVisited(field, [...dangerous, start]).filter((index) => index !== target) };
         }
+    }
+    return null;
+};
+
+/** 지금 지도의 패가 세 장이고 정예가 많은 지도가 든 첫 지역(글이 가장 긴 화면) */
+export const pickFieldQaTraitRegion = (player: Player): string | null => BALANCE.FIELD_MAP_REGIONS.find((loc) => {
+    const mapData = DB.MAPS[loc];
+    if (!mapData || typeof mapData.level !== 'number') return false;
+    const offer = getFieldTraitOffer(player, createFieldMapState({ stats: player.stats, meta: player.meta, fieldMap: null }, loc, mapData), mapData);
+    return offer.length === 3 && offer.includes('elite');
+}) ?? null;
+
+/** 열지 않은 상자 바로 옆 칸에 선 지도 */
+export const buildFieldQaBesideChestMap = (field: FieldMapState, layout: FieldMapLayout): FieldMapState | null => {
+    const reserved = new Set([...layout.exits.map((exit) => exit.index), ...layout.chests.map((chest) => chest.index)]);
+    for (const chest of layout.chests) {
+        const beside = neighborsOf(layout, chest.index).find((index) => !reserved.has(index));
+        if (beside !== undefined) return { ...field, pos: beside, danger: 0, visited: withVisited(field, [beside]) };
     }
     return null;
 };

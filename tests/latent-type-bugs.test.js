@@ -68,8 +68,9 @@ test('H5(a): 내 묘비 제외는 player.uid가 아니라 세션 uid를 쓴다 (
     assert.match(read, /excludeOwnGraves\(fetched, uid\)/);
 
     const engine = await readSrc('src/hooks/useGameEngine.ts');
-    assert.match(engine, /useDimensionGravePool\(uid\)/, '엔진 세션 uid가 풀 훅까지 내려온다');
-    assert.match(engine, /\n {8}uid,\n {8}actions,/, 'useGameEngine이 uid를 노출한다');
+    // 2026-11 오늘의 시련: 시련 동안은 묘비 풀을 읽지 않는다(null) — 그 밖에는 세션 uid다.
+    assert.match(engine, /useDimensionGravePool\(inDailyTrial \? null : uid\)/, '엔진 세션 uid가 풀 훅까지 내려온다');
+    assert.match(engine, /\n {8}uid,\n {8}actions: playableActions,/, 'useGameEngine이 uid를 노출한다');
 });
 
 // ─── (b) StatsPanel trait null 가드 ────────────────────────────────────────────

@@ -21,7 +21,9 @@ import { BALANCE, CONSTANTS } from '../data/constants';
 import { createFieldMapState, getFieldMapLayout, isFieldMapRegion } from '../systems/fieldMapWalk';
 import { getFieldDoor } from '../systems/fieldDoor';
 import { getFieldBiome } from '../systems/fieldBiome';
-import { buildFieldQaDoorMap, buildFieldQaWalkChestMap, pickFieldQaBiomeRegion } from './fieldQaSeeds';
+import { buildFieldQaBesideChestMap, buildFieldQaDoorMap, buildFieldQaWalkChestMap, pickFieldQaBiomeRegion, pickFieldQaTraitRegion } from './fieldQaSeeds';
+import { createDailyTrialField } from '../systems/dailyTrial';
+import type { FieldDirection } from '../types/fieldMap';
 import { getLevelExpRequirement } from '../systems/expCurve';
 import { DB } from '../data/db';
 import { DEATH_LORE } from '../data/deathLore';
@@ -370,7 +372,10 @@ export interface CanonicalEventChanceRelicChoiceSnapshot {
 /** walk: 새 지도 · mimic: 첫 상자의 미믹이 깨어남 · opened: 상자를 모두 연 지도(나가면 클리어) · cleared: 클리어한 지역 */
 /** `paid` — 클리어한 지역, 오늘 무료 자동 탐험을 다 쓴 상태(다음 한 번은 골드) · 골드 넉넉 */
 /** 3단계 — `biome`: 숲이 아닌 바이옴의 새 지도 · `door`: 열린 보스 문 바로 옆 · `walkChest`: 위험한 칸 하나(상자 옆)만 남은 지도(전직 뒤) */
-export type FieldMapSeedKind = 'walk' | 'mimic' | 'opened' | 'cleared' | 'paid' | 'biome' | 'door' | 'walkChest';
+export type FieldMapSeedKind = 'walk' | 'mimic' | 'opened' | 'cleared' | 'paid' | 'biome' | 'door' | 'walkChest' | 'trait' | 'firstChest';
+
+/** 2026-11 오늘의 시련 — `entry`: 첫 전직 뒤 시작의 마을 대기 · `door`: 걷는 시련의 셋째 지도, 보스 문 옆(한 번 치면 쓰러지는 공격력) · `doomed`: 생명 1 */
+export type DailyTrialSeedKind = 'entry' | 'door' | 'doomed';
 
 export interface AetheriaTestApi {
     getTrueEndingJourneySnapshot: () => TrueEndingJourneySnapshot;
@@ -442,6 +447,8 @@ export interface AetheriaTestApi {
      * 자리에 미믹 처리할 일을 남기고(훅이 전투를 연다), 'cleared'는 그 지역을 클리어한 기록과 오늘 쓰지 않은 자동 탐험을 준다.
      */
     seedFieldMapScenario: (kind?: FieldMapSeedKind) => boolean;
+    /** 2026-11 오늘의 시련: 입구를 열거나(본편) 걷는 시련의 끝을 앞당긴다. `door`는 문으로 가는 방향, 나머지는 성공 여부를 돌려준다. */
+    seedDailyTrialScenario: (kind: DailyTrialSeedKind) => FieldDirection | boolean;
     /**
      * 2026-11 H5: 충전 강타를 모은 보스(`bossName` — 실제 `mechanics`, `mapName`에서)와 싸우는 중으로 만든다. 보스 생명은 3200이고
      * 예고 칩은 충전 강타 · 끊기까지 남은 피해다(`partialDamage`만큼 이미 깎인 상태). 생명은 실효 최대치다.
@@ -761,6 +768,10 @@ export const useGameTestApi = (
                     gold: e.player.gold,
                     // 2026-11 지역 지도 걷기: 걷는 상태 · 클리어 기록 · 오늘 쓴 자동 탐험 — e2e가 읽는다.
                     fieldMap: e.player.fieldMap ?? null,
+                    firstChestRelic: Boolean(e.player.stats?.firstChestRelic),
+                    // 2026-11 오늘의 시련: 지금 걷는 시련 · 본편의 기록 장부.
+                    trialRun: e.player.trialRun ?? null,
+                    dailyTrialDays: e.player.stats?.dailyTrial?.days ?? [],
                     fieldClearedRegions: e.player.fieldClearedRegions ?? [],
                     fieldAutoRuns: e.player.stats?.fieldAutoRuns ?? null,
                     // 지도 칸(벽 · 길 · 풀숲) · 입구 · 출구 · 상자 자리 — e2e 걷기 도우미가 경로를 고른다.
@@ -2035,13 +2046,17 @@ export const useGameTestApi = (
             seedFieldMapScenario: (kind: FieldMapSeedKind = 'walk') => {
                 const er = engineRef.current;
                 // 3단계: biome · door는 숲이 아닌 바이옴의 지역(구역 보스가 있는 첫 지역), 나머지는 첫 지도 지역(고요한 숲).
-                const loc = kind === 'biome' || kind === 'door' ? pickFieldQaBiomeRegion() : BALANCE.FIELD_MAP_REGIONS[0];
+                //   trait(지도 갈래)는 카드가 셋이고 정예가 많은 지도가 있는 지역이다.
+                const loc = kind === 'biome' || kind === 'door' ? pickFieldQaBiomeRegion()
+                    : kind === 'trait' ? pickFieldQaTraitRegion(er.player) : BALANCE.FIELD_MAP_REGIONS[0];
                 const mapData = loc ? DB.MAPS[loc] : null;
                 const job = DB.CLASSES[CONSTANTS.DEFAULT_JOB]?.next?.[0];
                 if (!loc || !mapData || !job || !isFieldMapRegion(loc, mapData)) return false;
                 const level = typeof mapData.level === 'number' ? Math.max(10, mapData.level + 2) : 10;
                 const base = { ...er.player, loc, fieldMap: null };
-                const fresh = createFieldMapState(base, loc, mapData);
+                const created = createFieldMapState(base, loc, mapData);
+                // 클리어한 지역의 새 지도는 성격을 고를 수 있다 — 갈래 시드(trait)만 고르기 전이고 나머지는 보통 지도를 고른 뒤다.
+                const fresh = kind === 'cleared' || kind === 'paid' ? { ...created, trait: 'plain' as const } : created;
                 const layout = getFieldMapLayout(fresh, mapData);
                 const chest = layout.chests[0];
                 const fieldMap = kind === 'mimic' && chest
@@ -2052,7 +2067,9 @@ export const useGameTestApi = (
                             ? buildFieldQaDoorMap(fresh, layout)?.field ?? null
                             : kind === 'walkChest'
                                 ? buildFieldQaWalkChestMap(fresh, layout)
-                                : fresh;
+                                : kind === 'firstChest'
+                                    ? buildFieldQaBesideChestMap(fresh, layout)
+                                    : fresh;
                 if (!fieldMap) return false;
                 const patch = {
                     job,
@@ -2065,9 +2082,13 @@ export const useGameTestApi = (
                     status: [],
                     activeExpedition: null,
                     fieldMap,
-                    fieldClearedRegions: kind === 'cleared' || kind === 'paid' ? [loc] : [],
+                    fieldClearedRegions: kind === 'cleared' || kind === 'paid' || kind === 'trait' ? [loc] : [],
+                    ...(kind === 'firstChest' ? { relics: [], meta: { ...er.player.meta, prestigeRank: 0 } } : {}),
                     stats: {
                         ...er.player.stats,
+                        // 첫 여정의 첫 상자는 firstChest 시드만 — 나머지는 이미 받은 계정이다(상자가 유물 선택을 열지 않는다).
+                        firstChestRelic: kind === 'firstChest' ? undefined : true,
+                        ...(kind === 'firstChest' ? { deaths: 0, relicCount: 0 } : {}),
                         fieldAutoRuns: kind === 'paid'
                             ? { day: getProtocolDayKey(new Date()), used: BALANCE.FIELD_AUTO_RUNS_PER_DAY }
                             : undefined,
@@ -2086,6 +2107,34 @@ export const useGameTestApi = (
                 });
                 er.dispatch({ type: AT.SET_GAME_STATE, payload: GS.IDLE });
                 return true;
+            },
+            seedDailyTrialScenario: (kind: DailyTrialSeedKind) => {
+                const er = engineRef.current;
+                const run = er.player.trialRun;
+                if (kind === 'entry') {
+                    const job = DB.CLASSES[CONSTANTS.DEFAULT_JOB]?.next?.[0];
+                    if (!job || run) return false;
+                    const patch = { job, loc: CONSTANTS.START_LOCATION, level: 12, exp: 0, nextExp: getLevelExpRequirement(12), status: [], activeExpedition: null, fieldMap: null };
+                    const fullStats = calculateFullStats({ ...er.player, ...patch })!;
+                    er.dispatch({ type: AT.SET_PENDING_RELICS, payload: null });
+                    er.dispatch({ type: AT.SET_POST_COMBAT_RESULT, payload: null });
+                    er.dispatch({ type: AT.SET_PLAYER, payload: { ...patch, hp: fullStats.maxHp, mp: fullStats.maxMp } });
+                    er.dispatch({ type: AT.SET_GAME_STATE, payload: GS.IDLE });
+                    return true;
+                }
+                if (!run) return false;
+                if (kind === 'doomed') {
+                    er.dispatch({ type: AT.SET_PLAYER, payload: { hp: 1, atk: 1, relics: [] } });
+                    return true;
+                }
+                const last = createDailyTrialField(run.dayKey, BALANCE.DAILY_TRIAL_MAPS);
+                const door = buildFieldQaDoorMap(last, getFieldMapLayout(last, DB.MAPS[last.loc]));
+                if (!door) return false;
+                er.dispatch({
+                    type: AT.SET_PLAYER,
+                    payload: { atk: 99_999, trialRun: { ...run, map: BALANCE.DAILY_TRIAL_MAPS }, fieldMap: door.field },
+                });
+                return door.toward;
             },
             seedBehaviorComboScenario: (effect: string, options: { enemyHpRatio?: number; beatCount?: number } = {}) => {
                 const er = engineRef.current;

@@ -5,9 +5,10 @@ import { MSG } from '../data/messages.js';
 import { canInvestigateTown } from './townInvestigation';
 import { getChainEventForLoc } from '../data/eventChains.js';
 import { getShopBuyPrice } from './shopRotation';
+import { isDailyTrialUnlocked } from '../systems/dailyTrial';
 import type { getAdventureGuidance, getExpeditionPreparation } from './adventureGuide.js';
 
-export type TownActionKey = 'explore' | 'move' | 'rest' | 'quests' | 'market' | 'class' | 'craft' | 'mirror' | 'crystal' | 'grave';
+export type TownActionKey = 'explore' | 'move' | 'rest' | 'quests' | 'market' | 'class' | 'craft' | 'mirror' | 'crystal' | 'trial' | 'grave';
 
 /**
  * safe 지역에서 explore 행동이 무엇을 의미하는지 — 라벨을 컴포넌트가 하드코딩하지 않게
@@ -64,7 +65,8 @@ interface TownActionContext {
 type TownFacilityKey = keyof typeof MSG.TOWN_FACILITY_LABELS & TownActionKey;
 // 소유자 결정 2026-10-26 D2(UX-04): 크리스탈 교환(에테르 교환소)도 마을 시설이다 — 설정 탭의 '장기 성장' 칸에서 옮겼다.
 //   마을 시설은 안전지대에서만 그려지므로 이 진입점도 안전지대에서만 열린다.
-const FACILITY_KEYS: TownFacilityKey[] = ['rest', 'quests', 'market', 'class', 'craft', 'mirror', 'crystal'];
+// 2026-11 오늘의 시련: 첫 전직 뒤에만 그린다(`isDailyTrialUnlocked`) — 전직 전 첫 화면의 시설 수는 그대로다.
+const FACILITY_KEYS: TownFacilityKey[] = ['rest', 'quests', 'market', 'class', 'craft', 'mirror', 'crystal', 'trial'];
 
 const PRIMARY_BUTTON_KEYS: Partial<Record<TownPrimaryKind, TownActionKey>> = {
     explore: 'explore',
@@ -208,7 +210,7 @@ export const getTownActionPresentation = ({
     const exploreIntent = getTownExploreIntent(player, mapData);
     if (exploreIntent !== null && primaryKey !== 'explore') quickKeys.push('explore');
     const visibleKeys = new Set<TownActionKey>([...quickKeys, ...(primaryKey ? [primaryKey] : [])]);
-    const facilityKeys = FACILITY_KEYS.filter((key) => !visibleKeys.has(key));
+    const facilityKeys = FACILITY_KEYS.filter((key) => !visibleKeys.has(key) && (key !== 'trial' || isDailyTrialUnlocked(player)));
 
     return {
         primary: {

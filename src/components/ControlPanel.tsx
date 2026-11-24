@@ -40,6 +40,8 @@ import { useAutoExploreControl } from './control/autoExploreContext';
 import { useFieldMapControl } from './field/fieldMapContext';
 import FieldPad from './field/FieldPad';
 import FieldAutoButton from './field/FieldAutoButton';
+import DailyTrialDock from './trial/DailyTrialDock';
+import { isTrialPlayer } from '../utils/trialPlayer';
 
 interface ControlPanelProps {
   gameState?: GameMode;
@@ -51,6 +53,8 @@ interface ControlPanelProps {
   onOpenMirror?: () => void;
   /** 에테르 교환소 열기 — 마을 시설의 교환소 단추가 쓴다(소유자 결정 2026-10-26 D2 — 설정 탭에서 옮김). */
   onOpenCrystalExchange?: () => void;
+  /** 오늘의 시련 입구 열기 — 마을 시설의 시련 단추가 쓴다(2026-11 H8). */
+  onOpenDailyTrial?: () => void;
   /**
    * 원정 준비의 '모험 기록' 단추를 그릴지 — 데스크톱은 오른쪽 기록 열이 늘 열려 있어 그리지 않는다(D6).
    *   기록 열기 자체(가방 · 지도 단추)는 `onOpenArchiveConsole`이 그대로 소유한다.
@@ -82,6 +86,7 @@ const ControlPanel = ({
   setGameState,
   onOpenMirror,
   onOpenCrystalExchange,
+  onOpenDailyTrial,
   showArchiveShortcut = true,
   shopItems,
   grave,
@@ -239,7 +244,16 @@ const ControlPanel = ({
     auxiliaryButtons,
     buttonByKey,
     openQuestBoard,
-  } = buildControlButtons({ actions, setGameState, onOpenMirror, onOpenCrystalExchange, onOpenArchiveConsole, showGraveRecovery });
+  } = buildControlButtons({ actions, setGameState, onOpenMirror, onOpenCrystalExchange, onOpenDailyTrial, onOpenArchiveConsole, showGraveRecovery });
+
+  // 2026-11 오늘의 시련: 시련에는 마을 · 이동 · 정찰 · 임무가 없다 — 지도의 걷기와 가방만 둔다(나가기는 위의 시련 줄).
+  if (isTrialPlayer(player)) {
+    return (
+      <div className="ae-control relative z-10 w-full">
+        <DailyTrialDock control={walkingField} bag={bagButton} />
+      </div>
+    );
+  }
 
   const townQuickButtons = townPresentation.quickKeys
     .map((key) => buttonByKey.get(key))

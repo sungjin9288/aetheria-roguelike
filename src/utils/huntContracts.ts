@@ -1,3 +1,4 @@
+import { isTrialPlayer } from './trialPlayer.js';
 import { BALANCE, CONSTANTS } from '../data/constants.js';
 import { DB } from '../data/db.js';
 import { HUNT_CONTRACTS, getHuntContract, type HuntContractDef } from '../data/huntContracts.js';
@@ -168,7 +169,7 @@ export const advanceHuntContractOnVictory = (
     const map = String(player.loc || '');
     const contract = getHuntContract(map);
     const unchanged: HuntContractVictoryResult = { player, logs: [], items: [], completedStage: null };
-    if (!contract || !deadEnemy) return unchanged;
+    if (!contract || !deadEnemy || isTrialPlayer(player)) return unchanged;
     const { stage, progress, round } = getHuntContractProgress(player, map);
     const logs: HuntContractVictoryResult['logs'] = [];
     const killGoal = getHuntKillGoal(round);

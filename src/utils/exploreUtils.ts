@@ -29,6 +29,7 @@ import { DB } from '../data/db.js';
 import { BALANCE, CONSTANTS } from '../data/constants.js';
 import { MSG } from '../data/messages.js';
 import { getPrestigeUnlocks } from '../systems/prestigeUnlocks';
+import { getActiveFieldTraitEffects } from '../systems/fieldTrait';
 import { getPrestigeEnemyLevelBonus } from '../systems/metaBonusRamp.js';
 import { getPrefixLevelBonus, rollEnemyLevel } from './enemyLevel.js';
 // Track J1: FIRST_VISIT_REWARDS 테이블은 data/firstVisitRewards.ts로 분리됨.
@@ -254,7 +255,9 @@ export const spawnEnemy = (mapData: GameMap, player: Player, playerRelics: Relic
     // PR #8: 프레스티지 rank≥3 해금 — 엘리트 출현 확률 +25%. forceElite처럼 엘리트
     //   접두어를 강제한다(고승천 플레이어에게 더 잦은 정예 위협 = 광고된 "심연의 메아리").
     const prestigeElite = !storyMonster && !mStats.isBoss && !forceElite && !earlyElite
-        && rng() < getPrestigeUnlocks(player.meta?.prestigeRank).eliteChanceBonus;
+        && rng() < getPrestigeUnlocks(player.meta?.prestigeRank).eliteChanceBonus
+            // 2026-11 지도 갈래: 정예 성격의 지도는 같은 추첨의 문턱을 올린다(초반 구간 제외 — 패에도 나오지 않는다).
+            + (earlyBand ? 0 : getActiveFieldTraitEffects(player).eliteChance);
     // 접두어 부여
     if (!storyMonster && (forceElite || earlyElite || prestigeElite || (rng() < BALANCE.PREFIX_CHANCE && CONSTANTS.MONSTER_PREFIXES))) {
         // 2026-10 Wave 115 (소유자 결정 "A 적용"): 고른 난이도(eliteOnly 도전)와 프레스티지 정예도 초반 구간에서는 초반 정예(×1.4)다.

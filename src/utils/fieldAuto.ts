@@ -9,6 +9,7 @@ import type { Player } from '../types/player';
 import { getAutoExploreHpStopRatio, isAutoExploreUnlocked, type AutoExploreStopReason } from './autoExplore';
 import { getMapAccess } from './mapAccess';
 import { getProtocolDayKey } from './protocolCycle';
+import { isTrialPlayer } from './trialPlayer';
 
 /**
  * 지역 지도 자동 탐험의 쓸 수 있음 판정(설계 docs/OVERWORLD_WALK_DESIGN_2026-11.md §7) — 리듀서(`FIELD_AUTO_START`)와 지도 화면
@@ -140,7 +141,8 @@ export const planPlayerFieldAutoWalk = (
     const door = getFieldDoor(player, field.loc, mapData, layout);
     const level = player.level || 1;
     const exits = layout.exits
-        .filter((exit) => !getMapAccess(DB.MAPS, field.loc, exit.to, level, seasonActive).reason)
+        // 오늘의 시련의 출구는 다음 지도다 — 진입 레벨을 보지 않는다.
+        .filter((exit) => isTrialPlayer(player) || !getMapAccess(DB.MAPS, field.loc, exit.to, level, seasonActive).reason)
         .map((exit) => exit.index);
     return planFieldAutoWalk(field, layout, { door, exits, acknowledgedChests });
 };

@@ -293,6 +293,37 @@ test('지도 걷기 정책(오버월드 2단계)은 옵션이다 — 기본은 �
     await assert.rejects(() => runNaturalPlay({ ...SHORT, fieldAuto: 'on' }), /needs field/);
 });
 
+test('지도 갈래 · 첫 상자 정책(2026-11)은 옵션이다 — 기본은 고르지 않고, 켜면 결정론적이며 게임 난수를 쓰지 않는다', async () => {
+    const ALL = { seed: 1, path: 'knight', maxSteps: 1500, field: 'all', bagRoom: 'tidy' };
+    const base = await runNaturalPlay(ALL);
+    assert.equal(base.mapTrait, undefined);
+    assert.equal(base.firstChest, undefined);
+    assert.equal(base.runs[0].field.traits, undefined, '고르지 않으면 흔적이 없다');
+    assert.deepEqual(await runNaturalPlay({ ...ALL, mapTrait: 'plain', firstChest: 'on' }), base);
+
+    for (const mapTrait of ['random', 'elite', 'chest', 'event', 'quiet']) {
+        const run = await runNaturalPlay({ ...ALL, mapTrait });
+        assert.deepEqual(await runNaturalPlay({ ...ALL, mapTrait }), run, mapTrait);
+        assert.equal(run.mapTrait, mapTrait);
+        assert.equal(run.stalled, null, JSON.stringify(run.stalled));
+        assert.equal(run.runs[0].field.fallbacks, 0, mapTrait);
+        const traits = run.runs[0].field.traits;
+        const named = Object.keys(traits).filter((trait) => trait !== 'plain');
+        if (mapTrait === 'random') assert.ok(named.length >= 2, JSON.stringify(traits));
+        else assert.deepEqual(named, [mapTrait], `${mapTrait}: ${JSON.stringify(traits)}`);
+    }
+
+    // 첫 상자 — 끄면 이미 받은 계정으로 시작한다. 켠 쪽은 첫 유물 제안이 더 이르다.
+    const off = await runNaturalPlay({ ...ALL, firstChest: 'off' });
+    assert.equal(off.firstChest, 'off');
+    const firstRelic = (result) => result.runs[0].moments.find(([, kind]) => kind === 'relic')?.[0];
+    assert.ok(firstRelic(base) < firstRelic(off), `${firstRelic(base)} < ${firstRelic(off)}`);
+
+    await assert.rejects(() => runNaturalPlay({ ...ALL, mapTrait: 'boss' }), /unknown mapTrait/);
+    await assert.rejects(() => runNaturalPlay({ ...SHORT, mapTrait: 'chest' }), /needs field/);
+    await assert.rejects(() => runNaturalPlay({ ...ALL, firstChest: 'maybe' }), /unknown firstChest/);
+});
+
 test('자동 걷기 정책(오버월드 3단계)은 옵션이다 — 끄면 흔적이 없고, 켜면 결정론적이며 상자를 열지 않고 걸음 · 멈춤의 합이 맞는다', async () => {
     const ALL = { seed: 1, path: 'knight', maxSteps: 1500, field: 'all', bagRoom: 'tidy' };
     const off = await runNaturalPlay(ALL);

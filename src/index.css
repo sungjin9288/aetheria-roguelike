@@ -3889,6 +3889,24 @@
     transform: none;
   }
 }
+/* 오늘의 시련(2026-11) — 시련 줄(지도 · 행동 · 나가기), 걷기 · 가방 두 칸 도크, 결과 화면 바탕 */
+.ae-trial-hud {
+  border-radius: var(--aether-r-md);
+  background: var(--aether-s2);
+  box-shadow: inset 0 0 0 1px var(--aether-rim-ether);
+}
+
+.ae-trial-dock.ae-field-dock.is-walk {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.ae-desktop-grid .ae-trial-dock.ae-field-dock.is-walk {
+  grid-template-columns: auto repeat(2, minmax(0, 1fr));
+}
+
+.ae-trial-result {
+  background: rgb(var(--aether-void-rgb) / 0.94);
+}
 /* === /w3:town === */
 
 /* === w3:choice === */

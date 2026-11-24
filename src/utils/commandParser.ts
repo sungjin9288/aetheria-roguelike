@@ -33,6 +33,7 @@ export const parseCommand = (input: string, gameState: GameMode, player: Player,
     [GS.CRAFTING]: MSG.CMD_BLOCKED_CRAFTING,
     [GS.ASCENSION]: MSG.CMD_BLOCKED_ASCENSION,
     [GS.DEAD]: MSG.CMD_BLOCKED_DEAD,
+    [GS.TRIAL_RESULT]: MSG.CMD_BLOCKED_TRIAL_RESULT,
     // 파서가 막지 않는 모드 — 게이트는 각 액션이 소유한다(§5 DON'T).
     [GS.IDLE]: null,
     [GS.COMBAT]: null,

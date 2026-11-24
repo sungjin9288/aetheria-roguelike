@@ -4,6 +4,7 @@ import { DB } from '../data/db.js';
 import { getAreaBossName, getBossGaugeValue, isAreaBossChallengeable } from './bossGauge.js';
 import { getAbyssDailyDiveRemaining } from './abyssDailyDive.js';
 import { getProtocolDayKey } from './protocolCycle.js';
+import { isTrialPlayer } from './trialPlayer.js';
 import type { Player } from '../types/index.js';
 
 /**
@@ -41,6 +42,8 @@ export const getBossGaugeChip = (player: Player | null | undefined): ExpeditionH
     const loc = player?.loc || '';
     if (!loc) return null;
     if (player?.challengeModifiers?.includes('blindMap')) return null;
+    // 오늘의 시련은 게이지를 쓰지 않는다 — 셋째 지도의 문이 언제나 열려 있다.
+    if (isTrialPlayer(player)) return null;
 
     const mapData = DB.MAPS[loc];
     if (!isAreaBossChallengeable(mapData, player)) return null;

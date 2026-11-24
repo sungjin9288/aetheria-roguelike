@@ -11,7 +11,7 @@ import { ELITE_TITLE_PREFIX } from './eliteTitles.js';
  * - `codex` — 도감(수집 · 발견). 사망은 초기화, 계승은 유지한다.
  * - `account` — 계정 장부(계승 단계 · 회차 규칙 · 사망 수 · 마왕 처치 · 심연 기록 · 시즌 · 크리스털로 산 것 · 전설 각인 수집 —
  *   Wave 125, 소유자 결정 "각인 수집만 계정 단위": 각인 발견은 `stats.signatureLedger`로 넘고 도감 · 도감 보너스는 그대로 비워진다 ·
- *   2026-11 B6 돌기둥의 증언 `stats.deathLore`).
+ *   2026-11 B6 돌기둥의 증언 `stats.deathLore` · 첫 여정 첫 상자의 유물 영수증 `stats.firstChestRelic` · 오늘의 시련 기록 `stats.dailyTrial`).
  *   초기화하지 않는다. 이 값을 읽는 업적은 지우면 곧바로 다시 달성되어 죽을 때마다 같은 보상을 받게 되므로
  *   수령 기록도 남긴다.
  *

@@ -82,6 +82,8 @@ export const bootstrapActionMap = {
                 case GS.EVENT: return Boolean(action.payload.currentEvent);
                 case GS.EVENT_PENDING: return false;
                 case GS.DEAD: return false;
+                // 오늘의 시련의 결과 화면 — 결과는 시련 슬롯에 있고 본편 봉투에는 없다.
+                case GS.TRIAL_RESULT: return false;
                 case GS.IDLE: case GS.MOVING: case GS.SHOP: case GS.JOB_CHANGE:
                 case GS.QUEST_BOARD: case GS.CRAFTING: case GS.ASCENSION: case GS.TRUE_ENDING:
                     return true;

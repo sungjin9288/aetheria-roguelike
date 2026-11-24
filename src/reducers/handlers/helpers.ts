@@ -8,6 +8,7 @@ import { applyEssenceGain } from '../../systems/essenceLedger';
 import { clampVitalsToEffectiveMax } from '../../utils/effectiveVitals';
 import { getCurrentDailyProtocol } from '../../utils/protocolCycle';
 import { createSeasonPassState, SEASON_MAX_TIER } from '../../utils/seasonPassPresentation';
+import { isTrialPlayer } from '../../utils/trialPlayer';
 import type { DailyProtocolMissionType, Item, Player } from '../../types/index.js';
 import type { Relic } from '../../types/relic.js';
 
@@ -32,7 +33,7 @@ export const sanitizeQuickSlots = (
 };
 
 export const addSeasonXp = (player: Player, amount: number): Player => {
-    if (!Number.isFinite(amount) || amount <= 0) return player;
+    if (!Number.isFinite(amount) || amount <= 0 || isTrialPlayer(player)) return player;
     // 2026-09 Wave 12 D2: 'S1' 리터럴 대신 레지스트리 기반 기본값.
     const seasonPass = player.seasonPass || createSeasonPassState();
     const currentXp = Math.max(0, Number(seasonPass.xp) || 0);

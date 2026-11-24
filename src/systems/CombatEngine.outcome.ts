@@ -19,6 +19,7 @@ import { endCombatScope } from '../utils/combatScope.js';
 import { getEffectiveMaxHp, getEffectiveMaxMpFull, healWithinMax } from './vitals.js';
 import { getChallengeMaxHpGain, getChallengeRewardMult, getGoldIncome } from '../utils/challengeRules.js';
 import { getCycleBestLevel } from '../utils/cycleBestLevel.js';
+import { isTrialPlayer } from '../utils/trialPlayer.js';
 
 /**
  * CombatEngine 결과(경험치/승리) 메서드 — mixin으로 CombatEngine에 spread.
@@ -217,18 +218,21 @@ export const outcomeMethods: OutcomeMixin & ThisType<OutcomeMixinContext> = {
         }
 
         const meta = { ...this.DEFAULT_META, ...(p.meta || {}) };
-        // PR #8: 프레스티지 rank≥1 해금 — 에센스 획득 +10% (essenceMult).
-        // 2026-07 — 에테르 거울: essence_flow 노드(레벨당 +10%)를 rank 배율과 곱연산으로 누적.
-        const essenceMult = getEssenceRewardMult(meta);
-        const essenceGain = getEssenceGainFromExp(enemy.exp, essenceMult);
-        logs.push({ type: 'event', text: MSG.LEGACY_ESSENCE(essenceGain) });
+        // 2026-11: 오늘의 시련에는 계승 정수가 없다 — 시련의 성장은 시련 안의 레벨 · 장비뿐이다.
+        if (!isTrialPlayer(p)) {
+            // PR #8: 프레스티지 rank≥1 해금 — 에센스 획득 +10% (essenceMult).
+            // 2026-07 — 에테르 거울: essence_flow 노드(레벨당 +10%)를 rank 배율과 곱연산으로 누적.
+            const essenceMult = getEssenceRewardMult(meta);
+            const essenceGain = getEssenceGainFromExp(enemy.exp, essenceMult);
+            logs.push({ type: 'event', text: MSG.LEGACY_ESSENCE(essenceGain) });
 
-        // 2026-09 G2: rank는 누적 획득량(essenceLifetime) 기준 — 거울 구매로 내려가지 않는다.
-        const granted = applyEssenceGain(meta, essenceGain);
-        if (granted.rankGain > 0) {
-            logs.push({ type: 'system', text: MSG.LEGACY_RANK(granted.meta.rank) });
+            // 2026-09 G2: rank는 누적 획득량(essenceLifetime) 기준 — 거울 구매로 내려가지 않는다.
+            const granted = applyEssenceGain(meta, essenceGain);
+            if (granted.rankGain > 0) {
+                logs.push({ type: 'system', text: MSG.LEGACY_RANK(granted.meta.rank) });
+            }
+            p.meta = granted.meta;
         }
-        p.meta = granted.meta;
 
         // 2026-10 Wave 56: 처치 회복의 상한은 실효 최대 생명이다 — 저장값으로 걸던 동안 장비 · 유물로 늘린 생명을 깎았다.
         //   전투 중 능력치(`FullStats`)가 아니라 전투 한정 보너스(세계 포식자)를 걷어 낸 뒤의 값이다 — 전투 중 값을 쓰던

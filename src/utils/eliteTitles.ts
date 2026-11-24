@@ -1,3 +1,4 @@
+import { isTrialPlayer } from './trialPlayer.js';
 import { BALANCE } from '../data/constants';
 import { MAPS } from '../data/maps';
 import { MSG } from '../data/messages';
@@ -105,7 +106,7 @@ export const recordEliteEncounter = (
     player: Player,
     enemy: Pick<Monster, 'isElite'> | null | undefined,
 ): { player: Player; unlockedMap: string | null } => {
-    if (!enemy?.isElite) return { player, unlockedMap: null };
+    if (!enemy?.isElite || isTrialPlayer(player)) return { player, unlockedMap: null };
     const mapName = player.loc;
     if (!mapName || !ELITE_TITLE_MAP_SET.has(mapName)) return { player, unlockedMap: null };
     const titleId = getEliteTitleId(mapName);

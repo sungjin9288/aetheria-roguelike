@@ -33,7 +33,7 @@ test('isGameMode는 GS 멤버 전부를 통과시킨다', () => {
     for (const mode of ALL_MODES) {
         assert.equal(isGameMode(mode), true, `${mode}는 GameMode다`);
     }
-    assert.equal(ALL_MODES.length, 12, 'GS는 12모드다 — 늘리면 아래 표 셋이 함께 움직여야 한다');
+    assert.equal(ALL_MODES.length, 13, 'GS는 13모드다 — 늘리면 아래 표 셋이 함께 움직여야 한다');
 });
 
 test('isGameMode는 GS 밖 문자열을 거부한다 — 봉투는 JSON.parse 결과라 신뢰 밖이다', () => {
@@ -61,6 +61,7 @@ test('모드 → 뒤로가기 동작 전수 표 (오버레이 플래그 전부 f
         [GS.DEAD]: 'close-app',
         [GS.ASCENSION]: 'close-app',
         [GS.TRUE_ENDING]: 'close-app',
+        [GS.TRIAL_RESULT]: 'close-app',
     };
     assert.deepEqual(
         Object.keys(EXPECTED).sort(), [...ALL_MODES].sort(),
@@ -111,10 +112,11 @@ const BLOCKED = {
     [GS.CRAFTING]: MSG.CMD_BLOCKED_CRAFTING,
     [GS.ASCENSION]: MSG.CMD_BLOCKED_ASCENSION,
     [GS.DEAD]: MSG.CMD_BLOCKED_DEAD,
+    [GS.TRIAL_RESULT]: MSG.CMD_BLOCKED_TRIAL_RESULT,
 };
 const PASSTHROUGH = [GS.IDLE, GS.COMBAT, GS.MOVING, GS.TRUE_ENDING];
 
-test('차단 표는 GS 전수다 — 차단 8 + 통과 4', () => {
+test('차단 표는 GS 전수다 — 차단 9 + 통과 4', () => {
     assert.deepEqual(
         [...Object.keys(BLOCKED), ...PASSTHROUGH].sort(), [...ALL_MODES].sort(),
         '새 모드는 차단/통과 둘 중 하나로 명시돼야 한다',
