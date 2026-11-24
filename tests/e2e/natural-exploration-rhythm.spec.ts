@@ -148,6 +148,18 @@ const armExploreSeed = async (page: Page, seed: number) => {
     expect(armed).toBe(true);
 };
 
+// 공격 난수도 고정한다 — 첫 전투에서 전설 각인이 떨어지고(약 4%) 생명이 65% 이하로 끝나면 셋째 탐험의
+//   한정 조우 후보가 셋으로 늘어 '변이된 덩굴'이 나왔다(여정 200번 중 7번). 같은 씨앗을 매 공격에 건다 —
+//   받아들여지지 않은 클릭이 씨앗 순서를 밀지 않는다.
+const COMBAT_ACTION_SEED = 1;
+
+const armCombatSeed = async (page: Page) => {
+    const armed = await page.evaluate((seed) => (
+        window.__AETHERIA_TEST_API__?.armNextCombatSeed?.(seed)
+    ), COMBAT_ACTION_SEED);
+    expect(armed).toBe(true);
+};
+
 const winCombatThroughVisibleAttacks = async (page: Page) => {
     const attack = page.getByTestId('combat-action-attack');
     await expect(attack).toBeVisible({ timeout: 10_000 });
@@ -156,6 +168,7 @@ const winCombatThroughVisibleAttacks = async (page: Page) => {
     for (let turn = 0; turn < 40; turn += 1) {
         if (!await attack.isVisible().catch(() => false)) break;
         await expect(attack).toBeEnabled({ timeout: 5_000 });
+        await armCombatSeed(page);
         await attack.click();
         attackCount += 1;
         await page.waitForTimeout(120);
