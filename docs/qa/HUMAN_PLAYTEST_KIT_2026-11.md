@@ -63,7 +63,7 @@
 VITE_FIREBASE_CONFIG='{}' VITE_USE_AI_PROXY=false VITE_RELEASE_ID=playtest-<커밋> npx vite build --outDir <임시 폴더> --emptyOutDir
 ```
 
-**iPhone 앱.** 빌드 뒤 `npx cap sync ios`로 넣고 [iPhone 런북](IPHONE_ACCEPTANCE_RUNBOOK.md) §1의 아카이브 · 설치 경로를 쓴다(`npm run cap:sync`는 다시 빌드해 Firebase 설정이 돌아오므로 쓰지 않는다). 번들은 `com.aetheria.roguelike.playtest`이고 기존 QA 앱과 세이브를 나눠 쓰지 않는다. 팀의 개발 프로필은 **만든 날부터 7일 뒤 만료**된다 — 설치한 날이 아니라 Xcode가 프로필을 만든 날이다. 만료되면 앱이 열리지 않으니 같은 번들로 다시 설치한다. **지금 설치본은 `0597f09c`(2026-11-18 설치, `VITE_RELEASE_ID=playtest-0597f09c` — PR #235 마을 무대 · 지도 큰 칸까지, 게임 코드는 공개 배포 `988ab2a1`과 같다)이고, 프로필은 2026-11-13에 만든 것을 다시 써 2026-11-20 15:03(한국 시각)에 만료된다.** 세션 3을 며칠에 나눠 하려면 그 전에 다시 설치하고(Xcode가 새 프로필을 만든다) 만료일을 시트에 적어 둔다. 이전 설치본 위에 덮어 설치했으므로 이전 세이브가 남아 있다 — 테스트는 새 세이브로 시작한다. 아카이브는 기기를 찾지 못해 실패했고, 연결된 기기를 지정한 `xcodebuild build`로 만든다.
+**iPhone 앱.** 빌드 뒤 `npx cap sync ios`로 넣고 [iPhone 런북](IPHONE_ACCEPTANCE_RUNBOOK.md) §1의 아카이브 · 설치 경로를 쓴다(`npm run cap:sync`는 다시 빌드해 Firebase 설정이 돌아오므로 쓰지 않는다). 번들은 `com.aetheria.roguelike.playtest`이고 기존 QA 앱과 세이브를 나눠 쓰지 않는다. 팀의 개발 프로필은 **만든 날부터 7일 뒤 만료**된다 — 설치한 날이 아니라 Xcode가 프로필을 만든 날이다. 만료되면 앱이 열리지 않으니 같은 번들로 다시 설치한다. **지금 설치본은 `7a2331a6`(2026-11-25 설치, `VITE_RELEASE_ID=playtest-7a2331a6` — PR #255 지도 갈래 · 첫 상자 · 오늘의 시련까지)이고, 프로필은 2026-11-23에 만든 것을 다시 써 2026-11-30 20:59(한국 시각)에 만료된다.** 세션 3을 며칠에 나눠 하려면 그 전에 다시 설치하고(Xcode가 새 프로필을 만든다) 만료일을 시트에 적어 둔다. 앱을 지우지 않고 이전 설치본 위에 덮어 설치했으므로 세이브가 이어질 수 있다 — 테스트는 새 세이브로 시작한다(첫 상자의 유물은 새 설치 · 지운 저장에서만 열린다). 실행이 "not been explicitly trusted"로 거부되면 기기의 설정 > 일반 > VPN 및 기기 관리에서 개발자 앱을 다시 신뢰하고, "Locked"면 잠금을 푼 뒤 실행만 다시 한다(2026-11-25에 둘 다 겪었다 — 인증서 · 프로필이 11-24 빌드와 같아도 신뢰를 다시 물었다). 아카이브는 기기를 찾지 못해 실패했고, 연결된 기기를 지정한 `xcodebuild build`로 만든다.
 
 ```bash
 xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Release -destination id=<UDID> -derivedDataPath <임시 폴더> -allowProvisioningUpdates PRODUCT_BUNDLE_IDENTIFIER=com.aetheria.roguelike.playtest build
@@ -82,7 +82,7 @@ cd <임시 폴더> && npx wrangler pages deploy . --project-name=aetheria-roguel
 npx vite preview --outDir <임시 폴더> --host --port 4173
 ```
 
-`0597f09c`의 로컬 저장 빌드(`VITE_RELEASE_ID=playtest-0597f09c`)를 확인했다(2026-11-18): 번들에 프로젝트 Firebase 설정 없음(`firestore.googleapis.com`은 SDK 기본값뿐) · AI 프록시 꺼짐 · 시험 API 없음, `.claude/launch.json`의 `aetheria-playtest-preview`(Chromium 390 × 844)에서 외부 요청 0(localhost뿐) · 콘솔 오류 0. 같은 빌드를 iPhone 14 Pro Max에 덮어 설치하고 실행 명령까지 보냈다(화면은 소유자가 본다). 이전 설치본은 `219b65f7`이었다 — 그때는 새 게임 → 고요한 숲 지도 · 걸음 · 다시 불러오면 지도 화면 복원 · 로컬 활동 기록이 쌓이는 것까지 확인했다. 배포는 하지 않았다.
+`7a2331a6`의 로컬 저장 빌드(`VITE_RELEASE_ID=playtest-7a2331a6`)를 확인했다(2026-11-25): 번들에 프로젝트 Firebase 설정 없음 · AI 프록시 꺼짐 · 시험 API 없음, 서명 검사 통과. iPhone 14 Pro Max에 덮어 설치하고 실행해 45초 뒤에도 같은 프로세스가 떠 있는 것까지 확인했다 — 화면과 세이브 이어짐은 소유자가 본다. 브라우저의 외부 요청 · 콘솔 오류 확인은 이 빌드로 다시 하지 않았다(기록된 이전 설치본 `0597f09c`에서는 둘 다 0이었다, 2026-11-18). 배포는 하지 않았다.
 
 ---
 
