@@ -18,7 +18,7 @@
 | 4 | **SDK 3.x 게시** | **승인(2026-10-29).** 3.x로 게시한 앱은 2.x로 되돌릴 수 없다는 것을 알고 3.x로 게시한다 | `sdk3_nonrollback` |
 | 5 | **게임 등급분류** | 게임은 등급 정보가 필수다. 콘솔 '게임 등급분류' 탭에 입력하고(개인은 본인 정보), 게임물관리위원회에 직접 신청하거나 스토어 자체등급분류 결과를 쓴다. 등급 설문에 필요한 사실은 [스토어 등록 초안](../store/APPS_IN_TOSS_LISTING_DRAFT.md) §3에 있다 | `grac_rating` |
 | 6 | **사업자 · 정산** | **결정(2026-10-29): 해당 없음.** 인앱 결제 · 정산이 없으면 사업자 없이 출시할 수 있다(공식 안내, 검색 요약). 이번 출시는 결제 · 광고가 없으므로 "해당 없음" 승인 영수증으로 닫는다. 결제 · 광고를 켜는 날 다시 연다 | `business` · `settlement` |
-| 7 | **개인정보 처리방침 · 고객 문의** | **결정(2026-10-29):** 공개 주소는 웹 배포(Cloudflare Pages)의 `/privacy/`다. 원본은 [`docs/legal/PRIVACY_POLICY_KO.md`](../legal/PRIVACY_POLICY_KO.md)이고 `node scripts/build-privacy-page.mjs`가 `public/privacy/index.html`을 만든다. 문의는 문의 전용 이메일(소유자가 만든다)과 게임 안 '의견 보내기' 둘이다. 칸은 모두 채웠다(2026-10-29, 시행일 = 공개일). `tests/privacy-page.test.js`가 공개본에 빈칸이 남으면 붉어진다. **공개는 손으로 하는 배포다** — Pages 프로젝트가 GitHub와 연결돼 있지 않아 `main` 머지로는 사이트가 바뀌지 않는다. 처리방침을 고치면 `VITE_USE_AI_PROXY=false npm run build` → `npx wrangler pages deploy dist --project-name=aetheria-roguelike --branch=main`으로 다시 올린다(첫 프로덕션 배포 2026-10-29 `c3ca3023`, 소스 `d023df7`). 빌드할 때 AI를 끄는 것은 로컬 `.env`가 켜 둘 수 있어서다 | `privacy_policy` · `support_channel` |
+| 7 | **개인정보 처리방침 · 고객 문의** | **결정(2026-10-29):** 공개 주소는 웹 배포(Cloudflare Pages)의 `/privacy/`다. 원본은 [`docs/legal/PRIVACY_POLICY_KO.md`](../legal/PRIVACY_POLICY_KO.md)이고 `node scripts/build-privacy-page.mjs`가 `public/privacy/index.html`을 만든다. 문의는 문의 전용 이메일(소유자가 만든다)과 게임 안 '의견 보내기' 둘이다. 칸은 모두 채웠다(2026-10-29). **저장소의 시행일은 2026-12-02다** — 순위표 항목 추가(#252)를 7일 전에 알렸다(변경 예고 배포 `798d6bc6`, 2026-11-24). 토스 후보를 그 전에 공개하면 예고와 어긋난다. `tests/privacy-page.test.js`가 공개본에 빈칸이 남으면 붉어진다. **공개는 손으로 하는 배포다** — Pages 프로젝트가 GitHub와 연결돼 있지 않아 `main` 머지로는 사이트가 바뀌지 않는다. 처리방침을 고치면 [웹 배포 절차](../QUICK_DEPLOY.md) §1로 다시 올린다(명령 · 배포 기록은 그 문서가 정본). **2026-12-02 전에는 `main`을 올리지 않는다.** 첫 프로덕션 배포는 2026-10-29 `c3ca3023`(소스 `d023df7`)이다 | `privacy_policy` · `support_channel` |
 | 8 | **반응을 어떻게 볼지** | **결정(2026-10-21): 수집 서버 없이 출시한다.** 반응은 콘솔 통계 · 의견 보내기 · 순위표로 본다. `event_collector`는 "출시 범위에서 쓰지 않음" 승인 영수증으로 닫는다. 부족하면 출시 뒤에 수집 서버를 만든다(1 ~ 6단계 계약의 서버 쪽). **바뀐 결정(2026-10-29): 오류 수집(Sentry)은 출시 전에 붙인다.** 정리된 오류 리포트만 보낸다(`src/platform/sentryErrorReporter.ts` — SDK 없음, 세션 id · 메시지 원문 없음). 후보 빌드 환경에 `VITE_SENTRY_DSN`을 넣는다(`.env.local`, 커밋 금지). Sentry 프로젝트 설정에서 IP 주소 저장을 끈다. `sentry_release` 영수증은 샌드박스에서 일부러 낸 오류가 그 릴리스(배포 id)로 Sentry에 들어온 것을 근거로 남긴다 | `event_collector` · `sentry_release` |
 | 9 | **토스 빌드의 Firebase · AI** | **결정(2026-10-21): Firebase를 넣는다.** 클라우드 저장 · 의견 보내기 · 순위표 · 다른 차원의 묘비가 동작한다. 토스 출처(`*.tossmini.com`)가 막혀 있지 않은지 두 곳을 확인한다: Firebase 인증의 승인된 도메인과, 브라우저 API 키의 HTTP 리퍼러 제한(제한을 걸어 두었다면 토스 출처를 더한다). 실제로 막히는지는 샌드박스 관찰이 보여 준다(§3). AI 이벤트(`VITE_USE_AI_PROXY`)는 끄고 출시한다(소유자 결정 2026-10-29 — 처리방침에서 AI 항목을 지웠다). 켜려면 [근거 문서](../legal/PRIVACY_POLICY_EVIDENCE.md) §2-3을 먼저 닫고 처리방침의 AI 항목을 되살린다 | `cors` |
 | 10 | **콘솔 자산** | 로고 600×600, 썸네일 1932×828, 실제 플레이 세로 스크린샷 3장 이상. 만드는 법은 [스토어 등록 초안](../store/APPS_IN_TOSS_LISTING_DRAFT.md) §4 | `console_assets_review` |
@@ -45,7 +45,7 @@ npm run toss:build      # build:toss:web + ait build → 루트에 aetheria.ait
 - **Firebase 설정을 넣는다(§0-9 결정).** `VITE_FIREBASE_CONFIG`는 셸 환경 변수나 `.env.local`(무시 목록 안)로만 준다. `.env.toss` · `.env.production` 같은 파일은 무시 목록 밖이라 트리를 더럽힌다.
   - 빌드 뒤 `grep -l "<Firebase 프로젝트 ID>" dist-toss/assets/*.js`가 파일 이름을 하나 이상 찍어야 설정이 들어간 것이다. 아무것도 안 나오면 업로드하지 않는다. 설정 없이 만든 빌드에는 프로젝트 ID가 없다(2026-10-21 `5f5a0b72` 빌드로 확인).
 - **첨부는 후보 폴더 안에만 둔다.** `build/` 아래도 무시 목록 밖이다.
-- **번들 예산의 여유는 3.3MB다.** 2026-10-21 `5f5a0b72` 기준 803개 파일 · 80,565,735바이트로, 80MiB 예산의 96%다. 그림 자산을 더한 뒤에는 `npm run toss:verify`부터 돌린다.
+- **번들은 예산의 31%다.** 2026-11-25 `e05b0829` 기준 777개 파일 · 25,926,557바이트로, 80MiB 예산에서 약 58MB가 남는다(2026-10-21 `5f5a0b72`는 803개 · 80,565,735바이트, 96%였다). 그림 자산을 더한 뒤에는 `npm run toss:verify`부터 돌린다.
 
 빌드가 끝나면 후보 worktree 루트에서 아래를 그대로 실행한다. 후보 폴더 · 번들 보고서 · `candidate.json`(해시 14칸)을 만든다. 트리가 깨끗하지 않으면 멈춘다.
 
@@ -126,13 +126,15 @@ Android 실기기가 없어도 된다. 공식 샌드박스 앱에는 iOS 시뮬�
 
 - **실행:** 샌드박스 앱에 콘솔 계정으로 로그인한 뒤 `intoss://aetheria`를 연다.
 - **시간 재기:** 기준은 `intoss://aetheria`를 연 순간이다. 화면 녹화로 첫 화면이 그려진 시각(`firstScreenMs`)과 첫 행동을 한 시각(`firstActionMs`)을 잰다. 각각 10,000 이하여야 한다.
-- **첫 행동:** 임무 게시판 열기(`mission_open`) · 이동(`move`) · 탐험(`explore`) 가운데 실제로 한 것이다. 게임의 `first_action` 사건과 같은 정의다.
+- **첫 행동:** 임무 게시판 열기(`mission_open`) · 이동(`move`) · 탐험(`explore`) 가운데 실제로 한 것이다. 게임의 `first_action` 사건과 같은 정의다. 걷는 지도에서는 걸음이 아니라 걷다가 만난 조우 하나가 `explore`다. 보통은 마을을 나서는 이동이나 게시판 열기가 먼저다.
 - **함께 볼 것:**
   - **클라우드 연결(§0-9):** 기록 › 설정 › '저장과 기기 점검'의 '동기화'가 '저장됨'이고, '명예의 전당'이 불러와진다.
     - '연결 안 됨'이면 토스 출처가 막힌 것이다. `issues.jsonl`에 기술 이슈로 남긴다(`cors` 게이트를 닫을 수 없다).
     - '의견 보내기'는 운영 데이터에 실제로 쌓이므로 한 번만 보내고 Firebase 콘솔에서 확인한다.
   - 토스 상단 바 · 홈 인디케이터가 상태 표시줄 · 하단 단추를 가리지 않는다.
-  - 뒤로가기는 열린 화면부터 닫는다.
+  - 지도의 칸을 누르면 그 칸까지 걷고, 웹뷰의 당겨서 새로고침 · 가장자리 뒤로가기와 부딪히지 않는다.
+  - 새 저장의 첫 상자에서 유물 3장 고르기가 열린다(`app_data_clear`라 회차마다 볼 수 있다).
+  - 뒤로가기는 열린 화면부터 닫는다. 닫을 것이 없으면 '게임을 종료할까요?'를 먼저 묻는다.
   - 글자가 빠진 곳 · 영어 낱말이 없다.
   - 기준은 [iPhone 런북](IPHONE_ACCEPTANCE_RUNBOOK.md)의 15 · 16 · 19번과 같다. 게임에는 소리가 없어 배경음악 복귀 반려 사례는 해당되지 않는다.
 
@@ -172,7 +174,9 @@ npm run -s toss:evidence:verify -- --release-dir "$RELEASE_DIR" --phase sandbox
 
 `"ok": true`가 아니면 private QR로 넘어가지 않는다.
 
-**이 런북의 명령은 2026-10-21에 리허설했다.** 깨끗한 worktree(`5f5a0b72`)에서 `npm run toss:build` → §1 · §2 · §3 명령을 그대로 실행했다. 업로드 값과 관찰 5회(iOS 3 · Android 2)는 리허설 값이었다.
+**이 런북의 명령은 2026-10-21에 리허설했다.** 그 뒤 게임이 크게 바뀌었고, 2026-11-25에는 `build:toss:web`의 번들 크기만 다시 쟀다. 업로드 전에 §1부터 한 번 더 돌린다. §4 콘솔 자산 명령은 지금 멈춘다([등록 초안](../store/APPS_IN_TOSS_LISTING_DRAFT.md) §4).
+
+2026-10-21 리허설: 깨끗한 worktree(`5f5a0b72`)에서 `npm run toss:build` → §1 · §2 · §3 명령을 그대로 실행했다. 업로드 값과 관찰 5회(iOS 3 · Android 2)는 리허설 값이었다.
 
 - 검증기 결과: `sandbox` 통과(`ok: true`, 막힘 0).
 - 빈 줄을 하나 더하면 막혔다: `observation_device_invalid` · `observation_time_invalid` · `observation_attachments_invalid`.

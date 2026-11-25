@@ -52,11 +52,10 @@ npm run toss:build
 - A local `.ait` build is evidence of packaging only. It is not Sandbox, QR, console, or release
   evidence.
 
-The current local production candidate contains 572 files and 74,055,642 uncompressed bytes. Its
-local `.ait` is 72,812,252 bytes with SHA-256
-`344d8bd952812e455c8607f625d778bca47dc4d23ef533926863040730b6e260`. The verifier reports zero
-missing, forbidden, unexpected, source-map, service-worker, or test-harness-marker entries. No part
-of this local packaging evidence implies an upload or deployment.
+As of 2026-11-25 (`main` `e05b0829`) `build:toss:web` produces 777 files and 25,926,557 uncompressed
+bytes, about 31% of the working budget. The `.ait` was not rebuilt for this figure. The first local
+candidate (2026-08) was 572 files and 74,055,642 bytes with a 72,812,252-byte `.ait`; it is kept only
+as history. No part of this local packaging evidence implies an upload or deployment.
 
 ## Local save contract
 
@@ -122,7 +121,7 @@ The Phase B base client emits only the approved vocabulary: `boot`, `character_c
 `name`, `releaseId`, `runtime`, `os`, `sessionId`, `job`, `levelBand`, `elapsedBucket`, and `outcome`.
 Unknown fields, free text, nickname, inventory, location, enemy identity, raw user keys, and combat
 logs are rejected before transport. The default event transport is a no-op, so this repository does
-not claim a production collector. Error reports go to Sentry only when the build sets `VITE_SENTRY_DSN`
+not claim a production collector; the release keeps the events in an on-device log only. Error reports go to Sentry only when the build sets `VITE_SENTRY_DSN`
 (see below).
 
 - Toss and Sandbox release identity comes from the SDK deployment ID. Missing or local release
@@ -193,8 +192,9 @@ debrief lifecycle. The current full repository gate passes 3,822/3,822 with type
 warning-free lint, and build guard green. Independent review found no remaining Important
 repository-owned issue.
 
-This is deliberately not an arbitrary-kill or cross-device exactly-once claim. The installed SDK
-3.0.3 earned event exposes no durable transaction ID. A hard kill after `userEarnedReward` but
+This is deliberately not an arbitrary-kill or cross-device exactly-once claim. The SDK
+3.0.3 earned event (the version installed when this was written; 3.9.0 is installed now and must be
+re-checked before ads are ever enabled) exposes no durable transaction ID. A hard kill after `userEarnedReward` but
 before the staged save completes can lose the client receipt, and simultaneous devices have no
 server receipt transaction to merge. The current restart proof begins after `await storage.save`.
 Actual ad rendering, rewarded group configuration, event ordering, audio/lifecycle behavior, and
